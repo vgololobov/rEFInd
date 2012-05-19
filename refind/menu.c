@@ -461,6 +461,9 @@ static UINTN RunGenericMenu(IN REFIT_MENU_SCREEN *Screen, IN MENU_STYLE_FUNC Sty
             case SCAN_F10:
                 egScreenShot();
                 break;
+			case 0x0016: // F12
+				EjectMedia();
+				break;
         }
         switch (key.UnicodeChar) {
             case CHAR_LINEFEED:

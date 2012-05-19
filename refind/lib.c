@@ -47,6 +47,7 @@
 #include "icns.h"
 #include "screen.h"
 #include "refit_call_wrapper.h"
+#include "RemovableMedia.h"
 
 // variables
 
@@ -1276,3 +1277,27 @@ CHAR16 *FindCommaDelimited(IN CHAR16 *InString, IN UINTN Index) {
    } // if
    return (FoundString);
 } // CHAR16 *FindCommaDelimited()
+
+
+static EFI_GUID AppleRemovableMediaGuid = APPLE_REMOVABLE_MEDIA_PROTOCOL_GUID;
+
+// Eject all removable media
+VOID EjectMedia(VOID) {
+   EFI_STATUS                      Status;
+   UINTN                           HandleIndex, HandleCount = 0;
+   EFI_HANDLE                      *Handles, Handle;
+   APPLE_REMOVABLE_MEDIA_PROTOCOL  *Ejectable;
+
+   Status = LibLocateHandle(ByProtocol, &AppleRemovableMediaGuid, NULL, &HandleCount, &Handles);
+   if (EFI_ERROR(Status) || HandleCount == 0)
+      return; // probably not an Apple system
+
+   for (HandleIndex = 0; HandleIndex < HandleCount; HandleIndex++) {
+      Handle = Handles[HandleIndex];
+      Status = refit_call3_wrapper(BS->HandleProtocol, Handle, &AppleRemovableMediaGuid, (VOID **) &Ejectable);
+      if (EFI_ERROR(Status))
+         continue;
+      Status = refit_call1_wrapper(Ejectable->Eject, Ejectable);
+   }
+   FreePool(Handles);
+} // VOID EjectMedia()

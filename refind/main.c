@@ -104,7 +104,7 @@ static VOID AboutrEFInd(VOID)
 {
     if (AboutMenu.EntryCount == 0) {
         AboutMenu.TitleImage = BuiltinIcon(BUILTIN_ICON_FUNC_ABOUT);
-        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.3.5");
+        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.3.5.1");
         AddMenuInfoLine(&AboutMenu, L"");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2006-2010 Christoph Pfisterer");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2012 Roderick W. Smith");
@@ -701,7 +701,13 @@ LOADER_ENTRY * AddLoaderEntry(IN CHAR16 *LoaderPath, IN CHAR16 *LoaderTitle, IN 
       Entry->me.Title = PoolPrint(L"Boot %s from %s", (LoaderTitle != NULL) ? LoaderTitle : LoaderPath, Volume->VolName);
       Entry->me.Row = 0;
       Entry->me.BadgeImage = Volume->VolBadgeImage;
-      Entry->LoaderPath = StrDuplicate(LoaderPath);
+      if ((LoaderPath != NULL) && (LoaderPath[0] != L'\\')) {
+         Entry->LoaderPath = StrDuplicate(L"\\");
+      } else {
+         Entry->LoaderPath = NULL;
+      }
+      MergeStrings(&(Entry->LoaderPath), LoaderPath, 0);
+//      Entry->LoaderPath = StrDuplicate(LoaderPath);
       Entry->VolName = Volume->VolName;
       Entry->DevicePath = FileDevicePath(Volume->DeviceHandle, Entry->LoaderPath);
       SetLoaderDefaults(Entry, LoaderPath, Volume);
@@ -1393,18 +1399,6 @@ static VOID ScanForBootloaders(VOID) {
    UINTN i;
 
    ScanVolumes();
-   // Commented-out below: Was part of an attempt to get rEFInd to
-   // re-scan disk devices on pressing Esc; but doesn't work (yet), so
-   // removed....
-//     MainMenu.Title = StrDuplicate(L"Main Menu 2");
-//     MainMenu.TitleImage = NULL;
-//     MainMenu.InfoLineCount = 0;
-//     MainMenu.InfoLines = NULL;
-//     MainMenu.EntryCount = 0;
-//     MainMenu.Entries = NULL;
-//     MainMenu.TimeoutSeconds = 20;
-//     MainMenu.TimeoutText = StrDuplicate(L"Automatic boot");
-   //    DebugPause();
 
    // scan for loaders and tools, add them to the menu
    for (i = 0; i < NUM_SCAN_OPTIONS; i++) {

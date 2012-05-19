@@ -7,16 +7,22 @@ SRCS=$(NAMES:=.c)
 OBJS=$(NAMES:=.o)
 HEADERS=$(NAMES:=.h)
 LOADER_DIR=refind
+FS_DIR=filesystems
 LIB_DIR=libeg
 
 # Build the Symbiote library itself.
 all:
 	make -C $(LIB_DIR)
 	make -C $(LOADER_DIR)
+#	make -C $(FS_DIR)
+
+filesystems:
+	make -C $(FS_DIR)
 
 clean:
 	make -C $(LIB_DIR) clean
 	make -C $(LOADER_DIR) clean
+#	make -C $(FS_DIR) clean
 
 # NOTE TO DISTRIBUTION MAINTAINERS:
 # The "install" target installs the program directly to the ESP

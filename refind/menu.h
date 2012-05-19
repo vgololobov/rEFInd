@@ -58,6 +58,7 @@
 #define MENU_EXIT_ESCAPE  (2)
 #define MENU_EXIT_DETAILS (3)
 #define MENU_EXIT_TIMEOUT (4)
+#define MENU_EXIT_EJECT   (5)
 
 #define TAG_RETURN       (99)
 

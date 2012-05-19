@@ -105,4 +105,6 @@ CHAR16 *FindPath(IN CHAR16* FullPath);
 CHAR16 *FindNumbers(IN CHAR16 *InString);
 CHAR16 *FindCommaDelimited(IN CHAR16 *InString, IN UINTN Index);
 
+VOID EjectMedia(VOID);
+
 #endif
