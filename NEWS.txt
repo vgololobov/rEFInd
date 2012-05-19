@@ -1,8 +1,10 @@
 0.3.6 (?/??/2012):
 ------------------
 
-- Added new feature to eject CDs (and other removable media): Press F12
-  to eject all such media.
+- Added new feature to eject CDs (and other removable media): Press F12 to
+  eject all such media. This function works only on some Macs, though (it
+  relies on an Apple-specific EFI extension, and this extension isn't even
+  implemented on all Macs, much less on UEFI-based PCs).
 
 - Fixed a problem that could cause GRUB 2 to fail to read its configuration
   file when launched from rEFInd.

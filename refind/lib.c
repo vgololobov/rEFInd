@@ -1281,16 +1281,17 @@ CHAR16 *FindCommaDelimited(IN CHAR16 *InString, IN UINTN Index) {
 
 static EFI_GUID AppleRemovableMediaGuid = APPLE_REMOVABLE_MEDIA_PROTOCOL_GUID;
 
-// Eject all removable media
-VOID EjectMedia(VOID) {
+// Eject all removable media.
+// Returns TRUE if any media were ejected, FALSE otherwise.
+BOOLEAN EjectMedia(VOID) {
    EFI_STATUS                      Status;
-   UINTN                           HandleIndex, HandleCount = 0;
+   UINTN                           HandleIndex, HandleCount = 0, Ejected = 0;
    EFI_HANDLE                      *Handles, Handle;
    APPLE_REMOVABLE_MEDIA_PROTOCOL  *Ejectable;
 
    Status = LibLocateHandle(ByProtocol, &AppleRemovableMediaGuid, NULL, &HandleCount, &Handles);
    if (EFI_ERROR(Status) || HandleCount == 0)
-      return; // probably not an Apple system
+      return (FALSE); // probably not an Apple system
 
    for (HandleIndex = 0; HandleIndex < HandleCount; HandleIndex++) {
       Handle = Handles[HandleIndex];
@@ -1298,6 +1299,9 @@ VOID EjectMedia(VOID) {
       if (EFI_ERROR(Status))
          continue;
       Status = refit_call1_wrapper(Ejectable->Eject, Ejectable);
+      if (!EFI_ERROR(Status))
+         Ejected++;
    }
    FreePool(Handles);
+   return (Ejected > 0);
 } // VOID EjectMedia()
