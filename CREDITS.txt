@@ -16,6 +16,13 @@ I've incorporated into the current version. Specifically:
   rEFInd. See http://packages.debian.org/sid/refit for this version of the
   program.
 
+* The filesystem drivers released with version 0.4.0 rely on a filesystem
+  wrapper created by Christoph Phisterer. They then passed through Oracle's
+  VirtualBox (https://www.virtualbox.org) and the Clover boot loader
+  project (https://sourceforge.net/projects/cloverefiboot/). The
+  filesystem-specific code comes from various sources, including Apple and
+  the Linux kernel.
+
 * I replaced many of the original rEFIt icons with icons taken from the
   Oxygen Icons project, either from the Oxygen Refit package on its page
   (http://deviantdark.deviantart.com/art/Oxygen-Refit-70199755) or from the

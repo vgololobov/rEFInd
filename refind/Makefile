@@ -32,5 +32,9 @@ all: $(TARGET)
 
 include $(SRCDIR)/../Make.common
 
+$(TARGET): $(SHLIB_TARGET)
+	$(OBJCOPY) -j .text -j .sdata -j .data -j .dynamic -j .dynsym -j .rel \
+		   -j .rela -j .reloc --target=$(FORMAT) $< $@
+
 # EOF
 # DO NOT DELETE

@@ -24,9 +24,12 @@ of Microsoft's Visual C. I neither have this toolchain nor do I want to use
 it. For this reason, I used Debian's patched version of rEFIt as a starting
 point in forking rEFInd.
 
-I've dropped ancillary programs, such as the ext2fs driver module and
-gptsync program, from rEFInd. You can still use these tools with rEFInd,
-but you'll need to install them separately.
+Note that the drivers, added with rEFInd 0.4.0, require use of the
+TianoCore tool kit. Driver compilation is described in more detail later.
+
+I've dropped ancillary programs, such as the gptsync program, from rEFInd.
+You can still use these tools with rEFInd, but you'll need to install them
+separately.
 
 The patched version of rEFIt that I used as a starting point disabled the
 program's ability to load EFI drivers because of limitations in the GNU-EFI
@@ -154,3 +157,75 @@ call install.sh as part of the binary package installation process.
 Placing the files in /boot/efi/EFI/{distname}/refind and then having a
 post-install script call efibootmgr is probably the better way to go,
 though.
+
+Compiling the EFI Filesystem Drivers
+====================================
+
+The EFI filesystem drivers in the filesystems subdirectory require the
+TianoCore UDK2010.SR1 toolkit. The drivers might compile with another
+version of the TianoCore toolkit, but I've not tested them with anything
+else. (My attempts to use GNU-EFI have failed; at best, I've gotten drivers
+that load but hang the system.)
+
+Unfortunately, the TianoCore toolkit is bulky and weird by Linux
+programming standards. I don't know of any Linux distribution packages for
+it in RPM, Debian package file, or other format; you MUST install the kit
+from source code using its own unusual compilation procedure. The
+installation documentation also omits a few steps. Here's how I installed
+the toolkit:
+
+1) Download UDK2010.SR1 from
+   https://sourceforge.net/apps/mediawiki/tianocore/index.php?title=UDK2010.
+
+2) Type "mkdir /usr/local/UDK2010". You can use another directory, but the
+   Makefile for rEFInd's EFI drivers assumes this location. You'll need to
+   edit the EDK2BASE line in the Makefile if you install somewhere else.
+
+3) Type "cd /usr/local/UDK2010".
+
+3) Unzip the downloaded file (UDK2010.SR1.Complete.MyWorkSpace.zip) in the
+   current directory (/usr/local/UDK2010). This creates a handful of files,
+   including a tarball and a couple of .zip files.
+
+4) Type "unzip UDK2010.SR1.MyWorkSpace.zip". This extracts the
+   platform-neutral portion of the development kit.
+
+5) Type "cd MyWorkSpace".
+
+6) Type "tar xvf ../BaseTools\(Unix\)_UDK2010.SR1.tar". This extracts the
+   Linux/Unix-specific portions of the toolkit.
+
+7) Follow the build instructions at
+   https://sourceforge.net/apps/mediawiki/tianocore/index.php?title=Using_EDK_II_with_Native_GCC_4.4;
+   however, a few changes are required, as detailed below....
+
+8) Type ". edksetup.sh BaseTools" (note the leading dot). This sets up some
+   environment variables, so subsequent steps (NOT including compiling the
+   rEFInd EFI drivers) must be typed in the shell you use for this step.
+
+9) Edit Conf/target.txt and change the following:
+   - ACTIVE_PLATFORM = MdeModulePkg/MdeModulePkg.dsc
+   - TARGET = RELEASE (DEBUG might work, but I've not tested it).
+   - TARGET_ARCH = X64 (on x86-64; leave this as IA32 on x86)
+   - TOOL_CHAIN_TAG = GCC45 (or other value depending on your GCC version;
+     type "gcc -v" to learn your GCC version number)
+   The Makefile for the drivers reads some of these variables from this
+   file and uses them when accessing directories, so be sure to type these
+   entries in the case specified.
+
+11) Type "make -C /usr/local/UDK2010/MyWorkSpace/BaseTools/Source/C".
+    (This step is not documented on the EDK Web page.)
+    
+10) Type "build" to build the main set of EDK2 files. This process is
+    likely to take a few minutes.
+
+Once the toolkit is installed, you can build the filesystem drivers. If you
+installed in a location other than the one I've specified, you must edit
+the Makefile's EDK2BASE variable. You can then type "make" to build all the
+drivers, or specify a filesystem type to build just it.
+
+The drivers all rely on filesystem wrapper code created by rEFIt's author,
+Christoph Phisterer. Most of the drivers seem to have passed through
+Oracle's VirtualBox project ((https://www.virtualbox.org) and the Clover
+boot loader project (https://sourceforge.net/projects/cloverefiboot/). Most
+of the drivers are based on code from the Linux kernel.
