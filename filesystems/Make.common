@@ -1,0 +1,141 @@
+#
+# filesystems/Make.common
+# Build control file for rEFInd's EFI filesystem drivers
+#
+
+SRCDIR = .
+
+VPATH = $(SRCDIR)
+
+HOSTARCH        = $(shell uname -m | sed s,i[3456789]86,ia32,)
+ARCH            := $(HOSTARCH)
+
+ifeq ($(ARCH),ia32)
+  ARCHDIR = Ia32
+  FILENAME_CODE = ia32
+endif
+
+ifeq ($(ARCH),x86_64)
+  ARCH_C_FLAGS = "-DEFIAPI=__attribute__((ms_abi))" -mcmodel=large
+  ARCHDIR = X64
+  FILENAME_CODE = x64
+endif
+
+EDK2BASE = /usr/local/UDK2010/MyWorkSpace
+
+# Below file defines TARGET (RELEASE or DEBUG), TARGET_ARCH (X64 or IA32), and TOOL_CHAIN_TAG (GCC45, GCC46, or GCC47)
+include $(EDK2BASE)/Conf/target.txt
+
+EFIINC = $(EDK2BASE)/MdePkg/Include/
+EFILIB          = $(EDK2BASE)/Build/MdeModule/$(TARGET)_$(TOOL_CHAIN_TAG)/$(TARGET_ARCH)/MdePkg/Library
+ALL_EFILIBS     = $(EDK2BASE)/Build/MdeModule/$(TARGET)_$(TOOL_CHAIN_TAG)/$(TARGET_ARCH)/MdePkg/Library/BaseDebugPrintErrorLevelLib/BaseDebugPrintErrorLevelLib/OUTPUT/BaseDebugPrintErrorLevelLib.lib \
+		  $(EDK2BASE)/Build/MdeModule/$(TARGET)_$(TOOL_CHAIN_TAG)/$(TARGET_ARCH)/MdePkg/Library/BasePrintLib/BasePrintLib/OUTPUT/BasePrintLib.lib \
+		  $(EDK2BASE)/Build/MdeModule/$(TARGET)_$(TOOL_CHAIN_TAG)/$(TARGET_ARCH)/MdePkg/Library/BasePcdLibNull/BasePcdLibNull/OUTPUT/BasePcdLibNull.lib \
+		  $(EDK2BASE)/Build/MdeModule/$(TARGET)_$(TOOL_CHAIN_TAG)/$(TARGET_ARCH)/MdePkg/Library/UefiDebugLibConOut/UefiDebugLibConOut/OUTPUT/UefiDebugLibConOut.lib \
+		  $(EDK2BASE)/Build/MdeModule/$(TARGET)_$(TOOL_CHAIN_TAG)/$(TARGET_ARCH)/MdePkg/Library/BaseLib/BaseLib/OUTPUT/BaseLib.lib \
+		  $(EDK2BASE)/Build/MdeModule/$(TARGET)_$(TOOL_CHAIN_TAG)/$(TARGET_ARCH)/MdePkg/Library/BaseMemoryLib/BaseMemoryLib/OUTPUT/BaseMemoryLib.lib \
+		  $(EDK2BASE)/Build/MdeModule/$(TARGET)_$(TOOL_CHAIN_TAG)/$(TARGET_ARCH)/MdePkg/Library/UefiBootServicesTableLib/UefiBootServicesTableLib/OUTPUT/UefiBootServicesTableLib.lib \
+		  $(EDK2BASE)/Build/MdeModule/$(TARGET)_$(TOOL_CHAIN_TAG)/$(TARGET_ARCH)/MdePkg/Library/UefiMemoryAllocationLib/UefiMemoryAllocationLib/OUTPUT/UefiMemoryAllocationLib.lib \
+		  $(EDK2BASE)/Build/MdeModule/$(TARGET)_$(TOOL_CHAIN_TAG)/$(TARGET_ARCH)/MdePkg/Library/UefiDevicePathLib/UefiDevicePathLib/OUTPUT/UefiDevicePathLib.lib \
+		  $(EDK2BASE)/Build/MdeModule/$(TARGET)_$(TOOL_CHAIN_TAG)/$(TARGET_ARCH)/MdePkg/Library/UefiRuntimeServicesTableLib/UefiRuntimeServicesTableLib/OUTPUT/UefiRuntimeServicesTableLib.lib \
+		  $(EDK2BASE)/Build/MdeModule/$(TARGET)_$(TOOL_CHAIN_TAG)/$(TARGET_ARCH)/MdePkg/Library/UefiLib/UefiLib/OUTPUT/UefiLib.lib \
+		  $(EDK2BASE)/Build/MdeModule/$(TARGET)_$(TOOL_CHAIN_TAG)/$(TARGET_ARCH)/MdePkg/Library/UefiDriverEntryPoint/UefiDriverEntryPoint/OUTPUT/UefiDriverEntryPoint.lib
+
+OS		= $(shell uname -s)
+CPPFLAGS        = -I$(EFIINC) -I$(EFIINC)/$(ARCH) -I$(EFIINC)/Protocol -I$(EFIINC)/$(ARCHDIR) -DNO_BUILTIN_VA_FUNCS
+
+INCLUDE_DIRS    = -I $(EDK2BASE)/MdePkg \
+                  -I $(EDK2BASE)/MdePkg/Include \
+                  -I $(EDK2BASE)/MdePkg/Include/$(ARCHDIR) \
+		  -I $(EDK2BASE)/IntelFrameworkModulePkg \
+		  -I $(EDK2BASE)/IntelFrameworkModulePkg/Include \
+
+FSW_NAMES       = fsw_efi fsw_core fsw_efi_lib fsw_lib AutoGen
+OBJS            = $(FSW_NAMES:=.o)
+#DRIVERNAME      = ext2
+BUILDME          = $(DRIVERNAME)_$(FILENAME_CODE).efi
+
+OPTIMFLAGS      = -fno-strict-aliasing -mno-red-zone -Wno-address -Os
+#OPTIMFLAGS      = -fno-strict-aliasing -mno-red-zone -Wno-address -mcmodel=large -Os 
+DEBUGFLAGS      = -Wall -Werror -Wno-missing-braces -Wno-array-bounds -ffunction-sections -fdata-sections -c -include AutoGen.h
+#CFLAGS          = $(ARCH3264) $(OPTIMFLAGS) -fpic -fshort-wchar $(DEBUGFLAGS)
+CFLAGS          = $(ARCH3264) $(OPTIMFLAGS) -g -fshort-wchar -fno-stack-protector $(DEBUGFLAGS)
+ASFLAGS         = $(ARCH3264)
+LDFLAGS         = -nostdlib -znocombreloc -dp --entry=fsw_efi_main
+
+prefix          = /usr/bin/
+CC              = $(prefix)gcc
+AS              = $(prefix)as
+LD              = $(prefix)ld
+AR              = $(prefix)ar
+RANLIB          = $(prefix)ranlib
+OBJCOPY         = $(prefix)objcopy
+GENFW           = $(EDK2BASE)/BaseTools/BinWrappers/PosixLike/GenFw
+
+ifeq ($(ARCH),ia64)
+  # EFI specs allows only lower floating point partition to be used
+  CFLAGS       += -frename-registers -mfixed-range=f32-f127
+endif
+
+ifeq ($(ARCH),x86_64)
+#  CFLAGS += -DEFI_FUNCTION_WRAPPER
+#  CPPFLAGS += -DEFIX64
+
+  ARCH3264 = -m64
+endif
+
+ifeq ($(ARCH),ia32)
+#  CPPFLAGS += -DEFI32
+
+  ARCH3264 = -m32
+
+endif
+
+
+LDSCRIPT = $(EDK2BASE)/BaseTools/Scripts/gcc4.4-ld-script
+
+LDFLAGS         = -nostdlib -n -q --gc-sections --script=$(EDK2BASE)/BaseTools/Scripts/gcc4.4-ld-script \
+                  --entry _ModuleEntryPoint -u _ModuleEntryPoint
+LIBS            = $(shell $(CC) $(ARCH3264) -print-libgcc-file-name)
+
+%.o: %.c
+	$(CC) $(CPPFLAGS) $(ARCH_C_FLAGS) $(CFLAGS) $(INCLUDE_DIRS) -DFSTYPE=$(DRIVERNAME) -c $< -o $@
+
+FORMAT   = efi-bsdrv-$(ARCH)
+
+
+ifneq (,$(filter %.efi,$(BUILDME)))
+
+SHLIB_TARGET = $(subst .efi,.lib,$(BUILDME))
+DLL_TARGET = $(subst .efi,.dll,$(BUILDME))
+
+all: $(BUILDME)
+
+$(DLL_TARGET): $(OBJS) fsw_$(DRIVERNAME).o
+	$(LD) -o $(DRIVERNAME)_$(FILENAME_CODE).dll $(LDFLAGS) --start-group $(ALL_EFILIBS) $(OBJS) fsw_$(DRIVERNAME).o --end-group
+
+$(BUILDME): $(DLL_TARGET)
+	$(OBJCOPY) --strip-unneeded $(DLL_TARGET)
+	$(OBJCOPY) $(DLL_TARGET)
+	$(GENFW) -e UEFI_DRIVER -o $(BUILDME) $(DLL_TARGET)
+	mkdir -p ../fs-drivers
+	cp $(BUILDME) ../fs-drivers
+#	$(OBJCOPY) -j .text -j .sdata -j .data -j .dynamic -j .dynsym -j .rel \
+#		   -j .rela -j .reloc --target=$(FORMAT) $< $@
+
+endif
+
+# rules for libraries
+
+ifneq (,$(filter %.a,$(BUILDME)))
+
+endif
+
+# utility rules
+
+clean:
+	rm -f $(BUILDME) *~ *.so $(OBJS) *.efi *.lib *.dll
+
+
+
+# EOF

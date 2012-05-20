@@ -1,0 +1,26 @@
+The below was written by Christoph Phisterer with respect to his original
+code. Since then, Oracle and the Clover team have modified the original
+files, and added the HFS+ driver, which bears Oracle and Apple copyrights
+and is released under terms of the GNU GPL.
+
+ File System Wrapper License
+=============================
+
+The various parts of the File System Wrapper source code come from
+different sources and may carry different licenses. Here's a quick
+account of the situation:
+
+ * The core code was written from scratch and is covered by a
+   BSD-style license.
+
+ * The EFI host driver was written from scratch, possibly using code
+   from the TianoCore project and Intel's EFI Application Toolkit. It
+   is covered by a BSD-style license.
+
+ * The ext2 and reiserfs file system drivers use definitions from the
+   Linux kernel source. The actual code was written from scratch,
+   using multiple sources for reference. These drivers are covered by
+   the GNU GPL.
+
+For more details, see each file's boilerplate comment. The full text
+of the GNU GPL is in the file LICENSE_GPL.txt.
