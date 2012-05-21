@@ -58,8 +58,10 @@
 #define MACOSX_LOADER_PATH      L"System\\Library\\CoreServices\\boot.efi"
 #if defined (EFIX64)
 #define SHELL_NAMES             L"\\EFI\\tools\\shell.efi,\\shellx64.efi"
+#define DRIVER_DIRS             L"drivers,drivers_x64"
 #elif defined (EFI32)
 #define SHELL_NAMES             L"\\EFI\\tools\\shell.efi,\\shellia32.efi"
+#define DRIVER_DIRS             L"drivers,drivers_ia32"
 #else
 #define SHELL_NAMES             L"\\EFI\\tools\\shell.efi"
 #endif
@@ -104,7 +106,7 @@ static VOID AboutrEFInd(VOID)
 {
     if (AboutMenu.EntryCount == 0) {
         AboutMenu.TitleImage = BuiltinIcon(BUILTIN_ICON_FUNC_ABOUT);
-        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.3.5.1");
+        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.4.0");
         AddMenuInfoLine(&AboutMenu, L"");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2006-2010 Christoph Pfisterer");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2012 Roderick W. Smith");
@@ -1372,16 +1374,22 @@ Done:
 // file line.
 static VOID LoadDrivers(VOID)
 {
-    CHAR16        *Directory;
+    CHAR16        *Directory, *SelfDirectory;
     UINTN         i = 0, Length, NumFound = 0;
 
-    // load drivers from the "drivers" subdirectory of rEFInd's home directory
-    Directory = StrDuplicate(SelfDirPath);
-    CleanUpPathNameSlashes(Directory);
-    MergeStrings(&Directory, L"drivers", L'\\');
-    NumFound += ScanDriverDir(Directory);
+    // load drivers from the subdirectories of rEFInd's home directory specified
+    // in the DRIVER_DIRS constant.
+    while ((Directory = FindCommaDelimited(DRIVER_DIRS, i++)) != NULL) {
+       SelfDirectory = StrDuplicate(SelfDirPath);
+       CleanUpPathNameSlashes(SelfDirectory);
+       MergeStrings(&SelfDirectory, Directory, L'\\');
+       NumFound += ScanDriverDir(SelfDirectory);
+       FreePool(Directory);
+       FreePool(SelfDirectory);
+    }
 
     // Scan additional user-specified driver directories....
+    i = 0;
     while ((Directory = FindCommaDelimited(GlobalConfig.DriverDirs, i++)) != NULL) {
        CleanUpPathNameSlashes(Directory);
        Length = StrLen(Directory);

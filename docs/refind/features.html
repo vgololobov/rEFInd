@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 3/14/2012; last Web page update:
-5/15/2012, referencing rEFInd 0.3.5</p>
+5/20/2012, referencing rEFInd 0.4.0</p>
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
 
@@ -107,6 +107,10 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <li>Load EFI drivers for filesystems or hardware devices not supported natively by your firmware. (This feature is absent in some builds of rEFIt and in rEFInd prior to version 0.2.7.)</li>
 
+<li>Inclusion of drivers for the Linux ReiserFS and ext2 filesystems in the
+    main package. (These drivers are absent from rEFInd prior to version
+    0.4.0; and the rEFInd versions don't work on at least some Macs.)</li>
+
 </ul>
 
 <p>I've used rEFIt on a couple of computers for over a year, but I've found that it has some frustrating limitations. It tends to flood the screen with non-functional BIOS boot options, for instance; and it has a number of bugs on UEFI-based systems. I therefore expanded on rEFIt, giving rEFInd features that improve on or go beyond those of rEFIt, such as:</p>
@@ -148,6 +152,8 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 <li>Improved detection of itself, to keep rEFInd out of its own boot menu.</li>
 
 <li>An "exit" option (disabled by default), so that you can return to whatever shell or boot manager you used to launch rEFInd, should this ability be desirable. (This feature first appeared in rEFInd 0.2.4.)</li>
+
+<li>Drivers for ISO-9660 and HFS+, which are not included in rEFIt. (The ISO-9660 driver is based on code from the rEFIt project, but was never completed by its original author. It was completed by Oracle for VirtualBox.)</li>
 
 </ul>
 

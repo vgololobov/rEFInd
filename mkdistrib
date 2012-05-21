@@ -16,20 +16,26 @@ make clean
 # Prepare a place and copy files there....
 mkdir -p ../snapshots/$1/refind-$1/icons
 cp --preserve=timestamps icons/*icns ../snapshots/$1/refind-$1/icons/
-cp -a docs images include libeg refind install.sh CREDITS.txt NEWS.txt BUILDING.txt COPYING.txt LICENSE.txt README.txt Make.common Makefile refind.conf-sample ../snapshots/$1/refind-$1
+cp -a docs images include libeg refind filesystems install.sh CREDITS.txt NEWS.txt BUILDING.txt COPYING.txt LICENSE.txt README.txt Make.common Makefile refind.conf-sample ../snapshots/$1/refind-$1
 
-# Go there are prepare a souce code zip file....
+# Go there and prepare a souce code zip file....
 cd ../snapshots/$1/
 zip -9r refind-src-$1.zip refind-$1
 
-# Build the source code into a binary
+# Build the source code into binaries
 cd refind-$1
 make
-mkdir -p refind-bin-$1/refind
+make fs
+mkdir -p refind-bin-$1/refind/drivers_x64
+mkdir -p refind-bin-$1/refind/drivers_ia32
 cp -a icons refind-bin-$1/refind/
+cp --preserve=timestamps drivers/*_x64.efi refind-bin-$1/refind/drivers_x64/
+cp --preserve=timestamps filesystems/LICENSE*txt refind-bin-$1/refind/drivers_x64/
+cp --preserve=timestamps filesystems/LICENSE*txt refind-bin-$1/refind/drivers_ia32/
 cp --preserve=timestamps refind.conf-sample refind-bin-$1/refind/
 cp refind/refind_x64.efi refind-bin-$1/refind/refind_x64.efi
 cp $StartDir/refind_ia32.efi refind-bin-$1/refind/
+cp $StartDir/drivers/*_ia32.efi refind-bin-$1/refind/drivers_ia32/
 cp -a COPYING.txt LICENSE.txt README.txt docs CREDITS.txt install.sh refind-bin-$1
 zip -9r ../refind-bin-$1.zip refind-bin-$1
 cd ..

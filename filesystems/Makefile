@@ -8,9 +8,9 @@
 
 INSTALL_DIR = /boot/efi/EFI/refind/drivers
 
-all:	ext2fs reiserfs iso9660 hfs
+all:	ext2 reiserfs iso9660 hfs
 
-ext2fs:
+ext2:
 	rm -f fsw_efi.o
 	make DRIVERNAME=ext2 -f Make.common
 

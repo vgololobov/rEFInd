@@ -39,6 +39,14 @@ ln ../../refind/refind.conf-sample ./refind.conf
 mkdir icons
 cd icons
 ln ../../../refind/icons/* ./
+cd ../
+mkdir drivers_x64
+cd drivers_x64
+ln ../../../refind/drivers_x64/* ./
+cd ..
+mkdir drivers_ia32
+cd drivers_ia32
+ln ../../../refind/drivers_x64/* ./
 cd ../../..
 
 # Get the size of the binaries to go in the El Torito image in kB
@@ -53,7 +61,7 @@ mv EFI/boot/shell*.efi ./
 # Prepare a FAT filesystem image and populate it with the
 # EFI boot files....
 dd if=/dev/zero of=refind-bin-$Version.img bs=1024 count=$ToritoSize
-mkdosfs -n "rEFInd.ET" refind-bin-$Version.img
+mkdosfs -n "ElTorito" refind-bin-$Version.img
 mcopy -irefind-bin-$Version.img -s EFI shell*.efi ::/
 
 # Make the ISO-9660 image file....

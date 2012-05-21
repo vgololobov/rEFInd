@@ -23,7 +23,7 @@ endif
 
 EDK2BASE = /usr/local/UDK2010/MyWorkSpace
 
-# Below file defines TARGET (RELEASE or DEBUG), TARGET_ARCH (X64 or IA32), and TOOL_CHAIN_TAG (GCC45, GCC46, or GCC47)
+# Below file defines TARGET (RELEASE or DEBUG), TARGET_ARCH (X64 or IA32), and TOOL_CHAIN_TAG (GCC44, GCC45, GCC46, or GCC47)
 include $(EDK2BASE)/Conf/target.txt
 
 EFIINC = $(EDK2BASE)/MdePkg/Include/
@@ -101,9 +101,6 @@ LIBS            = $(shell $(CC) $(ARCH3264) -print-libgcc-file-name)
 %.o: %.c
 	$(CC) $(CPPFLAGS) $(ARCH_C_FLAGS) $(CFLAGS) $(INCLUDE_DIRS) -DFSTYPE=$(DRIVERNAME) -c $< -o $@
 
-FORMAT   = efi-bsdrv-$(ARCH)
-
-
 ifneq (,$(filter %.efi,$(BUILDME)))
 
 SHLIB_TARGET = $(subst .efi,.lib,$(BUILDME))
@@ -118,24 +115,10 @@ $(BUILDME): $(DLL_TARGET)
 	$(OBJCOPY) --strip-unneeded $(DLL_TARGET)
 	$(OBJCOPY) $(DLL_TARGET)
 	$(GENFW) -e UEFI_DRIVER -o $(BUILDME) $(DLL_TARGET)
-	mkdir -p ../fs-drivers
-	cp $(BUILDME) ../fs-drivers
+	mkdir -p ../drivers
+	cp $(BUILDME) ../drivers
 #	$(OBJCOPY) -j .text -j .sdata -j .data -j .dynamic -j .dynsym -j .rel \
-#		   -j .rela -j .reloc --target=$(FORMAT) $< $@
+#		   -j .rela -j .reloc --target=efi-bsdrv-$(ARCH) $< $@
 
 endif
 
-# rules for libraries
-
-ifneq (,$(filter %.a,$(BUILDME)))
-
-endif
-
-# utility rules
-
-clean:
-	rm -f $(BUILDME) *~ *.so $(OBJS) *.efi *.lib *.dll
-
-
-
-# EOF

@@ -165,21 +165,22 @@ The EFI filesystem drivers in the filesystems subdirectory require the
 TianoCore UDK2010.SR1 toolkit. The drivers might compile with another
 version of the TianoCore toolkit, but I've not tested them with anything
 else. (My attempts to use GNU-EFI have failed; at best, I've gotten drivers
-that load but hang the system.)
+that load but hang the computer.)
 
 Unfortunately, the TianoCore toolkit is bulky and weird by Linux
 programming standards. I don't know of any Linux distribution packages for
 it in RPM, Debian package file, or other format; you MUST install the kit
 from source code using its own unusual compilation procedure. The
-installation documentation also omits a few steps. Here's how I installed
-the toolkit:
+installation documentation also omits at least one step and is a bit
+unclear about others. Here's how I installed the toolkit:
 
 1) Download UDK2010.SR1 from
    https://sourceforge.net/apps/mediawiki/tianocore/index.php?title=UDK2010.
 
 2) Type "mkdir /usr/local/UDK2010". You can use another directory, but the
    Makefile for rEFInd's EFI drivers assumes this location. You'll need to
-   edit the EDK2BASE line in the Makefile if you install somewhere else.
+   edit the EDK2BASE line in the Make.common file if you install somewhere
+   else.
 
 3) Type "cd /usr/local/UDK2010".
 
@@ -211,7 +212,10 @@ the toolkit:
      type "gcc -v" to learn your GCC version number)
    The Makefile for the drivers reads some of these variables from this
    file and uses them when accessing directories, so be sure to type these
-   entries in the case specified.
+   entries in the case specified. Note that the documentation refers to
+   editing Conf/tools_def.txt in addition to Conf/target.txt, but doesn't
+   specify what to change in Conf/tools_def.txt. I haven't found it
+   necessary to make any changes in Conf/tools_def.txt.
 
 11) Type "make -C /usr/local/UDK2010/MyWorkSpace/BaseTools/Source/C".
     (This step is not documented on the EDK Web page.)
@@ -221,11 +225,25 @@ the toolkit:
 
 Once the toolkit is installed, you can build the filesystem drivers. If you
 installed in a location other than the one I've specified, you must edit
-the Makefile's EDK2BASE variable. You can then type "make" to build all the
-drivers, or specify a filesystem type to build just it.
+the EDK2BASE variable in the filesystems/Make.common file in the rEFInd
+source package.. You can then type "make" in the "filesystems" directory,
+or "make fs" in the main source directory, to build all the drivers. If you
+want to build just one driver, you can change into the "filesystems"
+directory and type "make {fsname}", where {fsname} is a filesystem name --
+"ext2", "reiserfs", "iso9660", or "hfs". The drivers will appear in the
+"filesystems" directory, and also be copied to the "drivers" directory.
+
+To install drivers, you can type "make install" in the "filesystems"
+directory. This copies all the drivers to the
+"/boot/efi/EFI/refind/drivers" directory. Alternatively, you can copy the
+files you want manually.
+
+*CAUTION:* Install drivers for your system's architecture *ONLY*.
+Installing drivers for the wrong architecture causes some systems to hang
+at boot time.
 
 The drivers all rely on filesystem wrapper code created by rEFIt's author,
 Christoph Phisterer. Most of the drivers seem to have passed through
 Oracle's VirtualBox project ((https://www.virtualbox.org) and the Clover
-boot loader project (https://sourceforge.net/projects/cloverefiboot/). Most
-of the drivers are based on code from the Linux kernel.
+boot loader project (https://sourceforge.net/projects/cloverefiboot/),
+which I used as the source for this build.

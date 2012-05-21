@@ -1,5 +1,17 @@
-0.3.6 (?/??/2012):
+0.3.6 (5/20/2012):
 ------------------
+
+- Inclusion of drivers for ISO-9660, HFS+, ReiserFS, and ext2fs. Most of
+  these drivers originated with rEFIt, although the HFS+ driver seems to
+  have come from Oracle's VirtualBox, with some files from Apple. I hadn't
+  included these drivers previously because the build process proved
+  challenging. As it is, they don't work on my Mac Mini, I suspect because
+  the build process with the UDK2010 development kit may not work with the
+  EFI 1.x that Apple uses.
+
+- Addition of support for drivers in the "drivers_{arch}" subdirectory of
+  the main rEFInd binary directory (e.g., "drivers_x64" or "drivers_ia32").
+  Drivers may continue to be placed in the "drivers" subdirectory.
 
 - Added new feature to eject CDs (and other removable media): Press F12 to
   eject all such media. This function works only on some Macs, though (it

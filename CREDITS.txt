@@ -20,8 +20,8 @@ I've incorporated into the current version. Specifically:
   wrapper created by Christoph Phisterer. They then passed through Oracle's
   VirtualBox (https://www.virtualbox.org) and the Clover boot loader
   project (https://sourceforge.net/projects/cloverefiboot/). The
-  filesystem-specific code comes from various sources, including Apple and
-  the Linux kernel.
+  filesystem-specific code comes from various sources, including Apple,
+  the Linux kernel, and Christoph Phisterer.
 
 * I replaced many of the original rEFIt icons with icons taken from the
   Oxygen Icons project, either from the Oxygen Refit package on its page

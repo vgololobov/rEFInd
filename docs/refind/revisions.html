@@ -14,7 +14,7 @@
 <p class="subhead">by Roderick W. Smith, <a
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
-<p>Last Web page update: 5/15/2012</p>
+<p>Last Web page update: 5/20/2012</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -92,6 +92,8 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 <p>The following summarizes changes in rEFInd's public releases:</p>
 
 <ul>
+
+<li><b>0.4.0 (5/20/2012)</b>&mdash;I've bumped up this version number more than usual to reflect the addition of four filesystem drivers (for ext2fs, ReiserFS, HFS+, and ISO-9660) to the rEFInd package. These drivers originate with the original rEFIt, VirtualBox, and Clover boot loader projects. You can learn more on the <a href="drivers.html">drivers page.</a> To facilitate inclusion of drivers on the CD image, rEFInd also now supports reading drivers from architecture-specific subdirectories&mdash;<tt>drivers_x64</tt> and <tt>drivers_ia32</tt> for <i>x</i>86-64 and <i>x</i>86 systems, respectively. This version also adds the ability to eject removable media on some Macs (this won't work on UEFI-based PCs, unfortunately). Finally, this version fixes a problem that could cause GRUB 2 to be unable to read its configuration file in some settings when launched from rEFInd.</li>
 
 <li><b>0.3.5 (5/15/2012)</b>&mdash;This version's biggest new feature is the ability to re-scan for boot loaders after launching the program. This is done by pressing the Esc key, which causes rEFInd to re-read its configuration file, to tell the EFI to reconnect all disks, and to do a fresh scan of all disks for loaders. This is useful if you insert a removable disk after starting the computer, if rEFInd starts before a disk has fully settled, if you make a change to the configuration file, or if you manually load a driver. This version also fixes a minor bug that could cause the scroll-right arrow to be replaced with a left-pointing arrow under some circumstances; and I've removed the scan for a BIOS Boot Partition that I added in 0.3.2, since I'm told it isn't launching correctly. (BIOS-mode GRUB 2 can still be launched on Macs from its boot code in the MBR.)</li>
 
