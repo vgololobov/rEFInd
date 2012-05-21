@@ -10,32 +10,49 @@ following files and subdirectories:
    refind/refind_x64.efi            The main x86-64 rEFInd binary
    refind/refind.conf-sample        A sample configuration file
    refind/icons/                    Subdirectory containing icons
+   refind/drivers_ia32/             Subdirectory containing IA32 drivers
+   refind/drivers_x64/              Subdirectory containing x86-64 drivers
+   install.sh                       Linux/MacOS installation script
    README.txt                       This file
    LICENSE.txt                      The original rEFIt license
    COPYING.txt                      The rEFInd license
+   CREDITS.txt                      Acknowledgments of code sources
    docs/                            Documentation in HTML format
 
-To install the binary package, you must first access your EFI System
-Partition (ESP). You can then place the files from the refind subdirectory
-in a subdirectory of the ESP's EFI directory. You may omit the .efi binary
-for the type of computer you're NOT using, and you may optionally rename
-the .efi file for the binary you are using. If this is an initial
-installation, you should rename refind.conf-sample to refind.conf; but if
-you're replacing an existing installation, you should leave your existing
-refind.conf intact. The end result might include the following files on the
-ESP:
+The easiest way of installing rEFInd is generally to use the install.sh
+script; however, you must be running under Linux or OS X to do this. If
+you're using either of those OSes, simply typing "./install.sh" will
+generally install rEFInd. If you have problems with this method, though,
+you'll have to do a manual installation.
+
+To install the binary package manually, you must first access your EFI
+System Partition (ESP). You can then place the files from the refind
+subdirectory in a subdirectory of the ESP's EFI directory. You may omit the
+.efi binary for the type of computer you're NOT using, and you may
+optionally rename the .efi file for the binary you are using. If this is an
+initial installation, you should rename refind.conf-sample to refind.conf;
+but if you're replacing an existing installation, you should leave your
+existing refind.conf intact. The end result might include the following
+files on the ESP:
 
  EFI/refind/refind_x64.efi
  EFI/refind/refind.conf
  EFI/refind/icons/
 
 Unfortunately, dropping the files in the ESP is not sufficient; as
-described in the docs/installing.html file, you must also tell your EFI
-about rEFInd. Precisely how to do this varies with your OS or, if you
+described in the docs/refind/installing.html file, you must also tell your
+EFI about rEFInd. Precisely how to do this varies with your OS or, if you
 choose to do it through the EFI, your EFI implementation. In some cases you
 may need to rename the EFI/refind directory as EFI/boot, and rename
 refind_x86.efi to bootx64.efi (or refind_ia32.efi to bootia32.efi on 32-bit
 systems). Consult the installing.html file for full details.
+
+If you want to use any of the filesystem drivers, you must install them,
+too. Creating a subdirectory of the rEFInd binary directory called
+drivers_x64 (for x86-64 systems), drivers_ia32 (for x86 systems), or
+drivers (for any architecture) and copying the drivers you want to this
+location should do the trick. When you next launch it, rEFInd should load
+the drivers, giving you access to the relevant filesystems.
 
 Brief Installation Instructions (Source Package)
 ================================================
@@ -43,8 +60,6 @@ Brief Installation Instructions (Source Package)
 rEFInd source code can be obtained from
 https://sourceforge.net/projects/refind/. Consult the BUILDING.txt file in
 the source code package for build instructions. Once  you've built the
-source code, you should duplicate the directory tree described above by
-copying the individual files and the icons directory to the ESP. Note that
-the binary file created by the build process will be called "refind.efi".
-You can use that name or rename it to include your architecture code, as
-you see fit.
+source code, you can use the install.sh script to install the binaries
+you've built. Alternatively, you can duplicate the directory tree described
+above by copying the individual files and the icons directory to the ESP.

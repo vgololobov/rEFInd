@@ -37,3 +37,5 @@ I've incorporated into the current version. Specifically:
 * The Arch Linux icon was created by ~IDRGSKYWALKER on Deviant Art
   (http://idrgskywalker.deviantart.com/art/Arch-Linux-Logo-186211022).
 
+* Dave Vasilevsky (dave@vasilevsky.ca) contributed the disk-ejection
+  code.

@@ -164,8 +164,15 @@ Compiling the EFI Filesystem Drivers
 The EFI filesystem drivers in the filesystems subdirectory require the
 TianoCore UDK2010.SR1 toolkit. The drivers might compile with another
 version of the TianoCore toolkit, but I've not tested them with anything
-else. (My attempts to use GNU-EFI have failed; at best, I've gotten drivers
-that load but hang the computer.)
+else. My attempts to use GNU-EFI have failed; at best, I've gotten drivers
+that load but then hang the computer.
+
+An important caveat: I suspect the TianoCore toolkit is responsible for an
+inability to use the resulting drivers on a 32-bit Mac Mini. My suspicion
+is that it produces binaries that work on UEFI 2.x systems but not on the
+EFI 1.x that the Mac uses. If this suspicion is correct, you may be unable
+to use the rEFInd binaries on at least some Macs, as well as on other older
+EFI 1.x-based computers.
 
 Unfortunately, the TianoCore toolkit is bulky and weird by Linux
 programming standards. I don't know of any Linux distribution packages for
@@ -226,7 +233,7 @@ unclear about others. Here's how I installed the toolkit:
 Once the toolkit is installed, you can build the filesystem drivers. If you
 installed in a location other than the one I've specified, you must edit
 the EDK2BASE variable in the filesystems/Make.common file in the rEFInd
-source package.. You can then type "make" in the "filesystems" directory,
+source package. You can then type "make" in the "filesystems" directory,
 or "make fs" in the main source directory, to build all the drivers. If you
 want to build just one driver, you can change into the "filesystems"
 directory and type "make {fsname}", where {fsname} is a filesystem name --
@@ -244,6 +251,6 @@ at boot time.
 
 The drivers all rely on filesystem wrapper code created by rEFIt's author,
 Christoph Phisterer. Most of the drivers seem to have passed through
-Oracle's VirtualBox project ((https://www.virtualbox.org) and the Clover
+Oracle's VirtualBox project (https://www.virtualbox.org) and the Clover
 boot loader project (https://sourceforge.net/projects/cloverefiboot/),
 which I used as the source for this build.
