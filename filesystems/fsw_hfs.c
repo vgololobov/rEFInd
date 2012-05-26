@@ -215,13 +215,13 @@ HFSGetDescription(CICell ih, char *str, long strMaxLen)
 
 static fsw_status_t fsw_hfs_volume_mount(struct fsw_hfs_volume *vol)
 {
-    fsw_status_t           status, rv;
-    void                  *buffer = NULL;
-    HFSPlusVolumeHeader   *voldesc;
-    fsw_u32                blockno;
-    struct fsw_string      s;
-  HFSMasterDirectoryBlock* mdb;
-  UINTN i;
+    fsw_status_t              status, rv;
+    void                      *buffer = NULL;
+    HFSPlusVolumeHeader       *voldesc;
+    fsw_u32                   blockno;
+    struct fsw_string         s;
+    HFSMasterDirectoryBlock*  mdb;
+//    UINTN                     i;
 
     rv = FSW_UNSUPPORTED;
 
@@ -253,7 +253,7 @@ static fsw_status_t fsw_hfs_volume_mount(struct fsw_hfs_volume *vol)
         {
             if (vol->hfs_kind == 0)
             {
-    //            DPRINT("found HFS+\n");
+//                DPRINT("found HFS+\n");
                 vol->hfs_kind = FSW_HFS_PLUS;
             }
         }
@@ -298,15 +298,9 @@ static fsw_status_t fsw_hfs_volume_mount(struct fsw_hfs_volume *vol)
         fsw_set_blocksize(vol, block_size, block_size);
 
         /* get volume name */
-      for (i = kHFSMaxVolumeNameChars; i > 0; i--)
-        if (mdb->drVN[i-1] != ' ')
-          break;
-      
         s.type = FSW_STRING_TYPE_ISO88591;
-        s.size = s.len = 0;
-      s.data = NULL; //&mdb->drVN; //"HFS+ volume";
-      
-       //fsw_status_t fsw_strdup_coerce(struct fsw_string *dest, int type, struct fsw_string *src)
+        s.size = s.len = kHFSMaxVolumeNameChars;
+        s.data = "HFS+ volume";
         status = fsw_strdup_coerce(&vol->g.label, vol->g.host_string_type, &s);
         CHECK(status);
 
@@ -348,6 +342,13 @@ static fsw_status_t fsw_hfs_volume_mount(struct fsw_hfs_volume *vol)
                 (tree_header.keyCompareType == kHFSBinaryCompare);
         vol->catalog_tree.root_node = be32_to_cpu (tree_header.rootNode);
         vol->catalog_tree.node_size = be16_to_cpu (tree_header.nodeSize);
+
+//         /* get volume name */
+//         s.type = FSW_STRING_TYPE_ISO88591;
+//         s.size = s.len = kHFSMaxVolumeNameChars;
+//         s.data = vol->catalog_tree.file->g.name.data;
+//         status = fsw_strdup_coerce(&vol->g.label, vol->g.host_string_type, &s);
+//         CHECK(status);
 
         /* Read extents overflow file */
         r = fsw_hfs_read_file(vol->extents_tree.file,

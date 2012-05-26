@@ -106,7 +106,7 @@ static VOID AboutrEFInd(VOID)
 {
     if (AboutMenu.EntryCount == 0) {
         AboutMenu.TitleImage = BuiltinIcon(BUILTIN_ICON_FUNC_ABOUT);
-        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.4.0");
+        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.4.1");
         AddMenuInfoLine(&AboutMenu, L"");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2006-2010 Christoph Pfisterer");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2012 Roderick W. Smith");
@@ -156,6 +156,8 @@ static EFI_STATUS StartEFIImageList(IN EFI_DEVICE_PATH **DevicePaths,
     // load the image into memory
     ReturnStatus = Status = EFI_NOT_FOUND;  // in case the list is empty
     for (DevicePathIndex = 0; DevicePaths[DevicePathIndex] != NULL; DevicePathIndex++) {
+//        Print(L"About to try loading '%s' from '%s'\n", ImageTitle, DevicePathToStr(DevicePaths[DevicePathIndex]));
+//        PauseForKey();
         ReturnStatus = Status = refit_call6_wrapper(BS->LoadImage, FALSE, SelfImageHandle, DevicePaths[DevicePathIndex], NULL, 0, &ChildImageHandle);
         if (ReturnStatus != EFI_NOT_FOUND)
             break;
@@ -350,9 +352,6 @@ static REFIT_MENU_ENTRY* CopyMenuEntry(REFIT_MENU_ENTRY *Entry) {
       }
       if (Entry->SubScreen != NULL) {
          NewEntry->SubScreen = CopyMenuScreen(Entry->SubScreen);
-//          NewEntry->SubScreen = AllocatePool(sizeof(REFIT_MENU_SCREEN));
-//          if (NewEntry->SubScreen != NULL)
-//             CopyMem(NewEntry->SubScreen, Entry->SubScreen, sizeof(REFIT_MENU_SCREEN));
       }
    } // if
    return (NewEntry);
@@ -788,7 +787,7 @@ static VOID ScanLoaderDir(IN REFIT_VOLUME *Volume, IN CHAR16 *Path, IN CHAR16 *P
     CHAR16                  FileName[256], *Extension;
     struct LOADER_LIST      *LoaderList = NULL, *NewLoader;
 
-    if (!SelfDirPath || !Path || ((StriCmp(Path, SelfDirPath) == 0) && Volume != SelfVolume) ||
+    if (!SelfDirPath || !Path || ((StriCmp(Path, SelfDirPath) == 0) && Volume->DeviceHandle != SelfVolume->DeviceHandle) ||
         (StriCmp(Path, SelfDirPath) != 0)) {
        // look through contents of the directory
        DirIterOpen(Volume->RootDir, Path, &DirIter);
@@ -1494,10 +1493,28 @@ static VOID ScanForTools(VOID) {
    } // for
 } // static VOID ScanForTools
 
+// Rescan for boot loaders
+VOID RescanAll(VOID) {
+   EG_PIXEL           BGColor;
+
+   BGColor.b = 255;
+   BGColor.g = 175;
+   BGColor.r = 100;
+   BGColor.a = 0;
+   egDisplayMessage(L"Scanning for new boot loaders; please wait....", &BGColor);
+   FreeList((VOID ***) &(MainMenu.Entries), &MainMenu.EntryCount);
+   MainMenu.Entries = NULL;
+   MainMenu.EntryCount = 0;
+   ReadConfig();
+   ConnectAllDriversToAllControllers();
+   ScanForBootloaders();
+   ScanForTools();
+   SetupScreen();
+} // VOID RescanAll()
+
 //
 // main entry point
 //
-
 EFI_STATUS
 EFIAPI
 efi_main (IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable)
@@ -1533,16 +1550,9 @@ efi_main (IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable)
     while (MainLoopRunning) {
         MenuExit = RunMainMenu(&MainMenu, Selection, &ChosenEntry);
 
-        // We don't allow exiting the main menu with the Escape key.
+        // The Escape key triggers a re-scan operation....
         if (MenuExit == MENU_EXIT_ESCAPE) {
-            FreeList((VOID ***) &(MainMenu.Entries), &MainMenu.EntryCount);
-            MainMenu.Entries = NULL;
-            MainMenu.EntryCount = 0;
-            ReadConfig();
-            ConnectAllDriversToAllControllers();
-            ScanForBootloaders();
-            ScanForTools();
-            SetupScreen();
+            RescanAll();
             continue;
         }
 

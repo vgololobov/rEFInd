@@ -157,6 +157,20 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 	from the partition data is harder than extracting the volume's
 	label or counting up the filesystem numbers.</li>
 
+    <li>The default_selection option in refind.conf could be improved by
+	supporting a list of default options, so that if the first item
+	isn't found, rEFInd will try to boot the second one in the list,
+	and so on. This could be handy in case a driver fails to load, or
+	to provide an override in case the user inserts a specific
+	removable disk&mdash;by placing the removable disk's name first in
+	the list, it will take precedence over the normal hard disk
+	default.</li>
+
+    <li>Along the lines of the previous item, the default_selection might
+	be expanded to support some form of specification of disk types, as
+	in a special entry for any optical disk or any external disk, no
+	matter what its name is.</li>
+
     <li>It would be useful to be able to specify paths to boot loaders
 	and/or initial RAM disks relative to the rEFInd directory (or the
 	boot loader's directory, in the case of initrds).</li>
@@ -193,9 +207,9 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 	implementation, and a dismal one at that, so I'm inclined to just
 	let it go.</li>
 
-    <li>The Shutdown option works correctly on Macs, but not on UEFI-based PCs.
-        On such systems, Shutdown reboots the computer. This should be
-        fixed.</li>
+    <li>The Shutdown option works correctly on Macs, but not on UEFI-based
+	PCs. On such systems, Shutdown reboots the computer. This should be
+	fixed.</li>
 
     <li>The media-ejection feature (F12) should be extended to work on
 	UEFI-based PCs and early Macs. At the moment, it relies on an
@@ -206,10 +220,16 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 	ignoring new media or keeping old media that have been ejected.
 	This should be investigated and fixed.</li>
 
-    <li>The re-scan feature renders the user interface immobile until
-        the re-scan is complete. This is usually just a second or two,
-	but it can be longer if an optical disc needs to be spun up.
-	Adding a temporary "scanning media" notice would be helpful.</li>
+    <li>The "scanning for new boot loaders" message that appears during the
+	re-scan feature is primitive. Some sort of dynamic icon would be
+	nice, but perhaps impractical, given the single-tasking nature of
+	EFI.</li>
+
+    <li>On my Mac Mini, launching a shell, returning, and performing a
+	re-scan causes the system to be unable to launch the shell again. I
+	have not observed this behavior on UEFI-based PCs. It seems to be
+	caused by a truncated DevicePath to the shell, which includes the
+	shell's pathname but not the device identifier.</li>
 
     <li>The code is in need of review to search for memory leaks and
 	similar problems.</p>
@@ -289,10 +309,13 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 	the problem is worst with VirtualBox, and the next worst is a
 	system that uses <a
 	href="http://www.rodsbooks.com/bios2uefi/">DUET</a>). Nonetheless,
-	I'd like to track down the cause and fix it.
+	I'd like to track down the cause and fix it.</li>
 
     <li>The driver installation procedure could be improved, perhaps by
-        adding support for drivers to the <tt>install.sh</tt> script.
+        adding support for drivers to the <tt>install.sh</tt> script.</li>
+
+    <li>The HFS+ driver returns a volume label of "HFS+ volume", no matter
+        what the volume's real label is.</li>
 
     </ul></li> <!-- Drivers -->
 

@@ -8,7 +8,10 @@
 
 INSTALL_DIR = /boot/efi/EFI/refind/drivers
 
-all:	ext2 reiserfs iso9660 hfs
+FILESYSTEMS = ext2 reiserfs iso9660 hfs
+TEXTFILES = $(FILESYSTEMS:=*.txt)
+
+all:	$(FILESYSTEMS)
 
 ext2:
 	rm -f fsw_efi.o
@@ -29,7 +32,7 @@ hfs:
 # utility rules
 
 clean:
-	rm -f *~ *.so *.o *.efi *.dll err.txt ext2*.txt hfs*.txt iso9660*.txt reiserfs*.txt
+	rm -f *~ *.bak *.o *.efi *.dll err.txt $(TEXTFILES)
 
 
 install:

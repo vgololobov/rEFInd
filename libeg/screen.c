@@ -39,7 +39,6 @@
 #include "refit_call_wrapper.h"
 
 #include <efiUgaDraw.h>
-/* #include <efiGraphicsOutput.h> */
 #include <efiConsoleControl.h>
 
 // Console defines and variables
@@ -253,7 +252,7 @@ VOID egDrawImage(IN EG_IMAGE *Image, IN UINTN ScreenPosX, IN UINTN ScreenPosY)
         Image->HasAlpha = FALSE;
         egSetPlane(PLPTR(Image, a), 0, Image->Width * Image->Height);
     }
-    
+
     if (GraphicsOutput != NULL) {
         refit_call10_wrapper(GraphicsOutput->Blt, GraphicsOutput, (EFI_GRAPHICS_OUTPUT_BLT_PIXEL *)Image->PixelData, EfiBltBufferToVideo,
                             0, 0, ScreenPosX, ScreenPosY, Image->Width, Image->Height, 0);
@@ -270,16 +269,16 @@ VOID egDrawImageArea(IN EG_IMAGE *Image,
 {
     if (!egHasGraphics)
         return;
-    
+
     egRestrictImageArea(Image, AreaPosX, AreaPosY, &AreaWidth, &AreaHeight);
     if (AreaWidth == 0)
         return;
-    
+
     if (Image->HasAlpha) {
         Image->HasAlpha = FALSE;
         egSetPlane(PLPTR(Image, a), 0, Image->Width * Image->Height);
     }
-    
+
     if (GraphicsOutput != NULL) {
         refit_call10_wrapper(GraphicsOutput->Blt, GraphicsOutput, (EFI_GRAPHICS_OUTPUT_BLT_PIXEL *)Image->PixelData, EfiBltBufferToVideo,
                             AreaPosX, AreaPosY, ScreenPosX, ScreenPosY, AreaWidth, AreaHeight, Image->Width * 4);
@@ -288,6 +287,24 @@ VOID egDrawImageArea(IN EG_IMAGE *Image,
                      AreaPosX, AreaPosY, ScreenPosX, ScreenPosY, AreaWidth, AreaHeight, Image->Width * 4);
     }
 }
+
+// Display a message in the center of the screen, surrounded by a box of the
+// specified color. For the moment, uses graphics calls only. (It still works
+// in text mode on GOP/UEFI systems, but not on UGA/EFI 1.x systems.)
+VOID egDisplayMessage(IN CHAR16 *Text, EG_PIXEL *BGColor) {
+   UINTN BoxWidth, BoxHeight;
+   EG_IMAGE *Box;
+
+   if ((Text != NULL) && (BGColor != NULL)) {
+      BoxWidth = (StrLen(Text) + 2) * FONT_CELL_WIDTH;
+      if (BoxWidth > egScreenWidth)
+         BoxWidth = egScreenWidth;
+      BoxHeight = 2 * FONT_CELL_HEIGHT;
+      Box = egCreateFilledImage(BoxWidth, BoxHeight, FALSE, BGColor);
+      egRenderText(Text, Box, FONT_CELL_WIDTH, FONT_CELL_HEIGHT / 2);
+      egDrawImage(Box, (egScreenWidth - BoxWidth) / 2, (egScreenHeight - BoxHeight) / 2);
+   } // if non-NULL inputs
+} // VOID egDisplayMessage()
 
 //
 // Make a screenshot
@@ -300,17 +317,17 @@ VOID egScreenShot(VOID)
     UINT8           *FileData;
     UINTN           FileDataLength;
     UINTN           Index;
-    
+
     if (!egHasGraphics)
         return;
-    
+
     // allocate a buffer for the whole screen
     Image = egCreateImage(egScreenWidth, egScreenHeight, FALSE);
     if (Image == NULL) {
         Print(L"Error egCreateImage returned NULL\n");
         goto bailout_wait;
     }
-    
+
     // get full screen image
     if (GraphicsOutput != NULL) {
         refit_call10_wrapper(GraphicsOutput->Blt, GraphicsOutput, (EFI_GRAPHICS_OUTPUT_BLT_PIXEL *)Image->PixelData, EfiBltVideoToBltBuffer,
@@ -319,7 +336,7 @@ VOID egScreenShot(VOID)
         refit_call10_wrapper(UgaDraw->Blt, UgaDraw, (EFI_UGA_PIXEL *)Image->PixelData, EfiUgaVideoToBltBuffer,
                      0, 0, 0, 0, Image->Width, Image->Height, 0);
     }
-    
+
     // encode as BMP
     egEncodeBMP(Image, &FileData, &FileDataLength);
     egFreeImage(Image);
@@ -327,7 +344,7 @@ VOID egScreenShot(VOID)
         Print(L"Error egEncodeBMP returned NULL\n");
         goto bailout_wait;
     }
-    
+
     // save to file on the ESP
     Status = egSaveFile(NULL, L"screenshot.bmp", FileData, FileDataLength);
     FreePool(FileData);
@@ -335,9 +352,9 @@ VOID egScreenShot(VOID)
         Print(L"Error egSaveFile: %x\n", Status);
         goto bailout_wait;
     }
-    
+
     return;
-    
+
     // DEBUG: switch to text mode
 bailout_wait:
     egSetGraphicsModeEnabled(FALSE);

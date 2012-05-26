@@ -208,7 +208,7 @@ VOID TerminateScreen(VOID)
     // clear text screen
     refit_call2_wrapper(ST->ConOut->SetAttribute, ST->ConOut, ATTR_BASIC);
     refit_call1_wrapper(ST->ConOut->ClearScreen, ST->ConOut);
-    
+
     // enable cursor
     refit_call2_wrapper(ST->ConOut->EnableCursor, ST->ConOut, TRUE);
 }
@@ -262,9 +262,9 @@ static BOOLEAN ReadAllKeyStrokes(VOID)
 VOID PauseForKey(VOID)
 {
     UINTN index;
-    
+
     Print(L"\n* Hit any key to continue *");
-    
+
     if (ReadAllKeyStrokes()) {  // remove buffered key strokes
         refit_call1_wrapper(BS->Stall, 5000000);     // 5 seconds delay
         ReadAllKeyStrokes();    // empty the buffer again
@@ -385,11 +385,11 @@ VOID BltImage(IN EG_IMAGE *Image, IN UINTN XPos, IN UINTN YPos)
 VOID BltImageAlpha(IN EG_IMAGE *Image, IN UINTN XPos, IN UINTN YPos, IN EG_PIXEL *BackgroundPixel)
 {
     EG_IMAGE *CompImage;
-    
+
     // compose on background
     CompImage = egCreateFilledImage(Image->Width, Image->Height, FALSE, BackgroundPixel);
     egComposeImage(CompImage, Image, 0, 0);
-    
+
     // blit to screen and clean up
     egDrawImage(CompImage, XPos, YPos);
     egFreeImage(CompImage);
@@ -416,7 +416,7 @@ VOID BltImageAlpha(IN EG_IMAGE *Image, IN UINTN XPos, IN UINTN YPos, IN EG_PIXEL
 //         CompHeight = TotalHeight;
 //     OffsetY = (TotalHeight - CompHeight) >> 1;
 //     egComposeImage(CompImage, TopImage, OffsetX, OffsetY);
-//     
+//
 //     // blit to screen and clean up
 //     egDrawImage(CompImage, XPos, YPos);
 //     egFreeImage(CompImage);
@@ -447,7 +447,7 @@ VOID BltImageCompositeBadge(IN EG_IMAGE *BaseImage, IN EG_IMAGE *TopImage, IN EG
          OffsetY = (TotalHeight - CompHeight) >> 1;
          egComposeImage(CompImage, TopImage, OffsetX, OffsetY);
      }
-      
+
      // place the badge image
      if (BadgeImage != NULL && CompImage != NULL && (BadgeImage->Width + 8) < CompWidth && (BadgeImage->Height + 8) < CompHeight) {
          OffsetX += CompWidth  - 8 - BadgeImage->Width;

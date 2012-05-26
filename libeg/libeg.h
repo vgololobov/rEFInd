@@ -118,7 +118,7 @@ VOID egDrawImageArea(IN EG_IMAGE *Image,
                      IN UINTN AreaPosX, IN UINTN AreaPosY,
                      IN UINTN AreaWidth, IN UINTN AreaHeight,
                      IN UINTN ScreenPosX, IN UINTN ScreenPosY);
-
+VOID egDisplayMessage(IN CHAR16 *Text, EG_PIXEL *BGColor);
 VOID egScreenShot(VOID);
 
 

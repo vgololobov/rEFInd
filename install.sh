@@ -17,6 +17,7 @@
 #
 # Revision history:
 #
+# 0.4.1   -- Added check for rEFItBlesser in OS X
 # 0.3.3.1 -- Fixed OS X 10.7 bug; also works as make target
 # 0.3.2.1 -- Check for presence of source files; aborts if not present
 # 0.3.2   -- Initial version
@@ -159,6 +160,19 @@ InstallOnOSX() {
    fi
    if [[ $? != 0 ]] ; then
       Problems=1
+   fi
+   if [[ -f /Library/StartupItems/rEFItBlesser ]] ; then
+      echo
+      echo "/Library/StartupItems/rEFItBlesser file found!"
+      echo "This program is part of rEFIt, and will cause rEFInd to fail to work after"
+      echo -n "its first boot. Do you want to remove rEFItBlesser (Y/N)? "
+      read YesNo
+      if [[ $YesNo == "Y" || $YesNo == "y" ]] ; then
+         echo "Deleting /Library/StartupItems/rEFItBlesser..."
+	 rm /Library/StartupItems/rEFItBlesser
+      else
+         echo "Not deleting rEFItBlesser."
+      fi
    fi
    echo
    echo "WARNING: If you have an Advanced Format disk, *DO NOT* attempt to check the"

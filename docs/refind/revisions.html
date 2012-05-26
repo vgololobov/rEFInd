@@ -14,7 +14,7 @@
 <p class="subhead">by Roderick W. Smith, <a
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
-<p>Last Web page update: 5/20/2012</p>
+<p>Last Web page update: 5/25/2012</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -92,6 +92,8 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 <p>The following summarizes changes in rEFInd's public releases:</p>
 
 <ul>
+
+<li><b>0.4.1 (5/25/2012)</b>&mdash;This version provides a number of small bug fixes and improvements: When re-scanning (initiated by pressing Esc in the main menu), a message that re-scanning is occurring appears on the screen; I've fixed a bug that could cause rEFInd to appear as an option in its own menu after running a shell program and re-scanning; the <tt>install.sh</tt> script now checks for, and optionally deletes, the rEFItBlesser program when run under OS X; and the HFS+ driver now returns a volume label of <tt>HFS+ volume</tt>, rather than nothing at all (unlike other drivers, the HFS+ driver can't yet return the volume's true label).</li>
 
 <li><b>0.4.0 (5/20/2012)</b>&mdash;I've bumped up this version number more than usual to reflect the addition of four filesystem drivers (for ext2fs, ReiserFS, HFS+, and ISO-9660) to the rEFInd package. These drivers originate with the original rEFIt, VirtualBox, and Clover boot loader projects. You can learn more on the <a href="drivers.html">drivers page.</a> To facilitate inclusion of drivers on the CD image, rEFInd also now supports reading drivers from architecture-specific subdirectories&mdash;<tt>drivers_x64</tt> and <tt>drivers_ia32</tt> for <i>x</i>86-64 and <i>x</i>86 systems, respectively. This version also adds the ability to eject removable media on some Macs (this won't work on UEFI-based PCs, unfortunately). Finally, this version fixes a problem that could cause GRUB 2 to be unable to read its configuration file in some settings when launched from rEFInd.</li>
 

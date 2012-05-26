@@ -35,6 +35,7 @@
  */
 
 #include "libegint.h"
+//#include "../refind/screen.h"
 
 #include "egemb_font.h"
 #define FONT_CELL_WIDTH (7)
@@ -61,7 +62,7 @@ VOID egRenderText(IN CHAR16 *Text, IN OUT EG_IMAGE *CompImage, IN UINTN PosX, IN
     UINTN           BufferLineOffset, FontLineOffset;
     UINTN           TextLength;
     UINTN           i, c;
-    
+
     // clip the text
     TextLength = StrLen(Text);
     if (TextLength * FONT_CELL_WIDTH + PosX > CompImage->Width)
@@ -70,7 +71,7 @@ VOID egRenderText(IN CHAR16 *Text, IN OUT EG_IMAGE *CompImage, IN UINTN PosX, IN
     // load the font
     if (FontImage == NULL)
         FontImage = egPrepareEmbeddedImage(&egemb_font, TRUE);
-    
+
     // render it
     BufferPtr = CompImage->PixelData;
     BufferLineOffset = CompImage->Width;

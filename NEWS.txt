@@ -1,7 +1,23 @@
-0.4.1 (?/??/2012):
+0.4.1 (5/25/2012):
 ------------------
 
+- Added "scanning for new boot loaders" message to the re-scan function
+  (hitting Esc at the main menu). It usually flashes up too quickly to
+  be of importance, but if the scan function takes a while because of
+  access to a CD that must be spun up, it should make it clear that the
+  system hasn't hung.
 
+- Modified install.sh script to detect rEFItBlesser on Macs, and if
+  present, to ask the user if it should be removed.
+
+- Cleaned up the Make.common file for the filesystem drivers.
+
+- Changed HFS+ driver to return volume label of "HFS+ volume" rather than
+  an empty label. (The driver doesn't currently read the real volume
+  label.)
+
+- Fixed bug that could cause rEFInd to appear in its own menu after
+  running a shell and then re-scanning for boot loaders.
 
 0.4.0 (5/20/2012):
 ------------------

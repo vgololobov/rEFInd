@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 3/14/2012; last Web page update:
-5/20/2012, referencing rEFInd 0.4.0</p>
+5/25/2012, referencing rEFInd 0.4.1</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -168,6 +168,19 @@ Installation has completed successfully.</pre>
     what's required to boot the system once this is done; see <a
     href="https://sourceforge.net/p/refind/discussion/general/thread/5c7d0195/">this
     forum thread</a> for a discussion of the topic.</li>
+
+<li>If you're replacing rEFIt with rEFInd on a Mac, there's a chance that
+    <tt>install.sh</tt> will warn you about the presence of a file called
+    <tt>/Library/StartupItems/rEFItBlesser</tt> and ask if you want to
+    delete the file. This file is designed to keep rEFIt set as the boot
+    manager by automatically re-blessing it if the default boot manager
+    changes. This is obviously undesirable if you install rEFInd as your
+    primary boot manager, so it's generally best to remove this file. If
+    you prefer to keep your options open, you can answer <tt
+    class="userinput">N</tt> when <tt>install.sh</tt> asks if you want to
+    delete rEFItBlesser, and instead manually copy it elsewhere. If you
+    subsequently decide to go back to using rEFIt as your primary boot
+    manager, you can restore rEFItBlesser to its place.</li>
 
 <li>If you're using OS X and an Advanced Format disk, heed the warning that
     <tt>install.sh</tt> displays and <i><b>do not</b></i> use <tt>bless
