@@ -115,6 +115,18 @@ timeout 20
 #
 #also_scan_dirs boot,EFI/linux/kernels
 
+# Directories that should NOT be scanned for boot loaders. By default,
+# rEFInd doesn't scan its own directory or the EFI/tools directory.
+# You can "blacklist" additional directories with this option, which
+# takes a list of directory names as options. You might do this to
+# keep EFI/boot/bootx64.efi out of the menu if that's a duplicate of
+# another boot loader or to exclude a directory that holds drivers
+# or non-bootloader utilities provided by a hardware manufacturer. If
+# a directory is listed both here and in also_scan_dirs, dont_scan_dirs
+# takes precedence.
+#
+#dont_scan_dirs EFI/boot,EFI/Dell
+
 # Scan for Linux kernels that lack a ".efi" filename extension. This is
 # useful for better integration with Linux distributions that provide
 # kernels with EFI stub loaders but that don't give those kernels filenames

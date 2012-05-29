@@ -1200,7 +1200,8 @@ CHAR16 *FindLastDirName(IN CHAR16 *Path) {
 
 // Returns the directory portion of a pathname. For instance,
 // if FullPath is 'EFI\foo\bar.efi', this function returns the
-// string 'EFI\foo'.
+// string 'EFI\foo'. The calling function is responsible for
+// freeing the returned string's memory.
 CHAR16 *FindPath(IN CHAR16* FullPath) {
    UINTN i, LastBackslash = 0;
    CHAR16 *PathOnly;
@@ -1278,6 +1279,22 @@ CHAR16 *FindCommaDelimited(IN CHAR16 *InString, IN UINTN Index) {
    return (FoundString);
 } // CHAR16 *FindCommaDelimited()
 
+// Returns TRUE if SmallString is an element in the comma-delimited List,
+// FALSE otherwise. Performs comparison case-insensitively (except on
+// buggy EFIs with case-sensitive StriCmp() functions).
+BOOLEAN IsIn(IN CHAR16 *SmallString, IN CHAR16 *List) {
+   UINTN     i = 0;
+   BOOLEAN   Found = FALSE;
+   CHAR16    *OneElement;
+
+   if (SmallString && List) {
+      while (!Found && (OneElement = FindCommaDelimited(List, i++))) {
+         if (StriCmp(OneElement, SmallString) == 0)
+            Found = TRUE;
+      } // while
+   } // if
+   return Found;
+} // BOOLEAN IsIn()
 
 static EFI_GUID AppleRemovableMediaGuid = APPLE_REMOVABLE_MEDIA_PROTOCOL_GUID;
 

@@ -284,7 +284,8 @@ static VOID HandleString(IN CHAR16 **TokenList, IN UINTN TokenCount, OUT CHAR16 
 } // static VOID HandleString()
 
 // Handle a parameter with a series of string arguments, to be added to a comma-delimited
-// list
+// list. Passes each token through the CleanUpPathNameSlashes() function to ensure
+// consistency in subsequent comparisons of filenames.
 static VOID HandleStrings(IN CHAR16 **TokenList, IN UINTN TokenCount, OUT CHAR16 **Target) {
    UINTN i;
 
@@ -292,8 +293,10 @@ static VOID HandleStrings(IN CHAR16 **TokenList, IN UINTN TokenCount, OUT CHAR16
       FreePool(*Target);
       *Target = NULL;
    } // if
-    for (i = 1; i < TokenCount; i++)
-       MergeStrings(Target, TokenList[i], L',');
+   for (i = 1; i < TokenCount; i++) {
+      CleanUpPathNameSlashes(TokenList[i]);
+      MergeStrings(Target, TokenList[i], L',');
+   }
 } // static VOID HandleStrings()
 
 // read config file
@@ -355,6 +358,9 @@ VOID ReadConfig(VOID)
 
         } else if (StriCmp(TokenList[0], L"also_scan_dirs") == 0) {
             HandleStrings(TokenList, TokenCount, &(GlobalConfig.AlsoScan));
+
+        } else if ((StriCmp(TokenList[0], L"don't_scan_dirs") == 0) || (StriCmp(TokenList[0], L"dont_scan_dirs") == 0)) {
+            HandleStrings(TokenList, TokenCount, &(GlobalConfig.DontScan));
 
         } else if (StriCmp(TokenList[0], L"scan_driver_dirs") == 0) {
             HandleStrings(TokenList, TokenCount, &(GlobalConfig.DriverDirs));

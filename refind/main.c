@@ -87,7 +87,7 @@ static REFIT_MENU_ENTRY MenuEntryExit     = { L"Exit rEFInd", TAG_EXIT, 1, 0, 0,
 static REFIT_MENU_SCREEN MainMenu       = { L"Main Menu", NULL, 0, NULL, 0, NULL, 0, L"Automatic boot" };
 static REFIT_MENU_SCREEN AboutMenu      = { L"About", NULL, 0, NULL, 0, NULL, 0, NULL };
 
-REFIT_CONFIG GlobalConfig = { FALSE, FALSE, 0, 0, 20, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+REFIT_CONFIG GlobalConfig = { FALSE, FALSE, 0, 0, 20, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
                               {TAG_SHELL, TAG_ABOUT, TAG_SHUTDOWN, TAG_REBOOT, 0, 0, 0, 0, 0 }};
 
 // Structure used to hold boot loader filenames and time stamps in
@@ -106,7 +106,7 @@ static VOID AboutrEFInd(VOID)
 {
     if (AboutMenu.EntryCount == 0) {
         AboutMenu.TitleImage = BuiltinIcon(BUILTIN_ICON_FUNC_ABOUT);
-        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.4.1");
+        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.4.1.1");
         AddMenuInfoLine(&AboutMenu, L"");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2006-2010 Christoph Pfisterer");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2012 Roderick W. Smith");
@@ -787,8 +787,8 @@ static VOID ScanLoaderDir(IN REFIT_VOLUME *Volume, IN CHAR16 *Path, IN CHAR16 *P
     CHAR16                  FileName[256], *Extension;
     struct LOADER_LIST      *LoaderList = NULL, *NewLoader;
 
-    if (!SelfDirPath || !Path || ((StriCmp(Path, SelfDirPath) == 0) && Volume->DeviceHandle != SelfVolume->DeviceHandle) ||
-        (StriCmp(Path, SelfDirPath) != 0)) {
+    if ((!SelfDirPath || !Path || ((StriCmp(Path, SelfDirPath) == 0) && Volume->DeviceHandle != SelfVolume->DeviceHandle) ||
+        (StriCmp(Path, SelfDirPath) != 0)) && (!IsIn(Path, GlobalConfig.DontScan))) {
        // look through contents of the directory
        DirIterOpen(Volume->RootDir, Path, &DirIter);
        while (DirIterNext(&DirIter, 2, Pattern, &DirEntry)) {
@@ -844,20 +844,22 @@ static VOID ScanEfiFiles(REFIT_VOLUME *Volume) {
 
    if ((Volume->RootDir != NULL) && (Volume->VolName != NULL)) {
       // check for Mac OS X boot loader
-      StrCpy(FileName, MACOSX_LOADER_PATH);
-      if (FileExists(Volume->RootDir, FileName)) {
-         AddLoaderEntry(FileName, L"Mac OS X", Volume);
-      }
+      if (!IsIn(L"System\\Library\\CoreServices", GlobalConfig.DontScan)) {
+         StrCpy(FileName, MACOSX_LOADER_PATH);
+         if (FileExists(Volume->RootDir, FileName)) {
+            AddLoaderEntry(FileName, L"Mac OS X", Volume);
+         }
 
-      // check for XOM
-      StrCpy(FileName, L"System\\Library\\CoreServices\\xom.efi");
-      if (FileExists(Volume->RootDir, FileName)) {
-         AddLoaderEntry(FileName, L"Windows XP (XoM)", Volume);
-      }
+         // check for XOM
+         StrCpy(FileName, L"System\\Library\\CoreServices\\xom.efi");
+         if (FileExists(Volume->RootDir, FileName)) {
+            AddLoaderEntry(FileName, L"Windows XP (XoM)", Volume);
+         }
+      } // if Mac directory not in GlobalConfig.DontScan list
 
       // check for Microsoft boot loader/menu
       StrCpy(FileName, L"EFI\\Microsoft\\Boot\\Bootmgfw.efi");
-      if (FileExists(Volume->RootDir, FileName)) {
+      if (FileExists(Volume->RootDir, FileName) && !IsIn(L"EFI\\Microsoft\\Boot", GlobalConfig.DontScan)) {
          AddLoaderEntry(FileName, L"Microsoft EFI boot", Volume);
       }
 
