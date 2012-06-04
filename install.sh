@@ -17,6 +17,7 @@
 #
 # Revision history:
 #
+# 0.4.2   -- Added notice about BIOS-based OSes & made NVRAM changes in Linux smarter
 # 0.4.1   -- Added check for rEFItBlesser in OS X
 # 0.3.3.1 -- Fixed OS X 10.7 bug; also works as make target
 # 0.3.2.1 -- Check for presence of source files; aborts if not present
@@ -179,6 +180,11 @@ InstallOnOSX() {
    echo "bless status with 'bless --info', since this is known to cause disk corruption"
    echo "on some systems!!"
    echo
+   echo "NOTE: If you want to boot an OS via BIOS emulation (such as Windows or some"
+   echo "Linux installations), you *MUST* edit the $InstallPart/$TargetDir/refind.conf"
+   echo "file's 'scanfor' line to include the 'hdbios' option, and perhaps"
+   echo "'biosexternal' and 'cd', as well."
+   echo
 } # InstallOnOSX()
 
 
@@ -204,6 +210,7 @@ FindLinuxESP() {
 # Uses efibootmgr to add an entry for rEFInd to the EFI's NVRAM.
 # If this fails, sets Problems=1
 AddBootEntry() {
+   InstallIt="0"
    Efibootmgr=`which efibootmgr 2> /dev/null`
    if [[ $Efibootmgr ]] ; then
       modprobe efivars &> /dev/null
@@ -211,17 +218,27 @@ AddBootEntry() {
       PartNum=`grep $InstallPart /etc/mtab | cut -d " " -f 1 | cut -c 9-10`
       EntryFilename=$TargetDir/$Refind
       EfiEntryFilename=`echo ${EntryFilename//\//\\\}`
-      ExistingEntry=`$Efibootmgr -v | grep $Refind`
+      EfiEntryFilename2=`echo ${EfiEntryFilename} | sed s/\\\\\\\\/\\\\\\\\\\\\\\\\/g`
+      ExistingEntry=`$Efibootmgr -v | grep $EfiEntryFilename2`
       if [[ $ExistingEntry ]] ; then
-         echo "An existing EFI boot manager entry for rEFInd seems to exist:"
-         echo
-         echo "$ExistingEntry"
-         echo
-         echo "This entry is NOT being modified, and no new entry is being created."
+         ExistingEntryBootNum=`echo $ExistingEntry | cut -c 5-8`
+         FirstBoot=`$Efibootmgr | grep BootOrder | cut -c 12-15`
+         if [[ $ExistingEntryBootNum != $FirstBoot ]] ; then
+            echo "An existing rEFInd boot entry exists, but isn't set as the default boot"
+            echo "manager. The boot order is being adjusted to make rEFInd the default boot"
+            echo "manager. If this is NOT what you want, you should use efibootmgr to"
+            echo "manually adjust your EFI's boot order."
+            $Efibootmgr -b $ExistingEntryBootNum -B &> /dev/null
+	    InstallIt="1"
+         fi
       else
+         InstallIt="1"
+      fi
+      if [[ $InstallIt == "1" ]] ; then
+         echo "Installing it!"
          $Efibootmgr -c -l $EfiEntryFilename -L rEFInd -d $InstallDisk -p $PartNum &> /dev/null
          if [[ $? != 0 ]] ; then
-	    EfibootmgrProblems=1
+            EfibootmgrProblems=1
             Problems=1
          fi
       fi

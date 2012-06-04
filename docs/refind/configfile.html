@@ -14,8 +14,7 @@
   <p class="subhead">by Roderick W. Smith, <a
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
-<p>Originally written: 3/14/2012; last Web page update:
-5/25/2012, referencing rEFInd 0.4.1</p>
+<p>Originally written: 3/14/2012; last Web page update: 6/3/2012, referencing rEFInd 0.4.2</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -146,7 +145,7 @@ timeout 20
 <tr>
    <td><tt>hideui</tt></td>
    <td><tt>banner</tt>, <tt>label</tt>, <tt>singleuser</tt>, <tt>hwtest</tt>, <tt>arrows</tt>, or <tt>all</tt></td>
-   <td>Removes the specified user interface features. <tt>banner</tt> removes the banner graphic, <tt>label</tt> removes the text description of each tag, <tt>singleuser</tt> removes the single-user option from the Mac OS sub-menu, <tt>hwtest</tt> removes the Mac OS hardware test option, <tt>arrows</tt> removes the arrows to the right or left of the OS tags when rEFInd finds too many OSes to display simultaneously, and <tt>all</tt> removes all of these options. You can specify multiple parameters with this option. The default is to set none of these values.</td>
+   <td>Removes the specified user interface features. <tt>banner</tt> removes the banner graphic, <tt>label</tt> removes the text description of each tag and the countdown timer, <tt>singleuser</tt> removes the single-user option from the Mac OS sub-menu, <tt>hwtest</tt> removes the Mac OS hardware test option, <tt>arrows</tt> removes the arrows to the right or left of the OS tags when rEFInd finds too many OSes to display simultaneously, and <tt>all</tt> removes all of these options. You can specify multiple parameters with this option. The default is to set none of these values.</td>
 </tr>
 <tr>
    <td><tt>icons_dir</tt></td>
@@ -161,12 +160,12 @@ timeout 20
 <tr>
    <td><tt>selection_big</tt></td>
    <td>filename</td>
-   <td>Specifies a graphics file that can be used to highlight the OS selection icons. This should be a 144x144 image in BMP format.</td>
+   <td>Specifies a graphics file that can be used to highlight the OS selection icons. This should be a 144x144 image in BMP format, stored in rEFInd's main directory.</td>
 </tr>
 <tr>
    <td><tt>selection_small</tt></td>
    <td>filename</td>
-   <td>Like <tt>selection_big</tt>, this sets an alternate highlight graphic, but for the smaller utility tags on the second row.</td>
+   <td>Like <tt>selection_big</tt>, this sets an alternate highlight graphic, but for the smaller utility tags on the second row. This should be a 64x64 image in BMP format, stored in rEFInd's main directory.</td>
 </tr>
 <tr>
    <td><tt>showtools</tt></td>
@@ -197,6 +196,11 @@ timeout 20
    <td><tt>also_scan_dirs</tt></td>
    <td>directory path(s)</td>
    <td>Adds the specified directory or directories to the directory list that rEFInd scans for EFI boot loaders when <tt>scanfor</tt> includes the <tt>internal</tt>, <tt>external</tt>, or <tt>optical</tt> options. Directories are specified relative to the filesystem's root directory. If this option is used, it's applied to <i>all</i> the filesystems that rEFInd scans. If a specified directory doesn't exist, rEFInd ignores it (no error results).</td>
+</tr>
+<tr>
+   <td><tt>dont_scan_dirs</tt> or <tt>don't_scan_dirs</tt></td>
+   <td>directory path(s)</td>
+   <td>Adds the specified directory or directories to a directory "blacklist"&mdash;these directories are <i>not</i> scanned for boot loaders. This may be useful to keep duplicate boot loaders out of the menu (say, if <tt>EFI/Boot/bootx64.efi</tt> is a duplicate of another boot loader); or to keep drivers or utilities out of the boot menu, if you've stored them in a subdirectory of <tt>EFI</tt>. This option takes precedence over <tt>also_scan_dirs</tt>; if a directory appears in both lists, it will <i>not</i> be scanned.</td>
 </tr>
 <tr>
    <td><tt>scan_all_linux_kernels</tt></td>

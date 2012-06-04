@@ -1,5 +1,19 @@
-0.4.2 (?/??/2012):
-------------------
+0.4.2 (6/3/2012):
+-----------------
+
+- Added a message to install.sh when run on Macs to remind users to update
+  the "scanfor" line in refind.conf if they need to boot BIOS-based OSes
+  via rEFInd.
+
+- Modified install.sh script to be smarter about running efibootmgr on
+  Linux. It now uses the whole path to the rEFInd binary as a key to
+  determine whether an existing entry exists, rather than just the filename
+  portion. If an entry exists and is the first entry in the boot order, the
+  script does nothing to the NVRAM entries. If such an entry exists but is
+  not the default, the script deletes that entry and creates a new one
+  (implicitly making it the first in the boot order). If such an entry does
+  not exist, the script creates a new one (again, making it the first in
+  the boot order).
 
 - Added "dont_scan_dirs" configuration file option, which adds directories
   to a "blacklist" of directories that are NOT scanned for boot loaders.

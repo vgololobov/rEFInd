@@ -14,7 +14,7 @@
 <p class="subhead">by Roderick W. Smith, <a
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
-<p>Last Web page update: 5/25/2012</p>
+<p>Last Web page update: 6/3/2012</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -92,6 +92,8 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 <p>The following summarizes changes in rEFInd's public releases:</p>
 
 <ul>
+
+<li><b>0.4.2 (6/3/2012)</b>&mdash;I've added a new <tt>dont_scan_dirs</tt> option to the configuration file, enabling creation of a directory-scanning "blacklist." See the <a href="configfile.html">"Configuring the Boot Manager"</a> page for details. This version also makes a couple of changes to the <tt>install.sh</tt> script. The first is a reminder for Mac users to update <tt>refind.conf</tt> if they need to boot BIOS-based OSes. The second change makes the script a bit smarter about updating NVRAM settings when run from Linux; it now attempts to make itself the default boot loader if an entry for rEFInd already exists but isn't the default. I've made this change in response to problem reports from users; apparently some distributions' GRUB update scripts make GRUB the default boot loader under all circumstances, which causes rEFInd to be taken out of the picture after a GRUB update. The previous <tt>install.sh</tt> code wouldn't add rEFInd back to the "top spot" after this happened, but the new code should do the trick. (Although re-installing rEFInd is overkill in this case, it's something many users would logically try.)</li>
 
 <li><b>0.4.1 (5/25/2012)</b>&mdash;This version provides a number of small bug fixes and improvements: When re-scanning (initiated by pressing Esc in the main menu), a message that re-scanning is occurring appears on the screen; I've fixed a bug that could cause rEFInd to appear as an option in its own menu after running a shell program and re-scanning; the <tt>install.sh</tt> script now checks for, and optionally deletes, the rEFItBlesser program when run under OS X; and the HFS+ driver now returns a volume label of <tt>HFS+ volume</tt>, rather than nothing at all (unlike other drivers, the HFS+ driver can't yet return the volume's true label).</li>
 

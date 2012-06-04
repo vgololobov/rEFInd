@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 3/14/2012; last Web page update:
-5/25/2012, referencing rEFInd 0.4.1</p>
+6/3/2012, referencing rEFInd 0.4.2</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -135,6 +135,11 @@ WARNING: If you have an Advanced Format disk, *DO NOT* attempt to check the
 bless status with 'bless --info', since this is known to cause disk corruption
 on some systems!!
 
+NOTE: If you want to boot an OS via BIOS emulation (such as Windows or some
+Linux installations), you *MUST* edit the ///EFI/refind/refind.conf
+file's 'scanfor' line to include the 'hdbios' option, and perhaps
+'biosexternal' and 'cd', as well.
+
 
 Installation has completed successfully.</pre>
 
@@ -186,6 +191,12 @@ Installation has completed successfully.</pre>
     <tt>install.sh</tt> displays and <i><b>do not</b></i> use <tt>bless
     --info</tt> to check your installation status; this combination has
     been reported to cause disk corruption on some Macs!</li>
+
+<li>If you intend to boot BIOS-based OSes, such as most Windows
+    installations and some Linux installations, you <i>must</i> edit the
+    <tt>refind.conf</tt> file, as noted near the end of the installation
+    script's output. (Note that rEFInd can only boot such OSes on Macs at
+    the moment.)</li>
 
 </ul>
 
