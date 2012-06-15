@@ -50,6 +50,9 @@
  */
 
 #include "fsw_efi.h"
+#include "fsw_core.h"
+//#include <EfiCommonLib.h>
+//#include <EfiDriverLib.h>
 
 #define DEBUG_LEVEL 0
 
@@ -77,7 +80,7 @@
 /** Helper macro for stringification. */
 #define FSW_EFI_STRINGIFY(x) #x
 /** Expands to the EFI driver name given the file system type name. */
-#define FSW_EFI_DRIVER_NAME(t) L"rEFInd 0.4.1 " FSW_EFI_STRINGIFY(t) L" File System Driver"
+#define FSW_EFI_DRIVER_NAME(t) L"rEFInd 0.4.2 " FSW_EFI_STRINGIFY(t) L" File System Driver"
 
 // function prototypes
 

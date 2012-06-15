@@ -216,13 +216,22 @@ unclear about others. Here's how I installed the toolkit:
    - TARGET = RELEASE (DEBUG might work, but I've not tested it).
    - TARGET_ARCH = X64 (on x86-64; leave this as IA32 on x86)
    - TOOL_CHAIN_TAG = GCC45 (or other value depending on your GCC version;
-     type "gcc -v" to learn your GCC version number)
+     type "gcc -v" to learn your GCC version number). Note that GCC 4.7
+     doesn't have its own entry, so use GCC46 for GCC 4.7.
    The Makefile for the drivers reads some of these variables from this
    file and uses them when accessing directories, so be sure to type these
-   entries in the case specified. Note that the documentation refers to
-   editing Conf/tools_def.txt in addition to Conf/target.txt, but doesn't
-   specify what to change in Conf/tools_def.txt. I haven't found it
-   necessary to make any changes in Conf/tools_def.txt.
+   entries in the case specified.
+
+10) The documentation refers to editing Conf/tools_def.txt in addition to
+    Conf/target.txt, but doesn't specify what to change in
+    Conf/tools_def.txt. I haven't found it necessary to make any changes in
+    Conf/tools_def.txt EXCEPT when using GCC 4.7 on a Fedora 17 system.
+    (I haven't used GCC 4.7 on other platforms, so this may well be
+    necessary on other systems, too.) With that setup, I found it
+    necessary to change the following line:
+    *_GCC46_X64_ASM_FLAGS            = DEF(GCC46_ASM_FLAGS) -m64 -melf_x86_64
+    to:
+    *_GCC46_X64_ASM_FLAGS            = DEF(GCC46_ASM_FLAGS) -m64
 
 11) Type "make -C /usr/local/UDK2010/MyWorkSpace/BaseTools/Source/C".
     (This step is not documented on the EDK Web page.)

@@ -46,7 +46,9 @@ ALL_EFILIBS     = $(EFILIB)/BaseDebugPrintErrorLevelLib/BaseDebugPrintErrorLevel
 
 INCLUDE_DIRS    = -I $(EDK2BASE)/MdePkg \
                   -I $(EDK2BASE)/MdePkg/Include \
-                  -I $(EDK2BASE)/MdePkg/Include/$(ARCHDIR)
+                  -I $(EDK2BASE)/MdePkg/Include/$(ARCHDIR) \
+		  -I $(EDK2BASE)/EdkCompatibilityPkg/Foundation/Framework/Include \
+		  -I $(EDK2BASE)/EdkCompatibilityPkg/Foundation/Library/Dxe/Include
 
 FSW_NAMES       = fsw_efi fsw_core fsw_efi_lib fsw_lib AutoGen
 OBJS            = $(FSW_NAMES:=.o)

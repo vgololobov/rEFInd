@@ -478,7 +478,6 @@ fsw_u16      fsw_to_lower(fsw_u16 ch);
 
 /*@}*/
 
-
 /**
  * \name Posix Mode Macros
  * These macros can be used globally to test fields and bits in

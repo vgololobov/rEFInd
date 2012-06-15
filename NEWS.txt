@@ -1,3 +1,8 @@
+0.4.3 (?/??/2012):
+------------------
+
+- Filesystem drivers now work on EFI 1.x systems, such as Macs.
+
 0.4.2 (6/3/2012):
 -----------------
 

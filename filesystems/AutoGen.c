@@ -193,7 +193,8 @@ ProcessLibraryDestructorList (
 
 }
 
-const UINT32 _gUefiDriverRevision = 0x00020000U;
+//const UINT32 _gUefiDriverRevision = 0x00020000U;
+const UINT32 _gUefiDriverRevision = 0x00010000U;
 const UINT32 _gDxeRevision = 0x00000000U;
 
 

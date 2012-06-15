@@ -56,10 +56,10 @@
 # define DivU64x32(x,y,z) DivU64x32((x),(y))
 
 
-INTN CompareGuidEdk1(
-  IN EFI_GUID     *Guid1,
-  IN EFI_GUID     *Guid2
-                     );
+// INTN CompareGuidEdk1(
+//   IN EFI_GUID     *Guid1,
+//   IN EFI_GUID     *Guid2
+//                      );
 
 //#define CompareGuid(x, y) CompareGuidEdk1((x),(y))
 # define HOST_EFI 1

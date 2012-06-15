@@ -156,8 +156,6 @@ static EFI_STATUS StartEFIImageList(IN EFI_DEVICE_PATH **DevicePaths,
     // load the image into memory
     ReturnStatus = Status = EFI_NOT_FOUND;  // in case the list is empty
     for (DevicePathIndex = 0; DevicePaths[DevicePathIndex] != NULL; DevicePathIndex++) {
-//        Print(L"About to try loading '%s' from '%s'\n", ImageTitle, DevicePathToStr(DevicePaths[DevicePathIndex]));
-//        PauseForKey();
         ReturnStatus = Status = refit_call6_wrapper(BS->LoadImage, FALSE, SelfImageHandle, DevicePaths[DevicePathIndex], NULL, 0, &ChildImageHandle);
         if (ReturnStatus != EFI_NOT_FOUND)
             break;

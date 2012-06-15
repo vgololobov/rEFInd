@@ -293,20 +293,10 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
     <ul>
 
-    <li>The drivers I've built fail to load on a 32-bit Mac Mini; I get an
-	"incompatible version" error message at an EFI shell, or an error
-	code of 80000019 when rEFInd tries to load them. (These two
-	messages are equivalent.) I suspect the problem is related to the
-	EFI version 1.<i>x</i> used on the Mac, as opposed to UEFI
-	2.<i>x</i> used on PCs. I'm looking into the problem. In the
-	meantime, if you have this problem, I recommend tracking down
-	equivalent drivers from other sources. (See the <a
-	href="drivers.html">drivers page</a> for some pointers.) I'd
-	appreciate <a href="mailto:rodsmith@rodsbooks.com">hearing from
-	you</a> if you have problems along these lines. Please tell me what
-	type of computer you're using, and especially the firmware version
-	data (from rEFInd's "about" screen). This may help me narrow down
-	the cause.</li>
+    <li>The 32-bit versions of the drivers return filesystem labels that
+	omit the first two characters of the name. If the name is shorter
+	than two characters, the driver may return the wrong volume's
+	label. The 64-bit builds seem to be unaffected by this bug.</li>
 
     <li>Drivers for additional filesystems are required. Given the recent
 	shift to ext4fs, that should be the priority; however, other Linux
