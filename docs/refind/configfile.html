@@ -183,6 +183,11 @@ timeout 20
    <td>Sets the video resolution used by rEFInd; takes a width and a height as options. For instance, <tt>resolution 1024 768</tt> sets the resolution to 1024x768. If you set a resolution that doesn't work on a UEFI-based system, rEFInd displays a message along with a list of valid modes. On an system built around EFI 1.<i>x</i> (such as a Mac), setting an incorrect resolution fails silently; you'll get the system's default resolution. You'll also get the system's default resolution if you set either resolution value to <tt>0</tt> or if you pass anything but two numbers. (Note that passing a resolution with an <tt>x</tt>, as in <tt>1024x768</tt>, will be interpreted as <i>one</i> option and so will cause the default resolution to be used.) Also, be aware that it is possible to set a valid resolution for your video card that's invalid for your monitor. If you do this, your monitor will go blank until you've booted an OS that resets the video mode.</td>
 </tr>
 <tr>
+   <td><tt>use_graphics_for</tt></td>
+   <td><tt>osx</tt>, <tt>linux</tt>, <tt>elilo</tt>, <tt>grub</tt>, and <tt>windows</tt></td>
+   <td>Ordinarily, rEFInd clears the screen and displays basic boot information when launching any OS but Mac OS X. For OS X, the default behavior is to clear the screen to the default background color and display no information. You can specify the simpler Mac-style behavior by specifying the OSes or boot loaders you want to work this way with this option. (OSes that should use text-mode displays should be omitted from this list.) Note that this option doesn't affect what the boot loader does; it may display graphics, text, or nothing at all. Thus, the effect of this option is likely to last for just a fraction of a second. On at least one firmware (used on some Gigabyte boards), setting <tt>use_graphics_for linux</tt> is required to avoid a system hang when launching Linux via its EFI stub loader.</td>
+</tr>
+<tr>
    <td><tt>scan_driver_dirs</tt></td>
    <td>directory path(s)</td>
    <td>Scans the specified directory or directories for EFI driver files. If rEFInd discovers <tt>.efi</tt> files in those directories, they're loaded and activated as drivers. This option sets directories to scan <i>in addition to</i> the <tt>drivers</tt> subdirectory of the rEFInd installation directory, which is always scanned, if present.</td>

@@ -38,6 +38,7 @@
 
 // BMP structures
 
+#ifdef __MAKEWITH_GNUEFI
 #pragma pack(1)
 
 typedef struct {
@@ -67,6 +68,7 @@ typedef struct {
 } BMP_IMAGE_HEADER;
 
 #pragma pack()
+#endif
 
 //
 // Load BMP image

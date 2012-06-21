@@ -11,7 +11,7 @@ EFICRT0         = /usr/local/lib
 HOSTARCH        = $(shell uname -m | sed s,i[3456789]86,ia32,)
 ARCH            := $(HOSTARCH)
 OS		= $(shell uname -s)
-CPPFLAGS        = -I$(EFIINC) -I$(EFIINC)/$(ARCH) -I$(EFIINC)/protocol -DCONFIG_$(ARCH)
+CPPFLAGS        = -I$(EFIINC) -I$(EFIINC)/$(ARCH) -I$(EFIINC)/protocol -DCONFIG_$(ARCH) -D__MAKEWITH_GNUEFI
 
 OPTIMFLAGS      = -O2 -fno-strict-aliasing
 DEBUGFLAGS      = -Wall
@@ -109,6 +109,6 @@ endif
 # utility rules
 
 clean:
-	rm -f $(TARGET) *~ *.so $(OBJS) *.efi
+	rm -f $(TARGET) *~ *.so $(OBJS) *.efi *.obj refind_*.txt refind_*.dll *.lib
 
 # EOF

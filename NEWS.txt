@@ -1,7 +1,19 @@
 0.4.3 (?/??/2012):
 ------------------
 
+- rEFInd now supports compilation using the TianoCore UDK2010/EDK2
+  development kit in addition to GNU-EFI.
+
+- Added new "use_graphics_for" option to control which OSes to boot in
+  graphics mode. (This effect lasts for a fraction of a second on most
+  systems, since the boot loader that rEFInd launches is likely to set
+  graphics or text mode itself.)
+
 - Filesystem drivers now work on EFI 1.x systems, such as Macs.
+
+- Removed "linux.conf" as a valid alternative name for "refind_linux.conf"
+  for holding Linux kernel options. The kernel developers plan to use
+  "linux.conf" themselves.
 
 0.4.2 (6/3/2012):
 -----------------

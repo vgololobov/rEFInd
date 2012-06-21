@@ -67,6 +67,24 @@ timeout 20
 #
 #resolution 1024 768
 
+# Launch specified OSes in graphics mode. By default, rEFInd switches
+# to text mode and displays basic pre-launch information when launching
+# all OSes except OS X. Using graphics mode can produce a more seamless
+# transition, but displays no information, which can make matters
+# difficult if you must debug a problem. Also, on at least one known
+# computer, using graphics mode prevents a crash when using the Linux
+# kernel's EFI stub loader. You can specify an empty list to boot all
+# OSes in text mode.
+# Valid options:
+#   osx     - Mac OS X
+#   linux   - A Linux kernel with EFI stub loader
+#   elilo   - The ELILO boot loader
+#   grub    - The GRUB (Legacy or 2) boot loader
+#   windows - Microsoft Windows
+# Default value: osx
+#
+#use_graphics_for osx,linux
+
 # Which non-bootloader tools to show on the tools line, and in what
 # order to display them:
 #  shell     - the EFI shell

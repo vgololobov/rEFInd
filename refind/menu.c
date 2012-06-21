@@ -48,11 +48,11 @@
 #include "menu.h"
 #include "config.h"
 #include "libeg.h"
-#include "refit_call_wrapper.h"
+#include "../include/refit_call_wrapper.h"
 
-#include "egemb_back_selected_small.h"
-#include "egemb_arrow_left.h"
-#include "egemb_arrow_right.h"
+#include "../include/egemb_back_selected_small.h"
+#include "../include/egemb_arrow_left.h"
+#include "../include/egemb_arrow_right.h"
 
 // other menu definitions
 
@@ -371,7 +371,7 @@ static UINTN RunGenericMenu(IN REFIT_MENU_SCREEN *Screen, IN MENU_STYLE_FUNC Sty
     INTN ShortcutEntry;
     BOOLEAN HaveTimeout = FALSE;
     UINTN TimeoutCountdown = 0;
-    CHAR16 *TimeoutMessage;
+    CHAR16 TimeoutMessage[256];
     CHAR16 KeyAsString[2];
     UINTN MenuExit;
 
@@ -400,9 +400,8 @@ static UINTN RunGenericMenu(IN REFIT_MENU_SCREEN *Screen, IN MENU_STYLE_FUNC Sty
         }
 
         if (HaveTimeout) {
-            TimeoutMessage = PoolPrint(L"%s in %d seconds", Screen->TimeoutText, (TimeoutCountdown + 5) / 10);
+            SPrint(TimeoutMessage, 255, L"%s in %d seconds", Screen->TimeoutText, (TimeoutCountdown + 5) / 10);
             StyleFunc(Screen, &State, MENU_FUNCTION_PAINT_TIMEOUT, TimeoutMessage);
-            FreePool(TimeoutMessage);
         }
 
         // read key press (and wait for it if applicable)
@@ -504,7 +503,7 @@ static VOID TextMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, 
     UINTN MenuWidth, ItemWidth, MenuHeight;
     static UINTN MenuPosY;
     static CHAR16 **DisplayStrings;
-    CHAR16 *TimeoutMessage;
+    CHAR16 TimeoutMessage[256];
 
     State->ScrollMode = SCROLL_MODE_TEXT;
     switch (Function) {
@@ -532,8 +531,8 @@ static VOID TextMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, 
             // prepare strings for display
             DisplayStrings = AllocatePool(sizeof(CHAR16 *) * Screen->EntryCount);
             for (i = 0; i <= State->MaxIndex; i++)
-                DisplayStrings[i] = PoolPrint(L" %-.*s ", MenuWidth, Screen->Entries[i]->Title);
-            // TODO: shorten strings that are too long (PoolPrint doesn't do that...)
+                SPrint(DisplayStrings[i], Screen->EntryCount, L" %-.*s ", MenuWidth, Screen->Entries[i]->Title);
+//                DisplayStrings[i] = PoolPrint(L" %-.*s ", MenuWidth, Screen->Entries[i]->Title);
             // TODO: use more elaborate techniques for shortening too long strings (ellipses in the middle)
             // TODO: account for double-width characters
 
@@ -602,9 +601,8 @@ static VOID TextMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, 
                 // paint or update message
                 refit_call2_wrapper(ST->ConOut->SetAttribute, ST->ConOut, ATTR_ERROR);
                 refit_call3_wrapper(ST->ConOut->SetCursorPosition, ST->ConOut, 3, ConHeight - 1);
-                TimeoutMessage = PoolPrint(L"%s  ", ParamText);
+                SPrint(TimeoutMessage, 255, L"%s  ", ParamText);
                 refit_call2_wrapper(ST->ConOut->OutputString, ST->ConOut, TimeoutMessage);
-                FreePool(TimeoutMessage);
             }
             break;
 

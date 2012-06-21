@@ -45,8 +45,12 @@
 #ifndef __GLOBAL_H_
 #define __GLOBAL_H_
 
-#include "efi.h"
-#include "efilib.h"
+#ifdef __MAKEWITH_GNUEFI
+#include <efi.h>
+#include <efilib.h>
+#else
+#include "../include/tiano_includes.h"
+#endif
 
 #include "libeg.h"
 
@@ -67,6 +71,13 @@
 #define NUM_SCAN_OPTIONS 10
 
 #define DEFAULT_ICONS_DIR L"icons"
+
+// OS bit codes; used in GlobalConfig.GraphicsOn
+#define GRAPHICS_FOR_OSX        1
+#define GRAPHICS_FOR_LINUX      2
+#define GRAPHICS_FOR_ELILO      4
+#define GRAPHICS_FOR_GRUB       8
+#define GRAPHICS_FOR_WINDOWS   16
 
 //
 // global definitions
@@ -159,6 +170,7 @@ typedef struct {
    UINTN       Timeout;
    UINTN       HideUIFlags;
    UINTN       MaxTags;     // max. number of OS entries to show simultaneously in graphics mode
+   UINTN       GraphicsFor;
    CHAR16      *BannerFileName;
    CHAR16      *SelectionSmallFileName;
    CHAR16      *SelectionBigFileName;

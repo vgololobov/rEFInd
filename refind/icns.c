@@ -38,6 +38,7 @@
 #include "lib.h"
 #include "icns.h"
 #include "config.h"
+#include "../refind/screen.h"
 
 //
 // well-known icons
@@ -100,8 +101,10 @@ EG_IMAGE * LoadOSIcon(IN CHAR16 *OSIconName OPTIONAL, IN CHAR16 *FallbackIconNam
 
         // try to load it
         Image = egLoadIcon(SelfDir, FileName, 128);
-        if (Image != NULL)
+        if (Image != NULL) {
+            FreePool(CutoutName);
             return Image;
+        }
         FreePool(CutoutName);
     } // while
 

@@ -27,7 +27,7 @@ endif
 
 EDK2BASE = /usr/local/UDK2010/MyWorkSpace
 
-# Below file defines TARGET (RELEASE or DEBUG), TARGET_ARCH (X64 or IA32), and TOOL_CHAIN_TAG (GCC44, GCC45, GCC46, or GCC47)
+# Below file defines TARGET (RELEASE or DEBUG), TARGET_ARCH (X64 or IA32), and TOOL_CHAIN_TAG (GCC44, GCC45, or GCC46)
 include $(EDK2BASE)/Conf/target.txt
 
 EFILIB          = $(EDK2BASE)/Build/MdeModule/$(TARGET)_$(TOOL_CHAIN_TAG)/$(TARGET_ARCH)/MdePkg/Library

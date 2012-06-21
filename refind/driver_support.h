@@ -17,8 +17,13 @@
  *
  */
 
-#include <efi/efi.h>
+#ifdef __MAKEWITH_GNUEFI
+#include <efi.h>
 #include <efi/efilib.h>
+#else
+#include "../include/tiano_includes.h"
+#endif
+#include "global.h"
 
 #ifndef _DRIVER_SUPPORT
 #define _DRIVER_SUPPORT

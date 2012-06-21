@@ -1,0 +1,19 @@
+#
+# libeg/Make.tiano
+# Build control file for libeg components of rEFInd, using TianoCore EDK2
+#
+
+include ../Make.tiano
+
+SOURCE_NAMES     = image load_bmp load_icns screen text
+OBJS             = $(SOURCE_NAMES:=.obj)
+#DRIVERNAME      = ext2
+#BUILDME          = $(DRIVERNAME)_$(FILENAME_CODE).efi
+
+all: $(AR_TARGET)
+
+$(AR_TARGET): $(OBJS)
+	$(AR) -cr $(AR_TARGET).lib $(OBJS)
+
+clean:
+	make clean

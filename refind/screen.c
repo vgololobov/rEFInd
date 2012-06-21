@@ -1,5 +1,5 @@
 /*
- * refit/screen.c
+ * refind/screen.c
  * Screen handling functions
  *
  * Copyright (c) 2006 Christoph Pfisterer
@@ -38,9 +38,9 @@
 #include "screen.h"
 #include "config.h"
 #include "libegint.h"
-#include "refit_call_wrapper.h"
+#include "../include/refit_call_wrapper.h"
 
-#include "egemb_refind_banner.h"
+#include "../include/egemb_refind_banner.h"
 
 // Console defines and variables
 
@@ -177,10 +177,11 @@ VOID BeginExternalScreen(IN BOOLEAN UseGraphicsMode, IN CHAR16 *Title)
         BltClearScreen(FALSE);
     } else {
        egClearScreen(&DarkBackgroundPixel);
+       DrawScreenHeader(Title);
     } // if/else
 
     // show the header
-    DrawScreenHeader(Title);
+//    DrawScreenHeader(Title);
 
     if (!UseGraphicsMode)
         SwitchToText(TRUE);
@@ -302,6 +303,7 @@ VOID EndlessIdleLoop(VOID)
 // Error handling
 //
 
+#ifdef __MAKEWITH_GNUEFI
 BOOLEAN CheckFatalError(IN EFI_STATUS Status, IN CHAR16 *where)
 {
     CHAR16 ErrorName[64];
@@ -335,6 +337,41 @@ BOOLEAN CheckError(IN EFI_STATUS Status, IN CHAR16 *where)
 
     return TRUE;
 }
+#else
+BOOLEAN CheckFatalError(IN EFI_STATUS Status, IN CHAR16 *where)
+{
+//    CHAR16 ErrorName[64];
+
+    if (!EFI_ERROR(Status))
+        return FALSE;
+
+//    StatusToString(ErrorName, Status);
+    gST->ConOut->SetAttribute (gST->ConOut, ATTR_ERROR);
+    Print(L"Fatal Error: %r %s\n", Status, where);
+    gST->ConOut->SetAttribute (gST->ConOut, ATTR_BASIC);
+    haveError = TRUE;
+
+    //gBS->Exit(ImageHandle, ExitStatus, ExitDataSize, ExitData);
+
+    return TRUE;
+}
+
+BOOLEAN CheckError(IN EFI_STATUS Status, IN CHAR16 *where)
+{
+//    CHAR16 ErrorName[64];
+
+    if (!EFI_ERROR(Status))
+        return FALSE;
+
+//    StatusToString(ErrorName, Status);
+    gST->ConOut->SetAttribute (gST->ConOut, ATTR_ERROR);
+    Print(L"Error: %r %s\n", Status, where);
+    gST->ConOut->SetAttribute (gST->ConOut, ATTR_BASIC);
+    haveError = TRUE;
+
+    return TRUE;
+}
+#endif
 
 //
 // Graphics functions
@@ -425,7 +462,7 @@ VOID BltImageAlpha(IN EG_IMAGE *Image, IN UINTN XPos, IN UINTN YPos, IN EG_PIXEL
 
 VOID BltImageCompositeBadge(IN EG_IMAGE *BaseImage, IN EG_IMAGE *TopImage, IN EG_IMAGE *BadgeImage, IN UINTN XPos, IN UINTN YPos)
 {
-     UINTN TotalWidth, TotalHeight, CompWidth = 0, CompHeight = 0, OffsetX = 0, OffsetY = 0;
+     UINTN TotalWidth = 0, TotalHeight = 0, CompWidth = 0, CompHeight = 0, OffsetX = 0, OffsetY = 0;
      EG_IMAGE *CompImage = NULL;
 
      // initialize buffer with base image

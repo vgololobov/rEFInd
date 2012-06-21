@@ -37,9 +37,15 @@
 #include "libegint.h"
 #include "../refind/global.h"
 #include "../refind/lib.h"
-#include "refit_call_wrapper.h"
+#include "../refind/screen.h"
+#include "../include/refit_call_wrapper.h"
 
 #define MAX_FILE_SIZE (1024*1024*1024)
+
+#ifndef __MAKEWITH_GNUEFI
+#define LibLocateHandle gBS->LocateHandleBuffer
+#define LibOpenRoot EfiLibOpenRoot
+#endif
 
 //
 // Basic image handling

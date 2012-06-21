@@ -37,8 +37,12 @@
 #ifndef __SCREEN_H_
 #define __SCREEN_H_
 
+#ifdef __MAKEWITH_GNUEFI
 #include "efi.h"
 #include "efilib.h"
+#else
+#include "../include/tiano_includes.h"
+#endif
 
 #include "libeg.h"
 

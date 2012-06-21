@@ -1,0 +1,47 @@
+#
+# refind/Make.tiano
+# Build control file for rEFInd, using TianoCore EDK2
+# Requires that EfiLib and libeg subdirectories be built before this
+# file is used.
+#
+
+include ../Make.tiano
+
+EFILIB          = $(EDK2BASE)/Build/MdeModule/$(TARGET)_$(TOOL_CHAIN_TAG)/$(TARGET_ARCH)/MdePkg/Library
+ALL_EFILIBS     = $(EFILIB)/BaseDebugPrintErrorLevelLib/BaseDebugPrintErrorLevelLib/OUTPUT/BaseDebugPrintErrorLevelLib.lib \
+                  $(EFILIB)/BasePrintLib/BasePrintLib/OUTPUT/BasePrintLib.lib \
+                  $(EFILIB)/BasePcdLibNull/BasePcdLibNull/OUTPUT/BasePcdLibNull.lib \
+                  $(EFILIB)/UefiDebugLibStdErr/UefiDebugLibStdErr/OUTPUT/UefiDebugLibStdErr.lib \
+                  $(EFILIB)/BaseLib/BaseLib/OUTPUT/BaseLib.lib \
+                  $(EFILIB)/BaseMemoryLib/BaseMemoryLib/OUTPUT/BaseMemoryLib.lib \
+                  $(EFILIB)/UefiBootServicesTableLib/UefiBootServicesTableLib/OUTPUT/UefiBootServicesTableLib.lib \
+                  $(EFILIB)/UefiMemoryAllocationLib/UefiMemoryAllocationLib/OUTPUT/UefiMemoryAllocationLib.lib \
+                  $(EFILIB)/UefiRuntimeServicesTableLib/UefiRuntimeServicesTableLib/OUTPUT/UefiRuntimeServicesTableLib.lib \
+                  $(EFILIB)/UefiDevicePathLib/UefiDevicePathLib/OUTPUT/UefiDevicePathLib.lib \
+                  $(EFILIB)/UefiLib/UefiLib/OUTPUT/UefiLib.lib \
+                  $(EFILIB)/BasePeCoffExtraActionLibNull/BasePeCoffExtraActionLibNull/OUTPUT/PeCoffExtraActionLibNull.lib \
+                  $(EFILIB)/UefiApplicationEntryPoint/UefiApplicationEntryPoint/OUTPUT/UefiApplicationEntryPoint.lib \
+                  $(EFILIB)/DxeServicesLib/DxeServicesLib/OUTPUT/DxeServicesLib.lib \
+                  $(EFILIB)/DxeServicesTableLib/DxeServicesTableLib/OUTPUT/DxeServicesTableLib.lib \
+                  $(EFILIB)/DxeHobLib/DxeHobLib/OUTPUT/DxeHobLib.lib \
+                  $(EFILIB)/BaseIoLibIntrinsic/BaseIoLibIntrinsic/OUTPUT/BaseIoLibIntrinsic.lib \
+                  $(EFILIB)/BasePeCoffLib/BasePeCoffLib/OUTPUT/BasePeCoffLib.lib
+
+
+SOURCE_NAMES     = config driver_support icns lib main menu screen AutoGen
+OBJS             = $(SOURCE_NAMES:=.obj)
+
+all: $(BUILDME)
+
+$(AR_TARGET): $(OBJS)
+	$(AR) -cr $(AR_TARGET).lib $(OBJS)
+
+$(DLL_TARGET)_$(FILENAME_CODE).dll: $(OBJS) ../libeg/libeg.lib ../EfiLib/EfiLib.lib 
+	$(LD) -o $(DLL_TARGET)_$(FILENAME_CODE).dll $(LDFLAGS) --start-group $(ALL_EFILIBS) $(OBJS) ../libeg/libeg.lib ../EfiLib/EfiLib.lib --end-group
+
+$(BUILDME): $(DLL_TARGET)_$(FILENAME_CODE).dll
+	$(OBJCOPY) --strip-unneeded $(DLL_TARGET)_$(FILENAME_CODE).dll
+	$(GENFW) -e UEFI_APPLICATION -o $(BUILDME)_$(FILENAME_CODE).efi $(DLL_TARGET)_$(FILENAME_CODE).dll
+
+clean:
+	make clean

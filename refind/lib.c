@@ -46,8 +46,23 @@
 #include "lib.h"
 #include "icns.h"
 #include "screen.h"
-#include "refit_call_wrapper.h"
-#include "RemovableMedia.h"
+#include "../include/refit_call_wrapper.h"
+#include "../include/RemovableMedia.h"
+
+#ifdef __MAKEWITH_GNUEFI
+#define EfiReallocatePool ReallocatePool
+#else
+#define LibLocateHandle gBS->LocateHandleBuffer
+#define DevicePathProtocol gEfiDevicePathProtocolGuid
+#define BlockIoProtocol gEfiBlockIoProtocolGuid
+#define LibFileSystemInfo EfiLibFileSystemInfo
+#define LibOpenRoot EfiLibOpenRoot
+EFI_DEVICE_PATH EndDevicePath[] = {
+   {END_DEVICE_PATH_TYPE, END_ENTIRE_DEVICE_PATH_SUBTYPE, {END_DEVICE_PATH_LENGTH, 0}}
+};
+
+//#define EndDevicePath DevicePath
+#endif
 
 // variables
 
@@ -128,10 +143,13 @@ EFI_STATUS InitRefitLib(IN EFI_HANDLE ImageHandle)
 
     // find the current directory
     DevicePathAsString = DevicePathToStr(SelfLoadedImage->FilePath);
+//    Print(L"DevicePathAsString is '%s'\n", DevicePathAsString);
     CleanUpPathNameSlashes(DevicePathAsString);
     if (SelfDirPath != NULL)
        FreePool(SelfDirPath);
     SelfDirPath = FindPath(DevicePathAsString);
+//    Print(L"SelfDirPath is '%s'\n", SelfDirPath);
+//    PauseForKey();
     FreePool(DevicePathAsString);
 
     return FinishInitRefitLib();
@@ -224,7 +242,7 @@ VOID AddListElement(IN OUT VOID ***ListPtr, IN OUT UINTN *ElementCount, IN VOID 
         if (*ElementCount == 0)
             *ListPtr = AllocatePool(sizeof(VOID *) * AllocateCount);
         else
-            *ListPtr = ReallocatePool(*ListPtr, sizeof(VOID *) * (*ElementCount), sizeof(VOID *) * AllocateCount);
+            *ListPtr = EfiReallocatePool(*ListPtr, sizeof(VOID *) * (*ElementCount), sizeof(VOID *) * AllocateCount);
     }
     (*ListPtr)[*ElementCount] = NewElement;
     (*ElementCount)++;
@@ -270,8 +288,7 @@ VOID ExtractLegacyLoaderPaths(EFI_DEVICE_PATH **PathList, UINTN MaxPaths, EFI_DE
     MaxPaths--;  // leave space for the terminating NULL pointer
 
     // get all LoadedImage handles
-    Status = LibLocateHandle(ByProtocol, &LoadedImageProtocol, NULL,
-                             &HandleCount, &Handles);
+    Status = LibLocateHandle(ByProtocol, &LoadedImageProtocol, NULL, &HandleCount, &Handles);
     if (CheckError(Status, L"while listing LoadedImage handles")) {
         if (HardcodedPathList) {
             for (HardcodedIndex = 0; HardcodedPathList[HardcodedIndex] && PathCount < MaxPaths; HardcodedIndex++)
@@ -639,7 +656,7 @@ static VOID ScanVolume(IN OUT REFIT_VOLUME *Volume)
     if (FileExists(Volume->RootDir, VOLUME_ICON_NAME)) {
        Volume->VolIconImage = LoadIcns(Volume->RootDir, VOLUME_ICON_NAME, 128);
     }
-}
+} // ScanVolume()
 
 static VOID ScanExtendedPartition(REFIT_VOLUME *WholeDiskVolume, MBR_PARTITION_INFO *MbrEntry)
 {
@@ -683,7 +700,9 @@ static VOID ScanExtendedPartition(REFIT_VOLUME *WholeDiskVolume, MBR_PARTITION_I
                 Volume->DiskKind = WholeDiskVolume->DiskKind;
                 Volume->IsMbrPartition = TRUE;
                 Volume->MbrPartitionIndex = LogicalPartitionIndex++;
-                Volume->VolName = PoolPrint(L"Partition %d", Volume->MbrPartitionIndex + 1);
+                Volume->VolName = AllocateZeroPool(256 * sizeof(UINT16));
+                SPrint(Volume->VolName, 255, L"Partition %d", Volume->MbrPartitionIndex + 1);
+//                Volume->VolName = PoolPrint(L"Partition %d", Volume->MbrPartitionIndex + 1);
                 Volume->BlockIO = WholeDiskVolume->BlockIO;
                 Volume->BlockIOOffset = ExtCurrent + EMbrTable[i].StartLBA;
                 Volume->WholeDiskBlockIO = WholeDiskVolume->BlockIO;
@@ -722,8 +741,9 @@ VOID ScanVolumes(VOID)
     // get all filesystem handles
     Status = LibLocateHandle(ByProtocol, &BlockIoProtocol, NULL, &HandleCount, &Handles);
     // was: &FileSystemProtocol
-    if (Status == EFI_NOT_FOUND)
+    if (Status == EFI_NOT_FOUND) {
         return;  // no filesystems. strange, but true...
+    }
     if (CheckError(Status, L"while listing all file systems"))
         return;
 
@@ -803,8 +823,10 @@ VOID ScanVolumes(VOID)
                 // now we're reasonably sure the association is correct...
                 Volume->IsMbrPartition = TRUE;
                 Volume->MbrPartitionIndex = PartitionIndex;
-                if (Volume->VolName == NULL)
-                    Volume->VolName = PoolPrint(L"Partition %d", PartitionIndex + 1);
+                if (Volume->VolName == NULL) {
+                    Volume->VolName = AllocateZeroPool(sizeof(CHAR16) * 256);
+                    SPrint(Volume->VolName, 255, L"Partition %d", PartitionIndex + 1);
+                }
                 break;
             }
 
@@ -925,7 +947,7 @@ EFI_STATUS DirNextEntry(IN EFI_FILE *Directory, IN OUT EFI_FILE_INFO **DirEntry,
                 Print(L"Reallocating buffer from %d to %d\n", LastBufferSize, BufferSize);
 #endif
             }
-            Buffer = ReallocatePool(Buffer, LastBufferSize, BufferSize);
+            Buffer = EfiReallocatePool(Buffer, LastBufferSize, BufferSize);
             LastBufferSize = BufferSize;
         }
         if (EFI_ERROR(Status)) {
@@ -968,6 +990,60 @@ VOID DirIterOpen(IN EFI_FILE *BaseDir, IN CHAR16 *RelativePath OPTIONAL, OUT REF
     }
     DirIter->LastFileInfo = NULL;
 }
+
+#ifndef __MAKEWITH_GNUEFI
+EFI_UNICODE_COLLATION_PROTOCOL *mUnicodeCollation = NULL;
+
+static EFI_STATUS
+InitializeUnicodeCollationProtocol (VOID)
+{
+   EFI_STATUS  Status;
+
+   if (mUnicodeCollation != NULL) {
+      return EFI_SUCCESS;
+   }
+
+   //
+   // BUGBUG: Proper impelmentation is to locate all Unicode Collation Protocol
+   // instances first and then select one which support English language.
+   // Current implementation just pick the first instance.
+   //
+   Status = gBS->LocateProtocol (
+                          &gEfiUnicodeCollation2ProtocolGuid,
+                          NULL,
+                          (VOID **) &mUnicodeCollation
+                          );
+  if (EFI_ERROR(Status)) {
+    Status = gBS->LocateProtocol (
+                  &gEfiUnicodeCollationProtocolGuid,
+                  NULL,
+                  (VOID **) &mUnicodeCollation
+                  );
+
+  }
+   return Status;
+}
+
+static BOOLEAN
+MetaiMatch (IN CHAR16 *String, IN CHAR16 *Pattern)
+{
+   if (!mUnicodeCollation) {
+      InitializeUnicodeCollationProtocol();
+   }
+   if (mUnicodeCollation)
+      return mUnicodeCollation->MetaiMatch (mUnicodeCollation, String, Pattern);
+   return FALSE; // Shouldn't happen
+}
+
+static VOID StrLwr (IN OUT CHAR16 *Str) {
+   if (!mUnicodeCollation) {
+      InitializeUnicodeCollationProtocol();
+   }
+   if (mUnicodeCollation)
+      mUnicodeCollation->StrLwr (mUnicodeCollation, Str);
+}
+
+#endif
 
 BOOLEAN DirIterNext(IN OUT REFIT_DIR_ITER *DirIter, IN UINTN FilterMode, IN CHAR16 *FilePattern OPTIONAL,
                     OUT EFI_FILE_INFO **DirEntry)
@@ -1322,3 +1398,4 @@ BOOLEAN EjectMedia(VOID) {
    FreePool(Handles);
    return (Ejected > 0);
 } // VOID EjectMedia()
+

@@ -8,21 +8,29 @@ OBJS=$(NAMES:=.o)
 HEADERS=$(NAMES:=.h)
 LOADER_DIR=refind
 FS_DIR=filesystems
-LIB_DIR=libeg
+LIBEG_DIR=libeg
+EFILIB_DIR=EfiLib
 
 # Build rEFInd, including libeg
 all:
-	make -C $(LIB_DIR)
+	make -C $(LIBEG_DIR)
 	make -C $(LOADER_DIR)
 #	make -C $(FS_DIR)
 
 fs:
 	make -C $(FS_DIR)
 
+tiano:
+	make AR_TARGET=EfiLib -C $(EFILIB_DIR) -f Make.tiano
+	make AR_TARGET=libeg -C $(LIBEG_DIR) -f Make.tiano
+	make BUILDME=refind DLL_TARGET=refind -C $(LOADER_DIR) -f Make.tiano
+
 clean:
-	make -C $(LIB_DIR) clean
+	make -C $(LIBEG_DIR) clean
 	make -C $(LOADER_DIR) clean
+	make -C $(EFILIB_DIR) clean -f Make.tiano
 	make -C $(FS_DIR) clean
+	rm -f include/*~
 
 # NOTE TO DISTRIBUTION MAINTAINERS:
 # The "install" target installs the program directly to the ESP

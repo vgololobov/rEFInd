@@ -49,12 +49,12 @@
 #include "menu.h"
 #include "config.h"
 #include "screen.h"
-#include "refit_call_wrapper.h"
+#include "../include/refit_call_wrapper.h"
 
 // constants
 
 #define CONFIG_FILE_NAME         L"refind.conf"
-#define LINUX_OPTIONS_FILENAMES  L"refind_linux.conf,refind-linux.conf,linux.conf"
+#define LINUX_OPTIONS_FILENAMES  L"refind_linux.conf,refind-linux.conf"
 #define MAXCONFIGFILESIZE        (128*1024)
 
 #define ENCODING_ISO8859_1  (0)
@@ -405,6 +405,22 @@ VOID ReadConfig(VOID)
            GlobalConfig.RequestedScreenWidth = Atoi(TokenList[1]);
            GlobalConfig.RequestedScreenHeight = Atoi(TokenList[2]);
 
+        } else if (StriCmp(TokenList[0], L"use_graphics_for") == 0) {
+           GlobalConfig.GraphicsFor = 0;
+           for (i = 1; i < TokenCount; i++) {
+              if (StriCmp(TokenList[i], L"osx")) {
+                 GlobalConfig.GraphicsFor |= GRAPHICS_FOR_OSX;
+              } else if (StriCmp(TokenList[i], L"linux")) {
+                 GlobalConfig.GraphicsFor |= GRAPHICS_FOR_LINUX;
+              } else if (StriCmp(TokenList[i], L"elilo")) {
+                 GlobalConfig.GraphicsFor |= GRAPHICS_FOR_ELILO;
+              } else if (StriCmp(TokenList[i], L"grub")) {
+                 GlobalConfig.GraphicsFor |= GRAPHICS_FOR_GRUB;
+              } else if (StriCmp(TokenList[i], L"windows")) {
+                 GlobalConfig.GraphicsFor |= GRAPHICS_FOR_WINDOWS;
+              }
+           } // for (graphics_on tokens)
+
         } else if (StriCmp(TokenList[0], L"scan_all_linux_kernels") == 0) {
            GlobalConfig.ScanAllLinux = TRUE;
 
@@ -433,11 +449,13 @@ static VOID AddSubmenu(LOADER_ENTRY *Entry, REFIT_FILE *File, REFIT_VOLUME *Volu
    SubEntry->me.Title        = StrDuplicate(Title);
 
    while (((TokenCount = ReadTokenLine(File, &TokenList)) > 0) && (StriCmp(TokenList[0], L"}") != 0)) {
+
       if ((StriCmp(TokenList[0], L"loader") == 0) && (TokenCount > 1)) { // set the boot loader filename
          if (SubEntry->LoaderPath != NULL)
             FreePool(SubEntry->LoaderPath);
          SubEntry->LoaderPath = StrDuplicate(TokenList[1]);
          SubEntry->DevicePath = FileDevicePath(Volume->DeviceHandle, SubEntry->LoaderPath);
+
       } else if (StriCmp(TokenList[0], L"initrd") == 0) {
          if (SubEntry->InitrdPath != NULL)
             FreePool(SubEntry->InitrdPath);
@@ -445,6 +463,7 @@ static VOID AddSubmenu(LOADER_ENTRY *Entry, REFIT_FILE *File, REFIT_VOLUME *Volu
          if (TokenCount > 1) {
             SubEntry->InitrdPath = StrDuplicate(TokenList[1]);
          }
+
       } else if (StriCmp(TokenList[0], L"options") == 0) {
          if (SubEntry->LoadOptions != NULL)
             FreePool(SubEntry->LoadOptions);
@@ -452,15 +471,20 @@ static VOID AddSubmenu(LOADER_ENTRY *Entry, REFIT_FILE *File, REFIT_VOLUME *Volu
          if (TokenCount > 1) {
             SubEntry->LoadOptions = StrDuplicate(TokenList[1]);
          } // if/else
+
       } else if ((StriCmp(TokenList[0], L"add_options") == 0) && (TokenCount > 1)) {
          MergeStrings(&SubEntry->LoadOptions, TokenList[1], L' ');
+
       } else if ((StriCmp(TokenList[0], L"graphics") == 0) && (TokenCount > 1)) {
          SubEntry->UseGraphicsMode = (StriCmp(TokenList[1], L"on") == 0);
+
       } else if (StriCmp(TokenList[0], L"disabled") == 0) {
          SubEntry->Enabled = FALSE;
       } // ief/elseif
+
       FreeTokenLine(&TokenList, &TokenCount);
    } // while()
+
    if (SubEntry->InitrdPath != NULL) {
       MergeStrings(&SubEntry->LoadOptions, L"initrd=", L' ');
       MergeStrings(&SubEntry->LoadOptions, SubEntry->InitrdPath, 0);
@@ -522,7 +546,8 @@ static LOADER_ENTRY * AddStanzaEntries(REFIT_FILE *File, REFIT_VOLUME *Volume, C
       return NULL;
 
    Entry->Title           = StrDuplicate(Title);
-   Entry->me.Title        = PoolPrint(L"Boot %s from %s", (Title != NULL) ? Title : L"Unknown", CurrentVolume->VolName);
+   Entry->me.Title        = AllocateZeroPool(256 * sizeof(CHAR16));
+   SPrint(Entry->me.Title, 255, L"Boot %s from %s", (Title != NULL) ? Title : L"Unknown", CurrentVolume->VolName);
    Entry->me.Row          = 0;
    Entry->me.BadgeImage   = CurrentVolume->VolBadgeImage;
    Entry->VolName         = CurrentVolume->VolName;
@@ -540,7 +565,8 @@ static LOADER_ENTRY * AddStanzaEntries(REFIT_FILE *File, REFIT_VOLUME *Volume, C
       } else if ((StriCmp(TokenList[0], L"volume") == 0) && (TokenCount > 1)) {
          if (FindVolume(&CurrentVolume, TokenList[1])) {
             FreePool(Entry->me.Title);
-            Entry->me.Title        = PoolPrint(L"Boot %s from %s", (Title != NULL) ? Title : L"Unknown", CurrentVolume->VolName);
+            Entry->me.Title        = AllocateZeroPool(256 * sizeof(CHAR16));
+            SPrint(Entry->me.Title, 255, L"Boot %s from %s", (Title != NULL) ? Title : L"Unknown", CurrentVolume->VolName);
             Entry->me.BadgeImage   = CurrentVolume->VolBadgeImage;
             Entry->VolName         = CurrentVolume->VolName;
          } // if match found

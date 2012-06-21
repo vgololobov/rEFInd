@@ -36,10 +36,14 @@
 
 #include "libegint.h"
 #include "../refind/screen.h"
-#include "refit_call_wrapper.h"
+#include "../include/refit_call_wrapper.h"
 
 #include <efiUgaDraw.h>
 #include <efiConsoleControl.h>
+
+#ifndef __MAKEWITH_GNUEFI
+#define LibLocateProtocol EfiLibLocateProtocol
+#endif
 
 // Console defines and variables
 
@@ -168,13 +172,17 @@ VOID egGetScreenSize(OUT UINTN *ScreenWidth, OUT UINTN *ScreenHeight)
 
 CHAR16 * egScreenDescription(VOID)
 {
+    CHAR16 *Temp;
+
     if (egHasGraphics) {
         if (GraphicsOutput != NULL) {
-            return PoolPrint(L"Graphics Output (UEFI), %dx%d",
-                             egScreenWidth, egScreenHeight);
+            Temp = AllocateZeroPool(256 * sizeof(CHAR16));
+            SPrint(Temp, 255, L"Graphics Output (UEFI), %dx%d", egScreenWidth, egScreenHeight);
+            return Temp;
         } else if (UgaDraw != NULL) {
-            return PoolPrint(L"UGA Draw (EFI 1.10), %dx%d",
-                             egScreenWidth, egScreenHeight);
+            Temp = AllocateZeroPool(256 * sizeof(CHAR16));
+            SPrint(Temp, 255, L"UGA Draw (EFI 1.10), %dx%d", egScreenWidth, egScreenHeight);
+            return Temp;
         } else {
             return L"Internal Error";
         }

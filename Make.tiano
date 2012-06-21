@@ -1,0 +1,64 @@
+#
+# Make.tiano
+# Common Makefile options for rEFInd using TianoCore EDK2
+#
+
+HOSTARCH        = $(shell uname -m | sed s,i[3456789]86,ia32,)
+ARCH            := $(HOSTARCH)
+
+# Note: IA64 options are untested; taken from Debian's rEFIt package.
+ifeq ($(ARCH),ia64)
+  # EFI specs allows only lower floating point partition to be used
+  ARCH_C_CFLAGS  = -frename-registers -mfixed-range=f32-f127
+  # TODO: Add ARCHDIR and FILENAME_CODE as appropriate
+endif
+
+ifeq ($(ARCH),ia32)
+  ARCH_C_FLAGS = -m32 -DEFI32
+  ARCHDIR = Ia32
+  FILENAME_CODE = ia32
+endif
+
+ifeq ($(ARCH),x86_64)
+  ARCH_C_FLAGS = "-DEFIAPI=__attribute__((ms_abi))" -DEFIX64 -mcmodel=large -m64
+  ARCHDIR = X64
+  FILENAME_CODE = x64
+endif
+
+EDK2BASE = /usr/local/UDK2010/MyWorkSpace
+
+# Below file defines TARGET (RELEASE or DEBUG), TARGET_ARCH (X64 or IA32), and TOOL_CHAIN_TAG (GCC44, GCC45, GCC46, or GCC47)
+include $(EDK2BASE)/Conf/target.txt
+
+INCLUDE_DIRS    = -I $(EDK2BASE)/MdePkg \
+                  -I $(EDK2BASE)/MdePkg/Include \
+                  -I $(EDK2BASE)/MdeModulePkg/Include \
+                  -I $(EDK2BASE)/IntelFrameworkPkg/Include \
+                  -I $(EDK2BASE)/MdePkg/Include/$(ARCHDIR) \
+		  -I .. \
+		  -I ../refind \
+		  -I ../libeg
+
+OPTIMFLAGS      = -fno-strict-aliasing -mno-red-zone -Wno-address -Os
+DEBUGFLAGS      = -Wall -Wno-missing-braces -Wno-array-bounds -ffunction-sections -fdata-sections
+CFLAGS          = $(OPTIMFLAGS) -g -fshort-wchar -fno-stack-protector $(DEBUGFLAGS) -c
+
+prefix          = /usr/bin/
+CC              = $(prefix)gcc
+AS              = $(prefix)as
+LD              = $(prefix)ld
+AR              = $(prefix)ar
+RANLIB          = $(prefix)ranlib
+OBJCOPY         = $(prefix)objcopy
+GENFW           = $(EDK2BASE)/BaseTools/Source/C/bin/GenFw
+
+
+LDSCRIPT = $(EDK2BASE)/BaseTools/Scripts/gcc4.4-ld-script
+
+LDFLAGS         = -nostdlib -n -q --gc-sections --script=$(EDK2BASE)/BaseTools/Scripts/gcc4.4-ld-script \
+                  --entry efi_main -u efi_main
+
+%.obj: %.c
+	$(CC) $(ARCH_C_FLAGS) $(CFLAGS) $(INCLUDE_DIRS) -DNO_BUILTIN_VA_FUNCS -D__MAKEWITH_TIANO -c $< -o $@
+
+

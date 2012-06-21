@@ -46,7 +46,11 @@
 #ifndef __CONFIG_H_
 #define __CONFIG_H_
 
+#ifdef __MAKEWITH_GNUEFI
 #include "efi.h"
+#else
+#include "../include/tiano_includes.h"
+#endif
 #include "global.h"
 
 //
