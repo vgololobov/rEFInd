@@ -1,7 +1,7 @@
 # meta-Makefile for rEFInd filesystem drivers
 #
-# Most of the functionality is in Make.common; this Makefile merely
-# deletes critical temporary files and calls Make.common with the
+# Most of the functionality is in Make.tiano; this Makefile merely
+# deletes critical temporary files and calls Make.tiano with the
 # name of the driver to be built. This is done because of a dependency
 # in the fsw_efi.c file on the filesystem type; this file must be
 # recompiled for each new filesystem built.
@@ -15,19 +15,19 @@ all:	$(FILESYSTEMS)
 
 ext2:
 	rm -f fsw_efi.o
-	make DRIVERNAME=ext2 -f Make.common
+	make DRIVERNAME=ext2 -f Make.tiano
 
 reiserfs:
 	rm -f fsw_efi.o
-	make DRIVERNAME=reiserfs -f Make.common
+	make DRIVERNAME=reiserfs -f Make.tiano
 
 iso9660:
 	rm -f fsw_efi.o
-	make DRIVERNAME=iso9660 -f Make.common
+	make DRIVERNAME=iso9660 -f Make.tiano
 
 hfs:
 	rm -f fsw_efi.o
-	make DRIVERNAME=hfs -f Make.common
+	make DRIVERNAME=hfs -f Make.tiano
 
 # utility rules
 

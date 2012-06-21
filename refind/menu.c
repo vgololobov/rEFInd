@@ -530,11 +530,12 @@ static VOID TextMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, 
 
             // prepare strings for display
             DisplayStrings = AllocatePool(sizeof(CHAR16 *) * Screen->EntryCount);
-            for (i = 0; i <= State->MaxIndex; i++)
-                SPrint(DisplayStrings[i], Screen->EntryCount, L" %-.*s ", MenuWidth, Screen->Entries[i]->Title);
-//                DisplayStrings[i] = PoolPrint(L" %-.*s ", MenuWidth, Screen->Entries[i]->Title);
+            for (i = 0; i <= State->MaxIndex; i++) {
+                DisplayStrings[i] = AllocateZeroPool(256 * sizeof(CHAR16));
+                SPrint(DisplayStrings[i], 255, L" %-.*s ", MenuWidth, Screen->Entries[i]->Title);
             // TODO: use more elaborate techniques for shortening too long strings (ellipses in the middle)
             // TODO: account for double-width characters
+            } // for
 
             // initial painting
             BeginTextScreen(Screen->Title);

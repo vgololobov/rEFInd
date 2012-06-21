@@ -58,14 +58,14 @@ LibScanHandleDatabase (
   UINTN                               OpenInfoIndex;
   UINTN                               ChildIndex;
   BOOLEAN                             DriverBindingHandleIndexValid;
-  BOOLEAN                             ControllerHandleIndexValid;
+//  BOOLEAN                             ControllerHandleIndexValid;
 
   DriverBindingHandleIndexValid = FALSE;
   if (DriverBindingHandleIndex != NULL) {
     *DriverBindingHandleIndex = 0xffffffff;
   }
 
-  ControllerHandleIndexValid = FALSE;
+//  ControllerHandleIndexValid = FALSE;
   if (ControllerHandleIndex != NULL) {
     *ControllerHandleIndex = 0xffffffff;
   }
@@ -110,7 +110,7 @@ LibScanHandleDatabase (
 
     if (ControllerHandle != NULL && ControllerHandleIndex != NULL && (*HandleBuffer)[HandleIndex] == ControllerHandle) {
       *ControllerHandleIndex      = (UINT32) HandleIndex;
-      ControllerHandleIndexValid  = TRUE;
+//      ControllerHandleIndexValid  = TRUE;
     }
 
   }

@@ -14,7 +14,7 @@
 <p class="subhead">by Roderick W. Smith, <a
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
-<p>Last Web page update: 6/3/2012</p>
+<p>Last Web page update: 6/21/2012</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -92,6 +92,8 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 <p>The following summarizes changes in rEFInd's public releases:</p>
 
 <ul>
+
+<li><b>0.4.3 (6/21/2012)</b>&mdash;The major user-visible change to this version is the addition of the <tt>use_graphics_for</tt> option, which enables you to specify the OSes that rEFInd launches in graphics mode vs. text mode. This effect is tiny on most systems, but can be important on some, as noted on the <a href="configfile.html">"Configuring the Boot Manager"</a> page. There's also a change to the way graphics-mode boots are handled, to make for a slightly smoother visual transition. This version also fixes the incompatibility between the drivers and the firmware used by Macs (and probably other EFI 1.x systems). I've removed <tt>linux.conf</tt> as a valid alternative name for the <tt>refind_linux.conf</tt> file, so if you're still using the old name, now is the time to rename it! The biggest change is behind the scenes, though: I've added support for compiling rEFInd using the TianoCore EDK2, as well as the GNU-EFI toolkit that I've used up to this point. I have no intention of removing GNU-EFI support, but there's a chance that the TianoCore toolkit will help in implementing some future features or in debugging some problems. You can download either version from the <a href="http://www.rodsbooks.com/refind/getting.html">downloads page.</a></li>
 
 <li><b>0.4.2 (6/3/2012)</b>&mdash;I've added a new <tt>dont_scan_dirs</tt> option to the configuration file, enabling creation of a directory-scanning "blacklist." See the <a href="configfile.html">"Configuring the Boot Manager"</a> page for details. This version also makes a couple of changes to the <tt>install.sh</tt> script. The first is a reminder for Mac users to update <tt>refind.conf</tt> if they need to boot BIOS-based OSes. The second change makes the script a bit smarter about updating NVRAM settings when run from Linux; it now attempts to make itself the default boot loader if an entry for rEFInd already exists but isn't the default. I've made this change in response to problem reports from users; apparently some distributions' GRUB update scripts make GRUB the default boot loader under all circumstances, which causes rEFInd to be taken out of the picture after a GRUB update. The previous <tt>install.sh</tt> code wouldn't add rEFInd back to the "top spot" after this happened, but the new code should do the trick. (Although re-installing rEFInd is overkill in this case, it's something many users would logically try.)</li>
 

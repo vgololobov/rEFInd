@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 3/14/2012; last Web page update:
-6/7/2012, referencing rEFInd 0.4.2</p>
+6/21/2012, referencing rEFInd 0.4.3</p>
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
 
@@ -97,7 +97,7 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <ul>
 
-<li><b><a href="http://sourceforge.net/projects/refind/files/0.4.2/refind-src-0.4.2.zip/download">A
+<li><b><a href="http://sourceforge.net/projects/refind/files/0.4.3/refind-src-0.4.3.zip/download">A
     source code zip file</a></b>&mdash;This is useful if you want to
     compile the software locally. Note that I use Linux with the <a
     href="http://sourceforge.net/projects/gnu-efi">GNU-EFI</a> development
@@ -108,19 +108,30 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
     possible, but I've not attempted it.</li>
 
 <li><b><a
-    href="http://sourceforge.net/projects/refind/files/0.4.2/refind-bin-0.4.2.zip/download">A
-    binary zip file</a></b>&mdash;Download this if you want to install
-    rEFInd and/or its filesystem drivers on an <i>x</i>86 or <i>x</i>86-64
-    computer and have no need to test rEFInd first by booting it on an
-    optical disc. This zip file package includes both <i>x</i>86 (aka IA32)
-    and <i>x</i>86-64 (aka <i>x</i>64, AMD64, or EM64T) versions of rEFInd.
-    Which you install depends on your architecture, as described on the <a
-    href="installing.html">Installing rEFInd</a> page.</li>
+    href="http://sourceforge.net/projects/refind/files/0.4.3/refind-bin-0.4.3.zip/download">A
+    binary zip file (built with GNU-EFI)</a></b>&mdash;Download this if you
+    want to install rEFInd and/or its filesystem drivers on an <i>x</i>86
+    or <i>x</i>86-64 computer and have no need to test rEFInd first by
+    booting it on an optical disc. This zip file package includes both
+    <i>x</i>86 (aka IA32) and <i>x</i>86-64 (aka <i>x</i>64, AMD64, or
+    EM64T) versions of rEFInd. Which you install depends on your
+    architecture, as described on the <a href="installing.html">Installing
+    rEFInd</a> page.</li>
 
 <li><b><a
-    href="http://sourceforge.net/projects/refind/files/0.4.2/refind-cd-0.4.2.zip/download">A
+    href="http://sourceforge.net/projects/refind/files/0.4.3/refind-bin-tiano-0.4.3.zip/download">A
+    binary zip file (built with TianoCore EDK2)</a></b>&mdash;This package
+    is just like the preceding one, except that it was built using the
+    TianoCore EFI Development Kit 2 (EDK2) rather than the GNU-EFI that was
+    used to build the other binary. In theory, the two should work
+    identically. In practice, they might not. I originally used GNU-EFI to
+    develop rEFInd, so it's the safer version; however, I would appreciate
+    feedback about the TianoCore EDK2 build.</li>
+
+<li><b><a
+    href="http://sourceforge.net/projects/refind/files/0.4.3/refind-cd-0.4.3.zip/download">A
     CD-R image file</a></b>&mdash;This download contains the same files as
-    the zip file, but you can burn it to a CD-R to test rEFInd (and its
+    the GNU-EFI zip file, but you can burn it to a CD-R to test rEFInd (and its
     filesystem drivers) without installing it first. (It boots on UEFI PCs,
     but fails on some older Macs.) If you like it, you can then copy the
     files from the CD-R to your hard disk. The files are named in such a
