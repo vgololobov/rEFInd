@@ -408,15 +408,15 @@ VOID ReadConfig(VOID)
         } else if (StriCmp(TokenList[0], L"use_graphics_for") == 0) {
            GlobalConfig.GraphicsFor = 0;
            for (i = 1; i < TokenCount; i++) {
-              if (StriCmp(TokenList[i], L"osx")) {
+              if (StriCmp(TokenList[i], L"osx") == 0) {
                  GlobalConfig.GraphicsFor |= GRAPHICS_FOR_OSX;
-              } else if (StriCmp(TokenList[i], L"linux")) {
+              } else if (StriCmp(TokenList[i], L"linux") == 0) {
                  GlobalConfig.GraphicsFor |= GRAPHICS_FOR_LINUX;
-              } else if (StriCmp(TokenList[i], L"elilo")) {
+              } else if (StriCmp(TokenList[i], L"elilo") == 0) {
                  GlobalConfig.GraphicsFor |= GRAPHICS_FOR_ELILO;
-              } else if (StriCmp(TokenList[i], L"grub")) {
+              } else if (StriCmp(TokenList[i], L"grub") == 0) {
                  GlobalConfig.GraphicsFor |= GRAPHICS_FOR_GRUB;
-              } else if (StriCmp(TokenList[i], L"windows")) {
+              } else if (StriCmp(TokenList[i], L"windows") == 0) {
                  GlobalConfig.GraphicsFor |= GRAPHICS_FOR_WINDOWS;
               }
            } // for (graphics_on tokens)
