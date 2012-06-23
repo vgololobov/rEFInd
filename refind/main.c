@@ -110,7 +110,7 @@ static VOID AboutrEFInd(VOID)
 
     if (AboutMenu.EntryCount == 0) {
         AboutMenu.TitleImage = BuiltinIcon(BUILTIN_ICON_FUNC_ABOUT);
-        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.4.3.1");
+        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.4.3.2");
         AddMenuInfoLine(&AboutMenu, L"");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2006-2010 Christoph Pfisterer");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2012 Roderick W. Smith");
@@ -118,7 +118,7 @@ static VOID AboutrEFInd(VOID)
         AddMenuInfoLine(&AboutMenu, L"Distributed under the terms of the GNU GPLv3 license");
         AddMenuInfoLine(&AboutMenu, L"");
         AddMenuInfoLine(&AboutMenu, L"Running on:");
-        TempStr = AllocateZeroPool(255 * sizeof(CHAR16));
+        TempStr = AllocateZeroPool(256 * sizeof(CHAR16));
         SPrint(TempStr, 255, L" EFI Revision %d.%02d", ST->Hdr.Revision >> 16, ST->Hdr.Revision & ((1 << 16) - 1));
         AddMenuInfoLine(&AboutMenu, TempStr);
 #if defined(EFI32)
@@ -128,11 +128,11 @@ static VOID AboutrEFInd(VOID)
 #else
         AddMenuInfoLine(&AboutMenu, L" Platform: unknown");
 #endif
-        TempStr = AllocateZeroPool(255 * sizeof(CHAR16));
+        TempStr = AllocateZeroPool(256 * sizeof(CHAR16));
         SPrint(TempStr, 255, L" Firmware: %s %d.%02d",
                ST->FirmwareVendor, ST->FirmwareRevision >> 16, ST->FirmwareRevision & ((1 << 16) - 1));
         AddMenuInfoLine(&AboutMenu, TempStr);
-        TempStr = AllocateZeroPool(255 * sizeof(CHAR16));
+        TempStr = AllocateZeroPool(256 * sizeof(CHAR16));
         SPrint(TempStr, 255, L" Screen Output: %s", egScreenDescription());
         AddMenuInfoLine(&AboutMenu, TempStr);
         AddMenuInfoLine(&AboutMenu, L"");
@@ -411,7 +411,7 @@ LOADER_ENTRY *InitializeLoaderEntry(IN LOADER_ENTRY *Entry) {
 // Returns a pointer to the new subscreen data structure, or NULL if there
 // were problems allocating memory.
 REFIT_MENU_SCREEN *InitializeSubScreen(IN LOADER_ENTRY *Entry) {
-   CHAR16              *FileName, *Temp = NULL, *TitleStr;
+   CHAR16              *FileName, *Temp = NULL;
    REFIT_MENU_SCREEN   *SubScreen = NULL;
    LOADER_ENTRY        *SubEntry;
 
@@ -419,9 +419,9 @@ REFIT_MENU_SCREEN *InitializeSubScreen(IN LOADER_ENTRY *Entry) {
    if (Entry->me.SubScreen == NULL) { // No subscreen yet; initialize default entry....
       SubScreen = AllocateZeroPool(sizeof(REFIT_MENU_SCREEN));
       if (SubScreen != NULL) {
-         TitleStr = AllocateZeroPool(sizeof(CHAR16) * 256);
-         SPrint(TitleStr, 255, L"Boot Options for %s on %s", (Entry->Title != NULL) ? Entry->Title : FileName, Entry->VolName);
-         SubScreen->Title = TitleStr;
+         SubScreen->Title = AllocateZeroPool(sizeof(CHAR16) * 256);
+         SPrint(SubScreen->Title, 255, L"Boot Options for %s on %s",
+                (Entry->Title != NULL) ? Entry->Title : FileName, Entry->VolName);
          SubScreen->TitleImage = Entry->me.Image;
          // default entry
          SubEntry = InitializeLoaderEntry(Entry);
@@ -734,15 +734,13 @@ VOID SetLoaderDefaults(LOADER_ENTRY *Entry, CHAR16 *LoaderPath, IN REFIT_VOLUME 
 // for icons, options, etc.
 LOADER_ENTRY * AddLoaderEntry(IN CHAR16 *LoaderPath, IN CHAR16 *LoaderTitle, IN REFIT_VOLUME *Volume) {
    LOADER_ENTRY      *Entry;
-   CHAR16            *PoolStr;
 
    CleanUpPathNameSlashes(LoaderPath);
    Entry = InitializeLoaderEntry(NULL);
    if (Entry != NULL) {
       Entry->Title = StrDuplicate((LoaderTitle != NULL) ? LoaderTitle : LoaderPath);
-      PoolStr = AllocateZeroPool(sizeof(CHAR16) * 256);
-      SPrint(PoolStr, 255, L"Boot %s from %s", (LoaderTitle != NULL) ? LoaderTitle : LoaderPath, Volume->VolName);
-      Entry->me.Title = PoolStr;
+      Entry->me.Title = AllocateZeroPool(sizeof(CHAR16) * 256);
+      SPrint(Entry->me.Title, 255, L"Boot %s from %s", (LoaderTitle != NULL) ? LoaderTitle : LoaderPath, Volume->VolName);
       Entry->me.Row = 0;
       Entry->me.BadgeImage = Volume->VolBadgeImage;
       if ((LoaderPath != NULL) && (LoaderPath[0] != L'\\')) {
@@ -1162,7 +1160,6 @@ static LEGACY_ENTRY * AddLegacyEntry(IN CHAR16 *LoaderTitle, IN REFIT_VOLUME *Vo
     REFIT_MENU_SCREEN       *SubScreen;
     CHAR16                  *VolDesc;
     CHAR16                  ShortcutLetter = 0;
-    CHAR16                  *PoolStr;
 
     if (LoaderTitle == NULL) {
         if (Volume->OSName != NULL) {
@@ -1179,9 +1176,8 @@ static LEGACY_ENTRY * AddLegacyEntry(IN CHAR16 *LoaderTitle, IN REFIT_VOLUME *Vo
 
     // prepare the menu entry
     Entry = AllocateZeroPool(sizeof(LEGACY_ENTRY));
-    PoolStr = AllocateZeroPool(256 * sizeof(CHAR16));
-    SPrint(PoolStr, 255, L"Boot %s from %s", LoaderTitle, VolDesc);
-    Entry->me.Title        = PoolStr;
+    Entry->me.Title = AllocateZeroPool(256 * sizeof(CHAR16));
+    SPrint(Entry->me.Title, 255, L"Boot %s from %s", LoaderTitle, VolDesc);
     Entry->me.Tag          = TAG_LEGACY;
     Entry->me.Row          = 0;
     Entry->me.ShortcutLetter = ShortcutLetter;
@@ -1194,16 +1190,14 @@ static LEGACY_ENTRY * AddLegacyEntry(IN CHAR16 *LoaderTitle, IN REFIT_VOLUME *Vo
 
     // create the submenu
     SubScreen = AllocateZeroPool(sizeof(REFIT_MENU_SCREEN));
-    PoolStr = AllocateZeroPool(256 * sizeof(CHAR16));
-    SPrint(PoolStr, 255, L"Boot Options for %s on %s", LoaderTitle, VolDesc);
-    SubScreen->Title = PoolStr;
+    SubScreen->Title = AllocateZeroPool(256 * sizeof(CHAR16));
+    SPrint(SubScreen->Title, 255, L"Boot Options for %s on %s", LoaderTitle, VolDesc);
     SubScreen->TitleImage = Entry->me.Image;
 
     // default entry
     SubEntry = AllocateZeroPool(sizeof(LEGACY_ENTRY));
-    PoolStr = AllocateZeroPool(256 * sizeof(CHAR16));
-    SPrint(PoolStr, 255, L"Boot %s", LoaderTitle);
-    SubEntry->me.Title        = PoolStr;
+    SubEntry->me.Title = AllocateZeroPool(256 * sizeof(CHAR16));
+    SPrint(SubEntry->me.Title, 255, L"Boot %s", LoaderTitle);
     SubEntry->me.Tag          = TAG_LEGACY;
     SubEntry->Volume          = Entry->Volume;
     SubEntry->LoadOptions     = Entry->LoadOptions;

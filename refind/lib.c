@@ -702,7 +702,6 @@ static VOID ScanExtendedPartition(REFIT_VOLUME *WholeDiskVolume, MBR_PARTITION_I
                 Volume->MbrPartitionIndex = LogicalPartitionIndex++;
                 Volume->VolName = AllocateZeroPool(256 * sizeof(UINT16));
                 SPrint(Volume->VolName, 255, L"Partition %d", Volume->MbrPartitionIndex + 1);
-//                Volume->VolName = PoolPrint(L"Partition %d", Volume->MbrPartitionIndex + 1);
                 Volume->BlockIO = WholeDiskVolume->BlockIO;
                 Volume->BlockIOOffset = ExtCurrent + EMbrTable[i].StartLBA;
                 Volume->WholeDiskBlockIO = WholeDiskVolume->BlockIO;

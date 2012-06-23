@@ -125,7 +125,7 @@ CopyRefindFiles() {
 MountOSXESP() {
    # Identify the ESP. Note: This returns the FIRST ESP found;
    # if the system has multiple disks, this could be wrong!
-   Temp=`diskutil list | grep EFI`
+   Temp=`diskutil list | grep " EFI "`
    Esp=/dev/`echo $Temp | cut -f 5 -d ' '`
    # If the ESP is mounted, use its current mount point....
    Temp=`df | grep $Esp`

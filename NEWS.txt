@@ -1,3 +1,18 @@
+0.4.4 (6/??/2012):
+------------------
+
+- Fixed bug that caused filesystem labels to be corrupted by rEFInd on
+  32-bit systems.
+
+- Fixed bug that caused filesystem labels to be truncated in the drivers
+  on 32-bit systems.
+
+- Fixed bug in use_graphics_for option parsing that caused most options
+  to set graphics mode for OS X and/or Linux but not other boot
+  loaders/OSes.
+
+- Tweaked install script to better isolate the ESP under OS X.
+
 0.4.3 (6/21/2012):
 ------------------
 

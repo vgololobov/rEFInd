@@ -14,7 +14,7 @@ ifeq ($(ARCH),ia64)
 endif
 
 ifeq ($(ARCH),ia32)
-  ARCH_C_FLAGS = -m32
+  ARCH_C_FLAGS = -m32 -malign-double
   ARCHDIR = Ia32
   FILENAME_CODE = ia32
 endif
@@ -25,7 +25,8 @@ ifeq ($(ARCH),x86_64)
   FILENAME_CODE = x64
 endif
 
-EDK2BASE = /usr/local/UDK2010/MyWorkSpace
+#EDK2BASE = /usr/local/UDK2010/MyWorkSpace
+EDK2BASE = /usr/local/edk2
 
 # Below file defines TARGET (RELEASE or DEBUG), TARGET_ARCH (X64 or IA32), and TOOL_CHAIN_TAG (GCC44, GCC45, or GCC46)
 include $(EDK2BASE)/Conf/target.txt
