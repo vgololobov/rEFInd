@@ -47,7 +47,7 @@ ifeq ($(ARCH),x86_64)
 endif
 
 ifeq ($(ARCH),ia32)
-  CPPFLAGS += -DEFI32
+  CPPFLAGS += -DEFI32 -malign-double
 
   ifeq ($(HOSTARCH),x86_64)
     ARCH3264 = -m32

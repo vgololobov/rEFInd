@@ -1,4 +1,4 @@
-0.4.4 (6/??/2012):
+0.4.4 (6/23/2012):
 ------------------
 
 - Fixed bug that caused filesystem labels to be corrupted by rEFInd on

@@ -143,13 +143,10 @@ EFI_STATUS InitRefitLib(IN EFI_HANDLE ImageHandle)
 
     // find the current directory
     DevicePathAsString = DevicePathToStr(SelfLoadedImage->FilePath);
-//    Print(L"DevicePathAsString is '%s'\n", DevicePathAsString);
     CleanUpPathNameSlashes(DevicePathAsString);
     if (SelfDirPath != NULL)
        FreePool(SelfDirPath);
     SelfDirPath = FindPath(DevicePathAsString);
-//    Print(L"SelfDirPath is '%s'\n", SelfDirPath);
-//    PauseForKey();
     FreePool(DevicePathAsString);
 
     return FinishInitRefitLib();
