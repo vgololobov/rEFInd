@@ -175,6 +175,12 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 	and/or initial RAM disks relative to the rEFInd directory (or the
 	boot loader's directory, in the case of initrds).</li>
 
+    <li>Various options (<tt>dont_scan_dirs</tt>, <tt>also_scan_dirs</tt>,
+	<tt>scan_driver_dirs</tt>, etc.) refer to directories or files,
+	either on the ESP or on all partitions. A way to identify specific
+	partitions for these options would be useful in some
+	situations.</li>
+
     </ul></li> <!-- Improvements -->
 
 <li><b>Known bugs that need squashing:</b>
@@ -257,8 +263,10 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 	forum thread</a> for more information.</li>
 
     <li>I'd like to find a way to enable users to enter customizations for
-	boot options and then save them to the <tt>refind.conf</tt>
-	file.</li>
+	boot options and then save them to the <tt>refind.conf</tt> file.
+	One possible way to implement this would be to have manual boot
+	stanzas override auto-detected boot loader definitions for the same
+	boot loader file.</li>
 
     <li>It should be possible to override specific auto-detected boot
 	loader settings&mdash;say, to disable one specific boot loader or
@@ -287,6 +295,11 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 	written in a cross-platform GUI toolkit, so that a single code base
 	can be used on any of the major OSes.</li>
 
+    <li>A way to "source" one configuration file from another one would be
+	helpful for some types of configuration scripts. (This would enable
+	overriding options in a secondary file without modifying the
+	default original file, for instance.)</li>
+
     </ul></li> <!-- New features -->
 
     <li><b>Improvements to the EFI drivers:</b>
@@ -312,6 +325,10 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
     <li>The HFS+ driver returns a volume label of "HFS+ volume", no matter
         what the volume's real label is.</li>
+
+    <li>This may not be possible, or it may require a new driver, but a way
+	to have the drivers access files (like a Linux loopback mount) is
+	desirable.</li>
 
     </ul></li> <!-- Drivers -->
 

@@ -87,8 +87,10 @@ timeout 20
 
 # Which non-bootloader tools to show on the tools line, and in what
 # order to display them:
-#  shell     - the EFI shell
-#  gptsync   - the (dangerous) gptsync.efi utility
+#  shell     - the EFI shell (requires external program; see rEFInd
+#              documentation for details)
+#  gptsync   - the (dangerous) gptsync.efi utility (requires external
+#              program; see rEFInd documentation for details)
 #  about     - an "about this program" option
 #  exit      - a tag to exit from rEFInd
 #  shutdown  - shuts down the computer (a bug causes this to reboot EFI
@@ -141,7 +143,8 @@ timeout 20
 # another boot loader or to exclude a directory that holds drivers
 # or non-bootloader utilities provided by a hardware manufacturer. If
 # a directory is listed both here and in also_scan_dirs, dont_scan_dirs
-# takes precedence.
+# takes precedence. Note that this blacklist applies to ALL the
+# filesystems that rEFInd scans, not just the ESP.
 #
 #dont_scan_dirs EFI/boot,EFI/Dell
 

@@ -171,7 +171,7 @@ timeout 20
 <tr>
    <td><tt>showtools</tt></td>
    <td><tt>shell</tt>, <tt>gptsync</tt>, <tt>about</tt>, <tt>exit</tt>, <tt>shutdown</tt>, and <tt>reboot</tt></td>
-   <td>Specifies which tool tags to display on the second row. <tt>shell</tt> launches an EFI shell, <tt>gptsync</tt> launches a tool that creates a hybrid MBR, <tt>about</tt> displays information about the program, <tt>exit</tt> terminates rEFInd, <tt>shutdown</tt> shuts down the computer (or reboots it, on UEFI PCs), and <tt>reboot</tt> reboots the computer. The tags appear in the order in which you specify them. The default is <tt>shell, about, shutdown, reboot</tt>.</td>
+   <td>Specifies which tool tags to display on the second row. <tt>shell</tt> launches an EFI shell, <tt>gptsync</tt> launches a tool that creates a hybrid MBR, <tt>about</tt> displays information about the program, <tt>exit</tt> terminates rEFInd, <tt>shutdown</tt> shuts down the computer (or reboots it, on UEFI PCs), and <tt>reboot</tt> reboots the computer. The tags appear in the order in which you specify them. The default is <tt>shell, about, shutdown, reboot</tt>. Note that the <tt>shell</tt> and <tt>gptsync</tt> options both require the presence of programs not included with rEFInd; see the <a href="installing.html#addons">"Installing Additional Components"</a> section of the <a href="installing.html">Installing rEFInd</a> page for pointers to these programs.</td>
 </tr>
 <tr>
    <td><tt>textonly</tt></td>
@@ -206,7 +206,7 @@ timeout 20
 <tr>
    <td><tt>dont_scan_dirs</tt> or <tt>don't_scan_dirs</tt></td>
    <td>directory path(s)</td>
-   <td>Adds the specified directory or directories to a directory "blacklist"&mdash;these directories are <i>not</i> scanned for boot loaders. This may be useful to keep duplicate boot loaders out of the menu (say, if <tt>EFI/Boot/bootx64.efi</tt> is a duplicate of another boot loader); or to keep drivers or utilities out of the boot menu, if you've stored them in a subdirectory of <tt>EFI</tt>. This option takes precedence over <tt>also_scan_dirs</tt>; if a directory appears in both lists, it will <i>not</i> be scanned.</td>
+   <td>Adds the specified directory or directories to a directory "blacklist"&mdash;these directories are <i>not</i> scanned for boot loaders, on <i>any</i> partition. This may be useful to keep duplicate boot loaders out of the menu (say, if <tt>EFI/Boot/bootx64.efi</tt> is a duplicate of another boot loader); or to keep drivers or utilities out of the boot menu, if you've stored them in a subdirectory of <tt>EFI</tt>. This option takes precedence over <tt>also_scan_dirs</tt>; if a directory appears in both lists, it will <i>not</i> be scanned.</td>
 </tr>
 <tr>
    <td><tt>scan_all_linux_kernels</tt></td>

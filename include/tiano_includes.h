@@ -57,6 +57,7 @@
 #include <Protocol/UgaIo.h>
 #include <Protocol/UnicodeCollation.h>
 #include <Protocol/UsbIo.h>
+#include <Protocol/LegacyBios.h>
 
 // Guid Includes
 #include <Guid/Acpi.h>

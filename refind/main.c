@@ -110,7 +110,7 @@ static VOID AboutrEFInd(VOID)
 
     if (AboutMenu.EntryCount == 0) {
         AboutMenu.TitleImage = BuiltinIcon(BUILTIN_ICON_FUNC_ABOUT);
-        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.4.4");
+        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.4.4.1");
         AddMenuInfoLine(&AboutMenu, L"");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2006-2010 Christoph Pfisterer");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2012 Roderick W. Smith");
@@ -198,7 +198,9 @@ static EFI_STATUS StartEFIImageList(IN EFI_DEVICE_PATH **DevicePaths,
             MergeStrings(&FullLoadOptions, L" ", 0);
             // NOTE: That last space is also added by the EFI shell and seems to be significant
             //  when passing options to Apple's boot.efi...
-        }
+        } else {
+            MergeStrings(&FullLoadOptions, LoadOptions, 0);
+        } // if/else
         // NOTE: We also include the terminating null in the length for safety.
         ChildLoadedImage->LoadOptions = (VOID *)FullLoadOptions;
         ChildLoadedImage->LoadOptionsSize = ((UINT32)StrLen(FullLoadOptions) + 1) * sizeof(CHAR16);
@@ -1137,8 +1139,9 @@ static VOID StartLegacy(IN LEGACY_ENTRY *Entry)
                       (UGAHeight - BootLogoImage->Height) >> 1,
                       &StdBackgroundPixel);
 
-    if (Entry->Volume->IsMbrPartition)
+    if (Entry->Volume->IsMbrPartition) {
         ActivateMbrPartition(Entry->Volume->WholeDiskBlockIO, Entry->Volume->MbrPartitionIndex);
+    }
 
     ExtractLegacyLoaderPaths(DiscoveredPathList, MAX_DISCOVERED_PATHS, LegacyLoaderList);
 
