@@ -12,7 +12,7 @@ LIBEG_DIR=libeg
 EFILIB_DIR=EfiLib
 
 # Build rEFInd, including libeg
-all:	tiano
+all:	gnuefi
 
 gnuefi:
 	make -C $(LIBEG_DIR)

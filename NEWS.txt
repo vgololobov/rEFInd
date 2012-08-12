@@ -1,7 +1,9 @@
-0.4.5 (?/??/2012):
+0.4.5 (8/12/2012):
 ------------------
 
 - Fixed bug that caused a failure to boot BIOS-based OSes on Macs.
+
+- Fixed bug in install.sh that caused it to fail to detect rEFItBlesser.
 
 0.4.4 (6/23/2012):
 ------------------

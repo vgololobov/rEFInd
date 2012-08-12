@@ -14,7 +14,7 @@
 <p class="subhead">by Roderick W. Smith, <a
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
-<p>Last Web page update: 6/23/2012</p>
+<p>Last Web page update: 8/12/2012</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -92,6 +92,8 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 <p>The following summarizes changes in rEFInd's public releases:</p>
 
 <ul>
+
+<li><b>0.4.5 (8/12/2012)</b>&mdash;This version fixes a couple of Mac-related bugs. The most important is that version 0.4.3 and 0.4.4 couldn't boot BIOS-based (aka CSM or Boot Camp) OS installations; 0.4.5 restores this important feature. The second bug is in the <tt>install.sh</tt> script, which would often fail to detect rEFItBlesser, thus leaving it enabled and causing rEFInd to fail to start after the first reboot into OS X.</li>
 
 <li><b>0.4.4 (6/23/2012)</b>&mdash;This is a bug-fix release. Most importantly, it fixes a bug in the new <tt>use_graphics_for</tt> feature; in 0.4.3, the options were set incorrectly (they just happened to work as expected on my main test configuration). I've also fixed problems with volume names in the 32-bit versions of both the drivers and the TianoCore EDK2 build of rEFInd itself. Finally, I've tweaked the <tt>install.sh</tt> script to do a better job of identifying the computer's ESP under OS X.</li>
 

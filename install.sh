@@ -17,6 +17,7 @@
 #
 # Revision history:
 #
+# 0.4.5   -- Fixed check for rEFItBlesser in OS X
 # 0.4.2   -- Added notice about BIOS-based OSes & made NVRAM changes in Linux smarter
 # 0.4.1   -- Added check for rEFItBlesser in OS X
 # 0.3.3.1 -- Fixed OS X 10.7 bug; also works as make target
@@ -162,15 +163,15 @@ InstallOnOSX() {
    if [[ $? != 0 ]] ; then
       Problems=1
    fi
-   if [[ -f /Library/StartupItems/rEFItBlesser ]] ; then
+   if [[ -f /Library/StartupItems/rEFItBlesser || -d /Library/StartupItems/rEFItBlesser ]] ; then
       echo
-      echo "/Library/StartupItems/rEFItBlesser file found!"
+      echo "/Library/StartupItems/rEFItBlesser found!"
       echo "This program is part of rEFIt, and will cause rEFInd to fail to work after"
       echo -n "its first boot. Do you want to remove rEFItBlesser (Y/N)? "
       read YesNo
       if [[ $YesNo == "Y" || $YesNo == "y" ]] ; then
          echo "Deleting /Library/StartupItems/rEFItBlesser..."
-	 rm /Library/StartupItems/rEFItBlesser
+	 rm -r /Library/StartupItems/rEFItBlesser
       else
          echo "Not deleting rEFItBlesser."
       fi

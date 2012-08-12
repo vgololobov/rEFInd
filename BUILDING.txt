@@ -71,12 +71,13 @@ It's possible that you could use a non-Linux platform to compile rEFInd. To
 the best of my knowledge, the rEFInd code doesn't rely on anything
 Linux-specific in its build requirements, and GNU-EFI's Sourceforge page
 indicates that it works under Windows and OS X, too; however, my one
-attempt to compile GNU-EFI under OS X failed. Using the TianoCore toolkit
-might be more likely to work under OS X or Windows, but I haven't tested
-it. Under Windows, you would need to either create a project or Makefile
-for your non-GCC compiler or use a GCC port, such as MinGW
-(http://www.mingw.org). You'd probably need to adjust the Makefiles in the
-latter case.
+attempt to compile GNU-EFI under OS X failed. I've received one report that
+rEFInd compiles successfully with Clang and the TianoCore toolkit under OS
+X by adding the refind.inf file to a .dsc file that you use for your own
+projects, but I don't have more details than this. Under Windows, you would
+need to either create a project or Makefile for your non-GCC compiler or
+use a GCC port, such as MinGW (http://www.mingw.org). You'd probably need
+to adjust the Makefiles in the latter case.
 
 
 Preparing Your Development Kit
@@ -105,6 +106,8 @@ others. Here's how I installed the toolkit:
 
 1) Download UDK2010.SR1 from
    https://sourceforge.net/apps/mediawiki/tianocore/index.php?title=UDK2010.
+   (Note that UDK2010.SR1.UP1 was released in June of 2012. I have yet to
+   test with it.)
 
 2) Type "mkdir /usr/local/UDK2010". You can use another directory, but the
    Makefile for rEFInd's EFI drivers assumes this location. You'll need to

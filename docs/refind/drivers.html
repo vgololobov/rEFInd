@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 4/19/2012; last Web page update:
-6/23/2012, referencing rEFInd 0.4.4</p>
+8/12/2012, referencing rEFInd 0.4.5</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -124,8 +124,13 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <li><b>ReiserFS</b>&mdash;This driver originated with rEFIt. It's useful
     for reading Linux kernels from a separate <tt>/boot</tt> partition, or
-    even from a root (<tt>/</tt>) filesystem, if you use ReiserFS on
-    it.</li>
+    even from a root (<tt>/</tt>) filesystem, if you use ReiserFS on it.
+    <b>Caution:</b> If you use this driver, you should use the
+    <tt>notail</tt> option in Linux's <tt>/etc/fstab</tt> file for the
+    partition(s) you want the EFI to read. This is because the driver
+    doesn't properly handle ReiserFS's "tail-packing" feature, so files can
+    seem to be corrupted in EFI if you use this feature, which is disabled
+    by <tt>notail</tt>.</li>
 
 <li><b>Ext2fs</b>&mdash;This driver also originated with rEFIt. It can be
     used in the same way as the ReiserFS driver. Although it's called an
@@ -143,7 +148,7 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 <li><b>HFS+</b>&mdash;Oracle seems to have written this driver, apparently
     with some code taken from open source Apple examples. It was then
     further modified by the Clover authors. I expect this driver to have
-    limited appeal most rEFInd users. Macs don't need it, since Apple's EFI
+    limited appeal to most rEFInd users. Macs don't need it, since Apple's EFI
     implementation provides its own HFS+ driver, and HFS+ isn't normally
     used on UEFI-based PCs. Some CDs are mastered with both ISO-9660 and
     HFS+, or even with HFS+ alone, and it's conceivable that an HFS+ driver
@@ -198,9 +203,9 @@ fs0: <tt class="userinput">map -r</tt>
 
 <p>I've tested several of the drivers described on this page on a handful of systems. The ext2fs driver (from any source) works on both ext2fs and ext3fs, but not on ext4fs&mdash;at least, not in my one test. (There may be options you can use when creating an ext4 filesystem that would enable the ext2fs driver to handle it, but if so I don't know what they are.) The ReiserFS driver is obviously useful only on ReiserFS partitions. (Reiser4 is not supported, as far as I know.) Given that these filesystems are getting a bit on in age by Linux standards, you might do well to use them on a separate Linux <tt>/boot</tt> partition; however, if you're willing to use ext3fs or ReiserFS on your root (<tt>/</tt>) filesystem, you can use the EFI drivers to read your kernel from it. Note that this assumes you use conventional partitions; to the best of my knowledge, there's no EFI driver for Linux's Logical Volume Manager (LVM) or Redundant Array of Independent Disks (RAID) configurations, so the EFI can't access filesystems stored in these ways.</p>
 
-<p>The ext2fs and ReiserFS drivers work, but they are a bit sluggish&mdash;particularly the ext2fs driver. The extent of the problem depends on the computer. In my tests so far, VirtualBox has fared the worst. On it, loading a Linux kernel with EFI stub loader from a FAT partition takes 2 seconds, from the moment of selecting the OS in rEFInd to the moment the kernel messages begin to appear. The equivalent time using ReiserFS or HFS+ is 20 seconds, and with ext2fs it's 200 seconds (that is, 3 minutes and 20 seconds). On a 32-bit Mac Mini, though, the speed problem is much less pronounced&mdash;my kernel loads in just 3 seconds from a ReiserFS partition and in 13 seconds from an ext2 filesystem. Times with ext2fs on a UEFI PC with an Intel motherboard are in the 2&ndash;4 second range. Nonetheless, if you try the ext2fs driver and it seems to hang, be patient; it may finally boot up. If so, and if the delay is too great for you to accept, you might consider using ReiserFS instead of ext2fs or ext3fs, at least if a change is practical. (For a <tt>/boot</tt> partition, it almost certainly is practical; you can back it up quite easily, create a fresh filesystem on it, and restore it. You may need to adjust your <tt>/etc/fstab</tt> entry for a new UUID value, though.) You can even use HFS+ on a Linux <tt>/boot</tt> partition, although this makes the most sense on a Mac, which has its own EFI HFS+ driver.</p>
+<p>The ext2fs and ReiserFS drivers work, but they are a bit sluggish&mdash;particularly the ext2fs driver. The extent of the problem depends on the computer. In my tests so far, VirtualBox has fared the worst. On it, loading a Linux kernel with EFI stub loader from a FAT partition takes 2 seconds, from the moment of selecting the OS in rEFInd to the moment the kernel messages begin to appear. The equivalent time using ReiserFS or HFS+ is 20 seconds, and with ext2fs it's 200 seconds (that is, 3 minutes and 20 seconds). On a 32-bit Mac Mini, though, the speed problem is much less pronounced&mdash;my kernel loads in just 3 seconds from a ReiserFS partition and in 13 seconds from an ext2 filesystem. Speeds were similar with my newest computer, an ASUS P8H77-I board. Times with ext2fs on a UEFI PC with an Intel motherboard are in the 2&ndash;4 second range. If you try the ext2fs driver and it seems to hang, be patient; it may finally boot up. If so, and if the delay is too great for you to accept, you might consider using ReiserFS instead of ext2fs or ext3fs, at least if a change is practical. (For a <tt>/boot</tt> partition, it almost certainly is practical; you can back it up quite easily, create a fresh filesystem on it, and restore it. You may need to adjust your <tt>/etc/fstab</tt> entry for a new UUID value, though. As noted earlier, be sure to use <tt>notail</tt> as an option in <tt>/etc/fstab</tt> for ReiserFS if you want to read it from EFI.) You can even use HFS+ on a Linux <tt>/boot</tt> partition, although this makes the most sense on a Mac, which has its own EFI HFS+ driver.</p>
 
-<p>Since the ext2fs and ReiserFS drivers share a common origin, it should come as no surprise that they perform in much the same way no matter which version (rEFIt, Clover, or rEFInd) you use. One exception is that the Clover EFI Tools drivers don't deliver filesystem labels, which makes them less desirable than the rEFIt or rEFInd drivers. The NTFS driver from the Clover Tools package is nice and speedy, though, so if for some reason you need to place a boot loader on an NTFS volume, this driver might be worth tracking down.</p>
+<p>Since the ext2fs and ReiserFS drivers share a common origin, it should come as no surprise that they perform in much the same way no matter which version (rEFIt, Clover, or rEFInd) you use. The NTFS driver from the Clover Tools package is nice and speedy, so if for some reason you need to place a boot loader on an NTFS volume, this driver might be worth tracking down.</p>
 
 <p>Although both ext2fs and ReiserFS are case-sensitive, these drivers treat them in a case-insensitive way. Symbolic links work, which opens up possibilities for configuration, such as using a single kernel binary for multiple Linux distributions, with a link in one subdirectory pointing to a file in another directory. (If you try this, though, be sure to use <i>relative</i> links, as in <tt>../otherdist/bzImage.efi</tt>, at least if the partition is not Linux's root filesystem.)</p>
 

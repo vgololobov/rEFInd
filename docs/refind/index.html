@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 3/14/2012; last Web page update:
-6/23/2012, referencing rEFInd 0.4.4</p>
+8/12/2012, referencing rEFInd 0.4.5</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -98,11 +98,11 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>I decided to fork the earlier rEFIt project because, although rEFIt is a useful program, it's got several important limitations, such as poor control over the boot loader detection process and an ability to display at most a handful of boot loader entries on its main screen. I fixed a few of these bugs and released a patched version <a href="http://www.rodsbooks.com/efi-bootloaders/refit.html">here;</a> however, rEFIt's author, Christoph Pfisterer, didn't respond to my e-mails, and the latest official version of rEFIt, 0.14, was released in March of 2010. Thus, it appears that rEFIt has been abandoned. Forking the project to give rEFIt new features seemed like the thing to do.</p>
 
-<p>The <a href="http://refit.sourceforge.net">rEFIt Web page</a> has a distinct Mac bias, and the provided binaries work only on Macs because they're 32-/64-bit "fat" binaries, which Macs can handle but UEFI-based PCs can't. rEFIt can be recompiled to work on UEFI-based PCs, but prebuilt binaries for such systems are relatively rare. Although I do own a Mac Mini, my interest lies more on the side of standard PC hardware, and hence with UEFI. My development platform is Linux, and my installation instructions and binaries are much more platform-neutral. I'm aware that many Mac users will consider this a step backward, but I ask their indulgence; I only have so many hours a day to work on this project, and I prefer to devote my efforts to improvements that will benefit all rEFInd users, at least initially.</p>
+<p>The <a href="http://refit.sourceforge.net">rEFIt Web page</a> has a distinct Mac bias, and the provided binaries work only on Macs because they're 32-/64-bit "fat" binaries, which Macs can handle but UEFI-based PCs can't. rEFIt can be recompiled to work on UEFI-based PCs, but prebuilt binaries for such systems are relatively rare. Although I do own a Mac Mini, my interest lies more on the side of standard PC hardware, and hence with UEFI. My development platform is Linux, and my installation instructions and binaries are much more platform-neutral. I'm aware that many Mac users will consider this a step backward, but I ask their indulgence; I only have so many hours a week to work on this project, and I prefer to devote my efforts to improvements that will benefit all rEFInd users, at least initially.</p>
 
 <p>As already noted, rEFInd is a boot manager for EFI and UEFI computers. (I use "EFI" to refer to either version unless the distinction is important.) You're likely to benefit from it on computers that boot multiple OSes, such as two or more of Linux, Mac OS X, and Windows. You will <i>not</i> find rEFInd useful on older BIOS-based computers. Prior to mid-2011, few computers outside of Intel-based Macs used EFI; but starting in 2011, computer manufacturers began adopting UEFI in droves, so most computers bought since then use EFI. Even so, many modern PCs support both EFI-style booting and BIOS-style booting, the latter via a BIOS compatibility mode that's known as the <i>Compatibility Support Module (CSM).</i> Thus, you may be using BIOS-style booting on an EFI-based computer. If you're unsure which boot method your computer uses, check the first of the below subsections.</p>
 
-<p>Subsequent sections of this document are on separate pages:</p>
+<p>Subsequent sections of this document are on separate pages. Be aware that you probably don't need to read them all; just skip to the sections that interest you:</p>
 
 <ul>
 
