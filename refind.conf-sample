@@ -118,10 +118,13 @@ timeout 20
 #  hdbios        - BIOS disk-based boot loaders
 #  biosexternal  - BIOS external boot loaders (USB, eSATA, etc.)
 #  cd            - BIOS optical-disc boot loaders
+#  legacypc      - BIOS target alternative search that may work on non-Mac 
+#                  machines. Use in place of the other BIOS options.
 #  manual        - use stanzas later in this configuration file
 # Default is internal,external,optical
 #
 #scanfor internal,external,optical
+scanfor internal,external,legacypc
 
 # When scanning volumes for EFI boot loaders, rEFInd always looks for
 # Mac OS X's and Microsoft Windows' boot loaders in their normal locations,

@@ -50,6 +50,7 @@
 #include <efilib.h>
 #else
 #include "../include/tiano_includes.h"
+#include "../EfiLib/GenericBdsLib.h"
 #endif
 
 #include "libeg.h"
@@ -66,6 +67,7 @@
 #define TAG_EXIT     (7)
 #define TAG_SHELL    (8)
 #define TAG_GPTSYNC  (9)
+#define TAG_LEGACY_NON_MAC (10)
 #define NUM_TOOLS    (9)
 
 #define NUM_SCAN_OPTIONS 10
@@ -156,11 +158,24 @@ typedef struct {
 } LOADER_ENTRY;
 
 typedef struct {
-   REFIT_MENU_ENTRY me;
-   REFIT_VOLUME     *Volume;
-   CHAR16           *LoadOptions;
-   BOOLEAN          Enabled;
+   REFIT_MENU_ENTRY  me;
+   REFIT_VOLUME      *Volume;
+#ifdef __MAKEWITH_TIANO
+   BDS_COMMON_OPTION *BdsOption;
+#endif // __MAKEWITH_TIANO
+   CHAR16            *LoadOptions;
+   BOOLEAN           Enabled;
 } LEGACY_ENTRY;
+
+/*
+#ifdef __MAKEWITH_TIANO
+typedef struct {
+   REFIT_MENU_ENTRY me;
+   BDS_COMMON_OPTION *BdsOption;
+   BOOLEAN          Enabled;
+} LEGACY_ENTRY_NON_MAC;
+#endif // __MAKEWITH_TIANO
+*/
 
 typedef struct {
    BOOLEAN     TextOnly;

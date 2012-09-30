@@ -5,7 +5,7 @@
 
 include ../Make.tiano
 
-SOURCE_NAMES     = BdsConnect BmLib Console DevicePath 
+SOURCE_NAMES     = BdsConnect BmLib Console DevicePath BdsHelper BdsTianoCore
 OBJS             = $(SOURCE_NAMES:=.obj)
 #DRIVERNAME      = ext2
 #BUILDME          = $(DRIVERNAME)_$(FILENAME_CODE).efi

@@ -53,6 +53,10 @@
 #include "driver_support.h"
 #include "../include/syslinux_mbr.h"
 
+#ifdef __MAKEWITH_TIANO
+#include "../EfiLib/BdsHelper.h"
+#endif // __MAKEWITH_TIANO
+
 // 
 // variables
 
@@ -110,7 +114,7 @@ static VOID AboutrEFInd(VOID)
 
     if (AboutMenu.EntryCount == 0) {
         AboutMenu.TitleImage = BuiltinIcon(BUILTIN_ICON_FUNC_ABOUT);
-        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.4.5");
+        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.4.5.2");
         AddMenuInfoLine(&AboutMenu, L"");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2006-2010 Christoph Pfisterer");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2012 Roderick W. Smith");
@@ -1157,6 +1161,15 @@ static VOID StartLegacy(IN LEGACY_ENTRY *Entry)
     FinishExternalScreen();
 } /* static VOID StartLegacy() */
 
+// Start a device on a non-Mac using the EFI_LEGACY_BIOS_PROTOCOL
+#ifdef __MAKEWITH_TIANO
+static VOID StartLegacyNonMac(IN LEGACY_ENTRY *Entry)
+{
+    BdsLibConnectDevicePath (Entry->BdsOption->DevicePath);
+    BdsLibDoLegacyBoot(Entry->BdsOption);
+}
+#endif // __MAKEWITH_TIANO
+
 static LEGACY_ENTRY * AddLegacyEntry(IN CHAR16 *LoaderTitle, IN REFIT_VOLUME *Volume)
 {
     LEGACY_ENTRY            *Entry, *SubEntry;
@@ -1211,6 +1224,112 @@ static LEGACY_ENTRY * AddLegacyEntry(IN CHAR16 *LoaderTitle, IN REFIT_VOLUME *Vo
     AddMenuEntry(&MainMenu, (REFIT_MENU_ENTRY *)Entry);
     return Entry;
 } /* static LEGACY_ENTRY * AddLegacyEntry() */
+
+
+#ifdef __MAKEWITH_TIANO
+/**
+    Create a rEFInd boot option from a Legacy BIOS protocol option.
+*/
+static LEGACY_ENTRY * AddLegacyEntryNonMac(BDS_COMMON_OPTION *BdsOption, IN UINT16 DiskType)
+{
+    LEGACY_ENTRY            *Entry, *SubEntry;
+    REFIT_MENU_SCREEN       *SubScreen;
+    CHAR16                  ShortcutLetter = 0;
+    CHAR16 *LegacyDescription = BdsOption->Description;
+
+    // prepare the menu entry
+    Entry = AllocateZeroPool(sizeof(LEGACY_ENTRY));
+    Entry->me.Title = AllocateZeroPool(256 * sizeof(CHAR16));
+    SPrint(Entry->me.Title, 255, L"Boot legacy target %s", LegacyDescription);
+    Entry->me.Tag          = TAG_LEGACY_NON_MAC;
+    Entry->me.Row          = 0;
+    Entry->me.ShortcutLetter = ShortcutLetter;
+    Entry->me.Image        = LoadOSIcon(L"legacy", L"legacy", TRUE);
+    Entry->LoadOptions     = (DiskType == BBS_CDROM) ? L"CD" :
+                             ((DiskType == BBS_USB) ? L"USB" : L"HD");
+    Entry->me.BadgeImage   = NULL;
+    Entry->BdsOption          = BdsOption; 
+    Entry->Enabled         = TRUE;
+
+    // create the submenu
+    SubScreen = AllocateZeroPool(sizeof(REFIT_MENU_SCREEN));
+    SubScreen->Title = AllocateZeroPool(256 * sizeof(CHAR16));
+    SPrint(SubScreen->Title, 255, L"No boot options for legacy target");
+    SubScreen->TitleImage = Entry->me.Image;
+
+    // default entry
+    SubEntry = AllocateZeroPool(sizeof(LEGACY_ENTRY));
+    SubEntry->me.Title = AllocateZeroPool(256 * sizeof(CHAR16));
+    SPrint(SubEntry->me.Title, 255, L"Boot %s", LegacyDescription);
+    SubEntry->me.Tag          = TAG_LEGACY_NON_MAC;
+    Entry->BdsOption          = BdsOption; 
+    AddMenuEntry(SubScreen, (REFIT_MENU_ENTRY *)SubEntry);
+
+    AddMenuEntry(SubScreen, &MenuEntryReturn);
+    Entry->me.SubScreen = SubScreen;
+    AddMenuEntry(&MainMenu, (REFIT_MENU_ENTRY *)Entry);
+    return Entry;
+} /* static LEGACY_ENTRY * AddLegacyEntryNonMac() */
+
+/**
+    Scan for legacy BIOS targets on machines that implement EFI_LEGACY_BIOS_PROTOCOL.
+    In testing, protocol has not been implemented on Macs but has been
+    implemented on several Dell PCs.
+*/
+static VOID ScanLegacyNonMac()
+{
+    EFI_STATUS                Status;
+    EFI_LEGACY_BIOS_PROTOCOL  *LegacyBios;
+    EFI_GUID EfiLegacyBootProtocolGuid     = { 0xdb9a1e3d, 0x45cb, 0x4abb, { 0x85, 0x3b, 0xe5, 0x38, 0x7f, 0xdb, 0x2e, 0x2d }};
+    EFI_GUID EfiGlobalVariableGuid     = { 0x8BE4DF61, 0x93CA, 0x11D2, { 0xAA, 0x0D, 0x00, 0xE0, 0x98, 0x03, 0x2B, 0x8C }};
+    UINT16                    *BootOrder = NULL;
+    UINTN                     Index = 0;
+    UINT16                    BootOption[10];
+    UINTN                     BootOrderSize = 0;
+    CHAR16            Buffer[20];
+    BDS_COMMON_OPTION *BdsOption;
+    LIST_ENTRY        TempList;
+    BBS_BBS_DEVICE_PATH * BbsDevicePath = NULL;
+
+    InitializeListHead (&TempList);
+    ZeroMem (Buffer, sizeof (Buffer));
+
+    // If LegacyBios protocol is not implemented on this platform, then
+    //we do not support this type of legacy boot on this machine.
+    Status = gBS->LocateProtocol (&EfiLegacyBootProtocolGuid, NULL, (VOID **) &LegacyBios);
+    if (EFI_ERROR (Status))
+        return;
+
+    // Grab the boot order
+    BootOrder = BdsLibGetVariableAndSize (L"BootOrder", &EfiGlobalVariableGuid, &BootOrderSize);
+    if (BootOrder == NULL) {
+        BootOrderSize = 0;
+    }
+
+    Index = 0;
+    while (Index < BootOrderSize / sizeof (UINT16))
+    {
+        // Grab each boot option variable from the boot order, and convert
+        // the variable into a BDS boot option
+        UnicodeSPrint (BootOption, sizeof (BootOption), L"Boot%04x", BootOrder[Index]);
+        BdsOption = BdsLibVariableToOption (&TempList, BootOption);
+
+        //Print(L"Option description = '%s'\n", BdsOption->Description);
+        BbsDevicePath = (BBS_BBS_DEVICE_PATH *)BdsOption->DevicePath;
+
+        // Only add the entry if it is of a supported type (e.g. USB, HD)
+        // See BdsHelper.c for currently supported types
+        if(IsBbsDeviceTypeSupported(BbsDevicePath->DeviceType))
+        {
+           // TODO: Find/build REFIT_VOLUME structure for volume and pass instead of NULL
+           AddLegacyEntryNonMac(BdsOption, BbsDevicePath->DeviceType);
+        }
+        Index++;
+    }
+} /* static VOID ScanLegacyNonMac() */
+#else
+static VOID ScanLegacyNonMac(){}
+#endif // __MAKEWITH_TIANO
 
 static VOID ScanLegacyVolume(REFIT_VOLUME *Volume, UINTN VolumeIndex) {
    UINTN VolumeIndex2;
@@ -1460,6 +1579,7 @@ static VOID LoadDrivers(VOID)
        ConnectAllDriversToAllControllers();
 } /* static VOID LoadDrivers() */
 
+
 static VOID ScanForBootloaders(VOID) {
    UINTN i;
 
@@ -1488,6 +1608,9 @@ static VOID ScanForBootloaders(VOID) {
             break;
          case 'o': case 'O':
             ScanOptical();
+            break;
+         case 'l': case 'L':
+            ScanLegacyNonMac();
             break;
       } // switch()
    } // for
@@ -1578,6 +1701,7 @@ static VOID InitializeLib(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *System
    //    gImageHandle   = ImageHandle;
    gBS            = SystemTable->BootServices;
    //    gRS            = SystemTable->RuntimeServices;
+   gRT = SystemTable->RuntimeServices; // Some BDS functions need gRT to be set
    EfiGetSystemConfigurationTable (&gEfiDxeServicesTableGuid, (VOID **) &gDS);
 
    InitializeConsoleSim();
@@ -1654,6 +1778,12 @@ efi_main (IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable)
             case TAG_LEGACY:   // Boot legacy OS
                 StartLegacy((LEGACY_ENTRY *)ChosenEntry);
                 break;
+
+#ifdef __MAKEWITH_TIANO
+            case TAG_LEGACY_NON_MAC: // Boot a legacy OS on a non-Mac
+                StartLegacyNonMac((LEGACY_ENTRY *)ChosenEntry);
+                break;
+#endif // __MAKEWITH_TIANO
 
             case TAG_TOOL:     // Start a EFI tool
                 StartTool((LOADER_ENTRY *)ChosenEntry);

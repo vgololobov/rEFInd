@@ -30,6 +30,8 @@
   EfiLib/BmLib.c
   EfiLib/DevicePath.c #included into GenericBdsLib
   EfiLib/BdsConnect.c #included into GenericBdsLib
+  EfiLib/BdsHelper.c
+  EfiLib/BdsTianoCore.c
   EfiLib/Console.c
   refind/main.c
   refind/config.c
