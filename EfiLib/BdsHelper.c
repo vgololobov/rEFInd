@@ -7,6 +7,8 @@
 
 #include "BdsHelper.h"
 
+EFI_GUID gEfiLegacyBootProtocolGuid     = { 0xdb9a1e3d, 0x45cb, 0x4abb, { 0x85, 0x3b, 0xe5, 0x38, 0x7f, 0xdb, 0x2e, 0x2d }};
+
 /**
     Internal helper function.
 
@@ -30,18 +32,18 @@ UpdateBbsTable (
 {
     UINT16  Idx;
     EFI_LEGACY_BIOS_PROTOCOL  *LegacyBios;
-    EFI_GUID EfiLegacyBootProtocolGuid     = { 0xdb9a1e3d, 0x45cb, 0x4abb, { 0x85, 0x3b, 0xe5, 0x38, 0x7f, 0xdb, 0x2e, 0x2d }};
+//    EFI_GUID EfiLegacyBootProtocolGuid     = { 0xdb9a1e3d, 0x45cb, 0x4abb, { 0x85, 0x3b, 0xe5, 0x38, 0x7f, 0xdb, 0x2e, 0x2d }};
     EFI_STATUS                Status;
     UINT16                       HddCount = 0;
     HDD_INFO                     *HddInfo = NULL; 
     UINT16                       BbsCount = 0; 
     BBS_TABLE                 *LocalBbsTable = NULL;
 
-    Status = gBS->LocateProtocol (&EfiLegacyBootProtocolGuid, NULL, (VOID **) &LegacyBios);
+    Status = gBS->LocateProtocol (&gEfiLegacyBootProtocolGuid, NULL, (VOID **) &LegacyBios);
     if (EFI_ERROR (Status)) {
       return;
     }
-    
+
     Status = LegacyBios->GetBbsInfo (LegacyBios, &HddCount, &HddInfo, &BbsCount, &LocalBbsTable);
 
     //Print (L"\n");
@@ -96,14 +98,6 @@ BOOLEAN ArrayContains(UINT16* Arr, UINT8 ArrLen, UINT8 Target)
 }
 
 /**
-    True if the DeviceType is supported by rEFInd, false otherwise.
-*/
-BOOLEAN IsBbsDeviceTypeSupported(UINT16 DeviceType)
-{
-    return ArrayContains(SupportedLegacyDevices, sizeof(SupportedLegacyDevices), DeviceType);
-}
-
-/**
     Boot the legacy system with the boot option
 
     @param  Option                 The legacy boot option which have BBS device path
@@ -120,11 +114,9 @@ BdsLibDoLegacyBoot (
 {
     EFI_STATUS                Status;
     EFI_LEGACY_BIOS_PROTOCOL  *LegacyBios;
-    EFI_GUID EfiLegacyBootProtocolGuid     = { 0xdb9a1e3d, 0x45cb, 0x4abb, { 0x85, 0x3b, 0xe5, 0x38, 0x7f, 0xdb, 0x2e, 0x2d }};
-    EFI_GUID EfiGlobalVariableGuid     = { 0x8BE4DF61, 0x93CA, 0x11D2, { 0xAA, 0x0D, 0x00, 0xE0, 0x98, 0x03, 0x2B, 0x8C }};
     BBS_BBS_DEVICE_PATH *OptionBBS;
 
-    Status = gBS->LocateProtocol (&EfiLegacyBootProtocolGuid, NULL, (VOID **) &LegacyBios);
+    Status = gBS->LocateProtocol (&gEfiLegacyBootProtocolGuid, NULL, (VOID **) &LegacyBios);
     if (EFI_ERROR (Status)) {
       return EFI_UNSUPPORTED;
     }

@@ -39,3 +39,6 @@ I've incorporated into the current version. Specifically:
 
 * Dave Vasilevsky (dave@vasilevsky.ca) contributed the disk-ejection
   code.
+
+* John Bressler (jrb1327@gmail.com) contributed the code to boot BIOS-based
+  OSes on UEFI-based PCs.

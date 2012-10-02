@@ -93,7 +93,8 @@ static REFIT_MENU_ENTRY MenuEntryExit     = { L"Exit rEFInd", TAG_EXIT, 1, 0, 0,
 static REFIT_MENU_SCREEN MainMenu       = { L"Main Menu", NULL, 0, NULL, 0, NULL, 0, L"Automatic boot" };
 static REFIT_MENU_SCREEN AboutMenu      = { L"About", NULL, 0, NULL, 0, NULL, 0, NULL };
 
-REFIT_CONFIG GlobalConfig = { FALSE, FALSE, 0, 0, 20, 0, 0, GRAPHICS_FOR_OSX, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+REFIT_CONFIG GlobalConfig = { FALSE, FALSE, 0, 0, 20, 0, 0, GRAPHICS_FOR_OSX, LEGACY_TYPE_MAC,
+                              NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
                               {TAG_SHELL, TAG_ABOUT, TAG_SHUTDOWN, TAG_REBOOT, 0, 0, 0, 0, 0 }};
 
 // Structure used to hold boot loader filenames and time stamps in
@@ -114,7 +115,7 @@ static VOID AboutrEFInd(VOID)
 
     if (AboutMenu.EntryCount == 0) {
         AboutMenu.TitleImage = BuiltinIcon(BUILTIN_ICON_FUNC_ABOUT);
-        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.4.5.2");
+        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.4.5.3");
         AddMenuInfoLine(&AboutMenu, L"");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2006-2010 Christoph Pfisterer");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2012 Roderick W. Smith");
@@ -1274,14 +1275,12 @@ static LEGACY_ENTRY * AddLegacyEntryNonMac(BDS_COMMON_OPTION *BdsOption, IN UINT
 /**
     Scan for legacy BIOS targets on machines that implement EFI_LEGACY_BIOS_PROTOCOL.
     In testing, protocol has not been implemented on Macs but has been
-    implemented on several Dell PCs.
+    implemented on several Dell PCs and an ASUS motherboard.
 */
-static VOID ScanLegacyNonMac()
+static VOID ScanLegacyNonMac(IN UINTN DiskType)
 {
     EFI_STATUS                Status;
     EFI_LEGACY_BIOS_PROTOCOL  *LegacyBios;
-    EFI_GUID EfiLegacyBootProtocolGuid     = { 0xdb9a1e3d, 0x45cb, 0x4abb, { 0x85, 0x3b, 0xe5, 0x38, 0x7f, 0xdb, 0x2e, 0x2d }};
-    EFI_GUID EfiGlobalVariableGuid     = { 0x8BE4DF61, 0x93CA, 0x11D2, { 0xAA, 0x0D, 0x00, 0xE0, 0x98, 0x03, 0x2B, 0x8C }};
     UINT16                    *BootOrder = NULL;
     UINTN                     Index = 0;
     UINT16                    BootOption[10];
@@ -1296,12 +1295,12 @@ static VOID ScanLegacyNonMac()
 
     // If LegacyBios protocol is not implemented on this platform, then
     //we do not support this type of legacy boot on this machine.
-    Status = gBS->LocateProtocol (&EfiLegacyBootProtocolGuid, NULL, (VOID **) &LegacyBios);
+    Status = gBS->LocateProtocol (&gEfiLegacyBootProtocolGuid, NULL, (VOID **) &LegacyBios);
     if (EFI_ERROR (Status))
         return;
 
     // Grab the boot order
-    BootOrder = BdsLibGetVariableAndSize (L"BootOrder", &EfiGlobalVariableGuid, &BootOrderSize);
+    BootOrder = BdsLibGetVariableAndSize (L"BootOrder", &gEfiGlobalVariableGuid, &BootOrderSize);
     if (BootOrder == NULL) {
         BootOrderSize = 0;
     }
@@ -1314,21 +1313,22 @@ static VOID ScanLegacyNonMac()
         UnicodeSPrint (BootOption, sizeof (BootOption), L"Boot%04x", BootOrder[Index]);
         BdsOption = BdsLibVariableToOption (&TempList, BootOption);
 
-        //Print(L"Option description = '%s'\n", BdsOption->Description);
-        BbsDevicePath = (BBS_BBS_DEVICE_PATH *)BdsOption->DevicePath;
+        if(BdsOption != NULL) {
+           //Print(L"Option description = '%s'\n", BdsOption->Description);
+           BbsDevicePath = (BBS_BBS_DEVICE_PATH *)BdsOption->DevicePath;
 
-        // Only add the entry if it is of a supported type (e.g. USB, HD)
-        // See BdsHelper.c for currently supported types
-        if(IsBbsDeviceTypeSupported(BbsDevicePath->DeviceType))
-        {
-           // TODO: Find/build REFIT_VOLUME structure for volume and pass instead of NULL
-           AddLegacyEntryNonMac(BdsOption, BbsDevicePath->DeviceType);
+           // Only add the entry if it is of a supported type (e.g. USB, HD)
+           // See BdsHelper.c for currently supported types
+           if (BbsDevicePath->DeviceType == DiskType) {
+//           if(IsBbsDeviceTypeSupported(BbsDevicePath->DeviceType)) {
+              AddLegacyEntryNonMac(BdsOption, BbsDevicePath->DeviceType);
+           }
         }
         Index++;
     }
 } /* static VOID ScanLegacyNonMac() */
 #else
-static VOID ScanLegacyNonMac(){}
+static VOID ScanLegacyNonMac(IN UINTN DiskType){}
 #endif // __MAKEWITH_TIANO
 
 static VOID ScanLegacyVolume(REFIT_VOLUME *Volume, UINTN VolumeIndex) {
@@ -1368,11 +1368,15 @@ static VOID ScanLegacyDisc(VOID)
    UINTN                   VolumeIndex;
    REFIT_VOLUME            *Volume;
 
-   for (VolumeIndex = 0; VolumeIndex < VolumesCount; VolumeIndex++) {
-      Volume = Volumes[VolumeIndex];
-      if (Volume->DiskKind == DISK_KIND_OPTICAL)
-         ScanLegacyVolume(Volume, VolumeIndex);
-   } // for
+   if (GlobalConfig.LegacyType == LEGACY_TYPE_MAC) {
+      for (VolumeIndex = 0; VolumeIndex < VolumesCount; VolumeIndex++) {
+         Volume = Volumes[VolumeIndex];
+         if (Volume->DiskKind == DISK_KIND_OPTICAL)
+            ScanLegacyVolume(Volume, VolumeIndex);
+      } // for
+   } else if (GlobalConfig.LegacyType == LEGACY_TYPE_UEFI) {
+      ScanLegacyNonMac(BBS_CDROM);
+   }
 } /* static VOID ScanLegacyDisc() */
 
 // Scan internal hard disks for legacy (BIOS) boot code
@@ -1382,11 +1386,15 @@ static VOID ScanLegacyInternal(VOID)
     UINTN                   VolumeIndex;
     REFIT_VOLUME            *Volume;
 
-    for (VolumeIndex = 0; VolumeIndex < VolumesCount; VolumeIndex++) {
-        Volume = Volumes[VolumeIndex];
-        if (Volume->DiskKind == DISK_KIND_INTERNAL)
-            ScanLegacyVolume(Volume, VolumeIndex);
-    } // for
+    if (GlobalConfig.LegacyType == LEGACY_TYPE_MAC) {
+       for (VolumeIndex = 0; VolumeIndex < VolumesCount; VolumeIndex++) {
+           Volume = Volumes[VolumeIndex];
+           if (Volume->DiskKind == DISK_KIND_INTERNAL)
+               ScanLegacyVolume(Volume, VolumeIndex);
+       } // for
+    } else if (GlobalConfig.LegacyType == LEGACY_TYPE_UEFI) {
+       ScanLegacyNonMac(BBS_HARDDISK);
+    }
 } /* static VOID ScanLegacyInternal() */
 
 // Scan external disks for legacy (BIOS) boot code
@@ -1396,11 +1404,15 @@ static VOID ScanLegacyExternal(VOID)
    UINTN                   VolumeIndex;
    REFIT_VOLUME            *Volume;
 
-   for (VolumeIndex = 0; VolumeIndex < VolumesCount; VolumeIndex++) {
-      Volume = Volumes[VolumeIndex];
-      if (Volume->DiskKind == DISK_KIND_EXTERNAL)
-         ScanLegacyVolume(Volume, VolumeIndex);
-   } // for
+   if (GlobalConfig.LegacyType == LEGACY_TYPE_MAC) {
+      for (VolumeIndex = 0; VolumeIndex < VolumesCount; VolumeIndex++) {
+         Volume = Volumes[VolumeIndex];
+         if (Volume->DiskKind == DISK_KIND_EXTERNAL)
+            ScanLegacyVolume(Volume, VolumeIndex);
+      } // for
+   } else if (GlobalConfig.LegacyType == LEGACY_TYPE_UEFI) {
+      ScanLegacyNonMac(BBS_USB);
+   }
 } /* static VOID ScanLegacyExternal() */
 
 //
@@ -1581,9 +1593,21 @@ static VOID LoadDrivers(VOID)
 
 
 static VOID ScanForBootloaders(VOID) {
-   UINTN i;
+   UINTN                     i;
+#ifdef __MAKEWITH_TIANO
+   EFI_STATUS                Status;
+   EFI_LEGACY_BIOS_PROTOCOL  *LegacyBios;
+#endif
 
    ScanVolumes();
+
+#ifdef __MAKEWITH_TIANO
+   // Check for UEFI-style legacy BIOS support. If present, set the appropriate
+   // GlobalConfig flag for it.
+   Status = gBS->LocateProtocol (&gEfiLegacyBootProtocolGuid, NULL, (VOID **) &LegacyBios);
+   if (!EFI_ERROR (Status))
+      GlobalConfig.LegacyType = LEGACY_TYPE_UEFI;
+#endif
 
    // scan for loaders and tools, add them to the menu
    for (i = 0; i < NUM_SCAN_OPTIONS; i++) {
@@ -1609,9 +1633,9 @@ static VOID ScanForBootloaders(VOID) {
          case 'o': case 'O':
             ScanOptical();
             break;
-         case 'l': case 'L':
-            ScanLegacyNonMac();
-            break;
+//         case 'l': case 'L':
+//            ScanLegacyNonMac();
+//            break;
       } // switch()
    } // for
 
@@ -1730,7 +1754,7 @@ efi_main (IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable)
         return Status;
 
     // read configuration
-    CopyMem(GlobalConfig.ScanFor, "ieo       ", NUM_SCAN_OPTIONS);
+    CopyMem(GlobalConfig.ScanFor, "ieom      ", NUM_SCAN_OPTIONS);
     ReadConfig();
     MainMenu.TimeoutSeconds = GlobalConfig.Timeout;
 

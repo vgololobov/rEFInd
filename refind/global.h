@@ -81,6 +81,28 @@
 #define GRAPHICS_FOR_GRUB       8
 #define GRAPHICS_FOR_WINDOWS   16
 
+// Type of legacy (BIOS) boot support detected
+#define LEGACY_TYPE_NONE 0
+#define LEGACY_TYPE_MAC  1
+#define LEGACY_TYPE_UEFI 2
+
+#ifndef __MAKEWITH_TIANO
+//
+// define BBS Device Types
+//
+#define BBS_FLOPPY        0x01
+#define BBS_HARDDISK      0x02
+#define BBS_CDROM         0x03
+#define BBS_PCMCIA        0x04
+#define BBS_USB           0x05
+#define BBS_EMBED_NETWORK 0x06
+#define BBS_BEV_DEVICE    0x80
+#define BBS_UNKNOWN       0xff
+#endif
+
+//TODO: may want to make this configurable via config file
+//static UINT16 SupportedLegacyDevices[] = {BBS_HARDDISK, BBS_CDROM, BBS_USB};
+
 //
 // global definitions
 //
@@ -167,16 +189,6 @@ typedef struct {
    BOOLEAN           Enabled;
 } LEGACY_ENTRY;
 
-/*
-#ifdef __MAKEWITH_TIANO
-typedef struct {
-   REFIT_MENU_ENTRY me;
-   BDS_COMMON_OPTION *BdsOption;
-   BOOLEAN          Enabled;
-} LEGACY_ENTRY_NON_MAC;
-#endif // __MAKEWITH_TIANO
-*/
-
 typedef struct {
    BOOLEAN     TextOnly;
    BOOLEAN     ScanAllLinux;
@@ -186,6 +198,7 @@ typedef struct {
    UINTN       HideUIFlags;
    UINTN       MaxTags;     // max. number of OS entries to show simultaneously in graphics mode
    UINTN       GraphicsFor;
+   UINTN       LegacyType;
    CHAR16      *BannerFileName;
    CHAR16      *SelectionSmallFileName;
    CHAR16      *SelectionBigFileName;
@@ -211,6 +224,9 @@ extern REFIT_VOLUME     **Volumes;
 extern UINTN            VolumesCount;
 
 extern REFIT_CONFIG     GlobalConfig;
+
+extern EFI_GUID gEfiLegacyBootProtocolGuid;
+extern EFI_GUID gEfiGlobalVariableGuid;
 
 LOADER_ENTRY *InitializeLoaderEntry(IN LOADER_ENTRY *Entry);
 REFIT_MENU_SCREEN *InitializeSubScreen(IN LOADER_ENTRY *Entry);
