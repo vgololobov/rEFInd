@@ -199,6 +199,7 @@ typedef struct {
    UINTN       MaxTags;     // max. number of OS entries to show simultaneously in graphics mode
    UINTN       GraphicsFor;
    UINTN       LegacyType;
+   UINTN       ScanDelay;
    CHAR16      *BannerFileName;
    CHAR16      *SelectionSmallFileName;
    CHAR16      *SelectionBigFileName;

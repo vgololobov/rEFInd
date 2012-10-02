@@ -199,6 +199,11 @@ timeout 20
    <td>Tells rEFInd what methods to use to locate boot loaders. The <tt>internal</tt>, <tt>external</tt>, and <tt>optical</tt> parameters tell rEFInd to scan for EFI boot loaders on internal, external, and optical (CD, DVD, and Blu-ray) devices, respectively. The <tt>hdbios</tt>, <tt>biosexternal</tt>, and <tt>cd</tt> parameters are similar, but scan for BIOS boot loaders. (Note that the BIOS options are likely to be useless on UEFI PCs.) The <tt>manual</tt> parameter tells rEFInd to scan the configuration file for manual settings. You can specify multiple parameters to have the program scan for multiple boot loader types. When you do so, the order determines the order in which the boot loaders appear in the menu. The default is <tt>internal, external, optical</tt>.</td>
 </tr>
 <tr>
+   <td><tt>scan_delay</tt></td>
+   <td>Numeric (integer) value</td>
+   <td>Imposes a delay before rEFInd scans for disk devices. Ordinarily this is not necessary, but on some systems, some disks (particularly external drives and optical discs) can take a few seconds to become available. If some of your disks don't appear when rEFInd starts but they <i>do</i> appear when you press the Esc key to re-scan, try uncommenting this option and setting it to a modest value, such as <tt>2</tt>, <tt>5</tt>, or even <tt>10</tt>. The default is <tt>0</tt>.</td>
+</tr>
+<tr>
    <td><tt>also_scan_dirs</tt></td>
    <td>directory path(s)</td>
    <td>Adds the specified directory or directories to the directory list that rEFInd scans for EFI boot loaders when <tt>scanfor</tt> includes the <tt>internal</tt>, <tt>external</tt>, or <tt>optical</tt> options. Directories are specified relative to the filesystem's root directory. If this option is used, it's applied to <i>all</i> the filesystems that rEFInd scans. If a specified directory doesn't exist, rEFInd ignores it (no error results).</td>

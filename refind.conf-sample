@@ -123,6 +123,13 @@ timeout 20
 #
 #scanfor internal,external,optical,manual
 
+# Delay for the specified number of seconds before scanning disks.
+# This can help some users who find that some of their disks
+# (usually external or optical discs) aren't detected initially,
+# but are detected after pressing Esc.
+#
+#scan_delay 5
+
 # When scanning volumes for EFI boot loaders, rEFInd always looks for
 # Mac OS X's and Microsoft Windows' boot loaders in their normal locations,
 # and scans the root directory and every subdirectory of the /EFI directory

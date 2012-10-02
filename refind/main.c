@@ -93,7 +93,7 @@ static REFIT_MENU_ENTRY MenuEntryExit     = { L"Exit rEFInd", TAG_EXIT, 1, 0, 0,
 static REFIT_MENU_SCREEN MainMenu       = { L"Main Menu", NULL, 0, NULL, 0, NULL, 0, L"Automatic boot" };
 static REFIT_MENU_SCREEN AboutMenu      = { L"About", NULL, 0, NULL, 0, NULL, 0, NULL };
 
-REFIT_CONFIG GlobalConfig = { FALSE, FALSE, 0, 0, 20, 0, 0, GRAPHICS_FOR_OSX, LEGACY_TYPE_MAC,
+REFIT_CONFIG GlobalConfig = { FALSE, FALSE, 0, 0, 20, 0, 0, GRAPHICS_FOR_OSX, LEGACY_TYPE_MAC, 0,
                               NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
                               {TAG_SHELL, TAG_ABOUT, TAG_SHUTDOWN, TAG_REBOOT, 0, 0, 0, 0, 0 }};
 
@@ -115,7 +115,7 @@ static VOID AboutrEFInd(VOID)
 
     if (AboutMenu.EntryCount == 0) {
         AboutMenu.TitleImage = BuiltinIcon(BUILTIN_ICON_FUNC_ABOUT);
-        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.4.5.3");
+        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.4.5.4");
         AddMenuInfoLine(&AboutMenu, L"");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2006-2010 Christoph Pfisterer");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2012 Roderick W. Smith");
@@ -1633,9 +1633,6 @@ static VOID ScanForBootloaders(VOID) {
          case 'o': case 'O':
             ScanOptical();
             break;
-//         case 'l': case 'L':
-//            ScanLegacyNonMac();
-//            break;
       } // switch()
    } // for
 
@@ -1743,8 +1740,9 @@ efi_main (IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable)
     EFI_STATUS         Status;
     BOOLEAN            MainLoopRunning = TRUE;
     REFIT_MENU_ENTRY   *ChosenEntry;
-    UINTN              MenuExit;
+    UINTN              MenuExit, i;
     CHAR16             *Selection;
+    EG_PIXEL           BGColor;
 
     // bootstrap
     InitializeLib(ImageHandle, SystemTable);
@@ -1763,6 +1761,15 @@ efi_main (IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable)
 
     // further bootstrap (now with config available)
     SetupScreen();
+    if (GlobalConfig.ScanDelay > 0) {
+       BGColor.b = 255;
+       BGColor.g = 175;
+       BGColor.r = 100;
+       BGColor.a = 0;
+       egDisplayMessage(L"Pausing before disk scan; please wait....", &BGColor);
+       for (i = 0; i < GlobalConfig.ScanDelay; i++)
+          refit_call1_wrapper(BS->Stall, 1000000);
+    } // if
     LoadDrivers();
     ScanForBootloaders();
     ScanForTools();
