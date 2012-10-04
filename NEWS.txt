@@ -1,6 +1,9 @@
 0.4.6 (10/??/2012):
 -------------------
 
+- Added new "scan_delay" feature to impose a delay before scanning
+  for disks.
+
 - Changed default "scanfor" option from internal-external-optical to
   internal-external-optical-manual. This will have no effect with the
   standard refind.conf file, which has no manual stanzas defined; but some

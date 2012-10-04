@@ -115,7 +115,7 @@ static VOID AboutrEFInd(VOID)
 
     if (AboutMenu.EntryCount == 0) {
         AboutMenu.TitleImage = BuiltinIcon(BUILTIN_ICON_FUNC_ABOUT);
-        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.4.5.4");
+        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.4.5.5");
         AddMenuInfoLine(&AboutMenu, L"");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2006-2010 Christoph Pfisterer");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2012 Roderick W. Smith");
@@ -1135,7 +1135,7 @@ static VOID StartLegacy(IN LEGACY_ENTRY *Entry)
     UINTN               ErrorInStep = 0;
     EFI_DEVICE_PATH     *DiscoveredPathList[MAX_DISCOVERED_PATHS];
 
-    BeginExternalScreen(TRUE, L"Booting Legacy OS");
+    BeginExternalScreen(TRUE, L"Booting Legacy OS (Mac mode)");
 
     BootLogoImage = LoadOSIcon(Entry->Volume->OSIconName, L"legacy", TRUE);
     if (BootLogoImage != NULL)
@@ -1164,11 +1164,18 @@ static VOID StartLegacy(IN LEGACY_ENTRY *Entry)
 
 // Start a device on a non-Mac using the EFI_LEGACY_BIOS_PROTOCOL
 #ifdef __MAKEWITH_TIANO
-static VOID StartLegacyNonMac(IN LEGACY_ENTRY *Entry)
+static VOID StartLegacyUEFI(IN LEGACY_ENTRY *Entry)
 {
+    BeginExternalScreen(TRUE, L"Booting Legacy OS (UEFI mode)");
+
     BdsLibConnectDevicePath (Entry->BdsOption->DevicePath);
     BdsLibDoLegacyBoot(Entry->BdsOption);
-}
+
+    // If we get here, it means that there was a failure....
+    Print(L"Failure booting legacy (BIOS) OS.");
+    PauseForKey();
+    FinishExternalScreen();
+} // static VOID StartLegacyUEFI()
 #endif // __MAKEWITH_TIANO
 
 static LEGACY_ENTRY * AddLegacyEntry(IN CHAR16 *LoaderTitle, IN REFIT_VOLUME *Volume)
@@ -1231,7 +1238,7 @@ static LEGACY_ENTRY * AddLegacyEntry(IN CHAR16 *LoaderTitle, IN REFIT_VOLUME *Vo
 /**
     Create a rEFInd boot option from a Legacy BIOS protocol option.
 */
-static LEGACY_ENTRY * AddLegacyEntryNonMac(BDS_COMMON_OPTION *BdsOption, IN UINT16 DiskType)
+static LEGACY_ENTRY * AddLegacyEntryUEFI(BDS_COMMON_OPTION *BdsOption, IN UINT16 DiskType)
 {
     LEGACY_ENTRY            *Entry, *SubEntry;
     REFIT_MENU_SCREEN       *SubScreen;
@@ -1249,7 +1256,7 @@ static LEGACY_ENTRY * AddLegacyEntryNonMac(BDS_COMMON_OPTION *BdsOption, IN UINT
     Entry->LoadOptions     = (DiskType == BBS_CDROM) ? L"CD" :
                              ((DiskType == BBS_USB) ? L"USB" : L"HD");
     Entry->me.BadgeImage   = NULL;
-    Entry->BdsOption          = BdsOption; 
+    Entry->BdsOption       = BdsOption;
     Entry->Enabled         = TRUE;
 
     // create the submenu
@@ -1270,7 +1277,7 @@ static LEGACY_ENTRY * AddLegacyEntryNonMac(BDS_COMMON_OPTION *BdsOption, IN UINT
     Entry->me.SubScreen = SubScreen;
     AddMenuEntry(&MainMenu, (REFIT_MENU_ENTRY *)Entry);
     return Entry;
-} /* static LEGACY_ENTRY * AddLegacyEntryNonMac() */
+} /* static LEGACY_ENTRY * AddLegacyEntryUEFI() */
 
 /**
     Scan for legacy BIOS targets on machines that implement EFI_LEGACY_BIOS_PROTOCOL.
@@ -1321,7 +1328,7 @@ static VOID ScanLegacyNonMac(IN UINTN DiskType)
            // See BdsHelper.c for currently supported types
            if (BbsDevicePath->DeviceType == DiskType) {
 //           if(IsBbsDeviceTypeSupported(BbsDevicePath->DeviceType)) {
-              AddLegacyEntryNonMac(BdsOption, BbsDevicePath->DeviceType);
+              AddLegacyEntryUEFI(BdsOption, BbsDevicePath->DeviceType);
            }
         }
         Index++;
@@ -1591,23 +1598,37 @@ static VOID LoadDrivers(VOID)
        ConnectAllDriversToAllControllers();
 } /* static VOID LoadDrivers() */
 
-
-static VOID ScanForBootloaders(VOID) {
-   UINTN                     i;
+// Determine what (if any) type of legacy (BIOS) boot support is available
+static VOID FindLegacyBootType(VOID) {
 #ifdef __MAKEWITH_TIANO
    EFI_STATUS                Status;
    EFI_LEGACY_BIOS_PROTOCOL  *LegacyBios;
 #endif
 
-   ScanVolumes();
+   GlobalConfig.LegacyType = LEGACY_TYPE_NONE;
 
+   // UEFI-style legacy BIOS support is available only with the TianoCore EDK2
+   // build environment, and then only with some implementations....
 #ifdef __MAKEWITH_TIANO
-   // Check for UEFI-style legacy BIOS support. If present, set the appropriate
-   // GlobalConfig flag for it.
    Status = gBS->LocateProtocol (&gEfiLegacyBootProtocolGuid, NULL, (VOID **) &LegacyBios);
    if (!EFI_ERROR (Status))
       GlobalConfig.LegacyType = LEGACY_TYPE_UEFI;
 #endif
+
+   // Macs have their own system. If the firmware vendor code contains the
+   // string "Apple", assume it's available. Note that this overrides the
+   // UEFI type, and might yield false positives if the vendor string
+   // contains "Apple" as part of something bigger, so this isn't 100%
+   // perfect.
+   if (StriSubCmp(L"Apple", ST->FirmwareVendor))
+      GlobalConfig.LegacyType = LEGACY_TYPE_MAC;
+} // static VOID FindLegacyBootType
+
+// Locates boot loaders. NOTE: This assumes that GlobalConfig.LegacyType is set correctly.
+static VOID ScanForBootloaders(VOID) {
+   UINTN                     i;
+
+   ScanVolumes();
 
    // scan for loaders and tools, add them to the menu
    for (i = 0; i < NUM_SCAN_OPTIONS; i++) {
@@ -1760,6 +1781,7 @@ efi_main (IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable)
     refit_call4_wrapper(BS->SetWatchdogTimer, 0x0000, 0x0000, 0x0000, NULL);
 
     // further bootstrap (now with config available)
+    FindLegacyBootType();
     SetupScreen();
     if (GlobalConfig.ScanDelay > 0) {
        BGColor.b = 255;
@@ -1812,7 +1834,7 @@ efi_main (IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable)
 
 #ifdef __MAKEWITH_TIANO
             case TAG_LEGACY_NON_MAC: // Boot a legacy OS on a non-Mac
-                StartLegacyNonMac((LEGACY_ENTRY *)ChosenEntry);
+                StartLegacyUEFI((LEGACY_ENTRY *)ChosenEntry);
                 break;
 #endif // __MAKEWITH_TIANO
 

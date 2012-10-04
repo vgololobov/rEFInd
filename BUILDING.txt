@@ -20,13 +20,23 @@ distributions and it was easy to get started with rEFInd development by
 using GNU-EFI and the Debian rEFIt package as a starting point.
 
 Over time, though, I've found that the recent TianoCore EDK2 toolkit has
-its advantages. The most important of these is that the EFI filesystem
-drivers, added with rEFInd 0.4.0, require this toolkit. This is a
-consequence of their derivation, which is via VirtualBox and the Clover
-boot loader, both of which are based on EDK2. I therefore use EDK2 for the
-drivers, and I've added EDK2 support for rEFInd itself. In short, then, the
-drivers require EDK2, whereas the main rEFInd binary can compile with
-either EDK2 or GNU-EFI.
+its advantages. Two features, in particular, require the TianoCore EDK2
+toolkit:
+
+- The EFI filesystem drivers, added with rEFInd 0.4.0. This requirement is
+  a consequence of the derivation of the drivers, which is via VirtualBox
+  and the Clover boot loader, both of which are based on EDK2.
+
+- The legacy BIOS boot feature for UEFI-based PCs. EDK2 is needed in this
+  case because of features unique to that environment. Note that the legacy
+  BIOS boot feature for Macs works when rEFInd is built via either GNU-EFI
+  or the TianoCore EDK2.
+
+For these reasons, effective with rEFInd 0.4.6, I've switched the primary
+build environment from GNU-EFI to TianoCore EDK2. The rEFInd binary itself
+still builds via GNU-EFI, but you must pass the "gnuefi" build target to
+make in order to build in this way, and the resulting binary can't boot
+BIOS-based OSes on UEFI PCs.
 
 I've dropped ancillary programs, such as the gptsync program, from rEFInd.
 You can still use these tools with rEFInd, but you'll need to install them
@@ -42,72 +52,81 @@ To compile rEFInd, you'll need the following:
   EFI-based. It can be 32- or 64-bit, but unless you use a cross-compiler
   (which I've not tested), it must be the appropriate bit width for your
   EFI implementation. (Normally that means 64-bit.) If you don't normally
-  run Linux, you can run it in a VirtualBox or similar virtual machine.
+  run Linux, you can run it in a VirtualBox or similar virtual machine. (I
+  describe some unsupported non-Linux build options shortly.)
 
 * A standard set of Linux development tools, based on GCC.
 
 * One of the following:
 
+  * The TianoCore EDK2 package
+    (http://sourceforge.net/projects/tianocore/). I've tested using the
+    UDK2010.SR1 and UDK2010.SR1.UP1 variants
+    (http://sourceforge.net/apps/mediawiki/tianocore/index.php?title=UDK2010),
+    which are "frozen," rather than the main EDK2 development branch, which
+    is changing as the developers add features, fix bugs, and so on. Using
+    TianoCore EDK2 is supported in rEFInd version 0.4.3 and later (0.4.0
+    and later for the filesystem drivers only). See below for TianoCore
+    setup instructions.
+
   * The GNU-EFI package (http://sourceforge.net/projects/gnu-efi/). You can
     install this from a package called "gnu-efi"; however, rEFInd relies on
     features that were added in (I think) 3.0l to provide driver-loading
-    capabilities. The versions I've used and that work are 3.0p and 3.0q. As
-    of 5/2012, most Linux distributions seem to deliver rather elderly
-    versions of GNU-EFI, so you may need to download the latest source code,
-    compile it, and install it locally. Since rEFInd version 0.2.7, the
-    Makefiles assume this (see below).
+    capabilities. The versions I've used and that work are 3.0p and 3.0q.
+    As of 5/2012, most Linux distributions seem to deliver rather elderly
+    versions of GNU-EFI, so you may need to download the latest source
+    code, compile it, and install it locally. Since rEFInd version 0.2.7,
+    the Makefiles assume this (see below). The legacy BIOS boot support on
+    UEFI-based PCs doesn't work when GNU-EFI is compiled under GNU-EFI, so
+    as of rEFInd 0.4.6, GNU-EFI is no longer the primary build environment,
+    although it's easier to set up on a Linux system.
 
-  * The TianoCore EDK2 package
-    (http://sourceforge.net/projects/tianocore/). I've tested using the
-    UDK2010.SR1 variant
-    (http://sourceforge.net/apps/mediawiki/tianocore/index.php?title=UDK2010),
-    which is "frozen," rather than the main EDK2 development branch, which
-    is changing as the developers add features, fix bugs, and so on. Using
-    this package is supported in rEFInd version 0.4.3 and later (0.4.0 and
-    later for the filesystem drivers only). See below for TianoCore setup
-    instructions.
+It's possible to use a non-Linux platform to compile rEFInd. To the best of
+my knowledge, the rEFInd code doesn't rely on anything Linux-specific in
+its build requirements, and GNU-EFI's Sourceforge page indicates that it
+works under Windows and OS X, too; however, my one attempt to compile
+GNU-EFI under OS X failed. I've received one report that rEFInd compiles
+successfully with Clang and the TianoCore toolkit under OS X by adding the
+refind.inf file to a .dsc file that you use for your own projects. You can
+find brief instructions here (note that this is not my documentation):
 
-It's possible that you could use a non-Linux platform to compile rEFInd. To
-the best of my knowledge, the rEFInd code doesn't rely on anything
-Linux-specific in its build requirements, and GNU-EFI's Sourceforge page
-indicates that it works under Windows and OS X, too; however, my one
-attempt to compile GNU-EFI under OS X failed. I've received one report that
-rEFInd compiles successfully with Clang and the TianoCore toolkit under OS
-X by adding the refind.inf file to a .dsc file that you use for your own
-projects, but I don't have more details than this. Under Windows, you would
-need to either create a project or Makefile for your non-GCC compiler or
-use a GCC port, such as MinGW (http://www.mingw.org). You'd probably need
-to adjust the Makefiles in the latter case.
+https://github.com/snarez/refind-edk2
+
+Under Windows, you would need to either create a project or Makefile for
+your non-GCC compiler or use a GCC port, such as MinGW
+(http://www.mingw.org). You'd probably need to adjust the Makefiles in the
+latter case. A procedure similar to that used under OS X might work using
+GCC or Microsoft's C compiler, but I haven't tested this.
 
 
 Preparing Your Development Kit
 ==============================
 
-If you want to build the rEFInd binary but not the drivers and if you're
-using Linux, GNU-EFI is the easiest way to do the job. I don't describe its
-setup here because it's likely to be fairly easy. If your distribution
-provides a recent enough version, you should be able to install a package
-called gnu-efi and be done with it. If not, you'll need to download the
-source code tarball, build it, and install it. This process is fairly
-typical of Linux packages. Read the GNU-EFI documentation if you need help.
-If you're using GNU-EFI, you can skip the rest of this section.
+If you want to build the rEFInd binary but not the drivers, if you don't
+care about booting BIOS-based OSes on UEFI PCs, and if you're using Linux,
+GNU-EFI is the easiest way to do the job. I don't describe its setup here
+because it's likely to be fairly easy. If your distribution provides a
+recent enough version, you should be able to install a package called
+gnu-efi and be done with it. If not, you'll need to download the source
+code tarball, build it, and install it. This process is fairly typical of
+Linux packages. Read the GNU-EFI documentation if you need help. If you're
+using GNU-EFI, you can skip the rest of this section.
 
-To build the EFI drivers, the TianoCore toolkit is required. You might also
-want to use it if you have problems with GNU-EFI or if you want to build
-rEFInd on a non-Linux platform. Unfortunately, the TianoCore toolkit is
-weird by Linux programming standards. It's also quite large -- it's
-intended as a means to develop a complete EFI firmware implementation, so
-it contains much more code than is needed to develop standalone EFI
-applications. I don't know of any Linux distribution packages for it in
-RPM, Debian package file, or other format; you MUST install the kit from
-source code using its own unusual compilation procedure. The installation
-documentation also omits at least one step and is a bit unclear about
-others. Here's how I installed the toolkit:
+To build the EFI drivers, or if you want support for booting BIOS-based
+OSes on UEFI PCs, the TianoCore toolkit is required. You might also want to
+use it if you have problems with GNU-EFI or if you want to build rEFInd on
+a non-Linux platform. Unfortunately, the TianoCore toolkit is weird by
+Linux programming standards. It's also quite large -- it's intended as a
+means to develop a complete EFI firmware implementation, so it contains
+much more code than is needed to develop standalone EFI applications. I
+don't know of any Linux distribution packages for it in RPM, Debian package
+file, or other formats; you MUST install the kit from source code using its
+own unusual compilation procedure. The installation documentation also
+omits at least one step and is a bit unclear about others. Here's how I
+installed the toolkit:
 
-1) Download UDK2010.SR1 from
+1) Download UDK2010.SR1.UP1 from
    https://sourceforge.net/apps/mediawiki/tianocore/index.php?title=UDK2010.
-   (Note that UDK2010.SR1.UP1 was released in June of 2012. I have yet to
-   test with it.)
 
 2) Type "mkdir /usr/local/UDK2010". You can use another directory, but the
    Makefile for rEFInd's EFI drivers assumes this location. You'll need to
@@ -116,35 +135,35 @@ others. Here's how I installed the toolkit:
 
 3) Type "cd /usr/local/UDK2010".
 
-3) Unzip the downloaded file (UDK2010.SR1.Complete.MyWorkSpace.zip) in the
-   current directory (/usr/local/UDK2010). This creates a handful of files,
-   including a tarball and a couple of .zip files.
+3) Unzip the downloaded file (UDK2010.SR1.UP1.Complete.MyWorkSpace.zip) in
+   the current directory (/usr/local/UDK2010). This creates a handful of
+   files, including a tarball and a couple of .zip files.
 
-4) Type "unzip UDK2010.SR1.MyWorkSpace.zip". This extracts the
+4) Type "unzip UDK2010.SR1.UP1.MyWorkSpace.zip". This extracts the
    platform-neutral portion of the development kit.
 
 5) Type "cd MyWorkSpace".
 
-6) Type "tar xvf ../BaseTools\(Unix\)_UDK2010.SR1.tar". This extracts the
+6) Type "tar xvf ../BaseTools\(Unix\).tar". This extracts the
    Linux/Unix-specific portions of the toolkit.
 
 7) Follow the build instructions at
    https://sourceforge.net/apps/mediawiki/tianocore/index.php?title=Using_EDK_II_with_Native_GCC_4.4;
    however, a few changes are required, as detailed below....
 
-8) Type ". edksetup.sh BaseTools" (note the leading dot). This sets up some
-   environment variables, so subsequent steps (NOT including compiling the
-   rEFInd EFI drivers) must be typed in the shell you use for this step.
+8) Type "source edksetup.sh BaseTools". This sets up some environment
+   variables, so subsequent steps (NOT including compiling the rEFInd EFI
+   drivers) must be typed in the shell you use for this step.
 
 9) Edit Conf/target.txt and change the following:
    - ACTIVE_PLATFORM = MdeModulePkg/MdeModulePkg.dsc
    - TARGET = RELEASE (DEBUG might work, but I've not tested it).
    - TARGET_ARCH = X64 (on x86-64; leave this as IA32 on x86)
-   - TOOL_CHAIN_TAG = GCC45 (or other value depending on your GCC version;
+   - TOOL_CHAIN_TAG = GCC46 (or other value depending on your GCC version;
      type "gcc -v" to learn your GCC version number). Note that GCC 4.7
      doesn't have its own entry, so use GCC46 for GCC 4.7.
    The TianoCore Makefiles read some of these variables from this file
-   and uses them when accessing directories, so be sure to type these
+   and use them when accessing directories, so be sure to type these
    entries in the case specified.
 
 10) The documentation refers to editing Conf/tools_def.txt in addition to
@@ -184,10 +203,10 @@ With your development system set up, you can compile rEFInd as follows:
    including this BUILDING.txt file and several subdirectories such as
    "refind", "libeg", and "include".
 
-4) Type "make" to build with GNU-EFI, or "make tiano" to build with
-   TianoCore EDK2. With any luck, rEFInd will compile without error,
-   leaving the "refind_ia32.efi" or "refind_x64.efi" file, depending on
-   your platform, in the "refind" subdirectory.
+4) Type "make gnuefi" to build with GNU-EFI, or either "make" alone or
+   "make tiano" to build with TianoCore EDK2. With any luck, rEFInd will
+   compile without error, leaving the "refind_ia32.efi" or "refind_x64.efi"
+   file, depending on your platform, in the "refind" subdirectory.
 
 5) The default build process does NOT build the filesystem drivers. If you
    want to build them, you must type "make fs" in the main rEFInd source
@@ -265,12 +284,12 @@ The install.sh script, and therefore the "install" target in the Makefile,
 installs the program directly to the ESP and it modifies the *CURRENT
 COMPUTER's* NVRAM. Thus, you should *NOT* use this target as part of the
 build process for your binary packages (RPMs, Debian packages, etc.).
-(Gentoo could use it in an ebuild, though....) You COULD, however, copy the
-files to a directory somewhere (/usr/share/refind or whatever) and then
-call install.sh as part of the binary package installation process.
-Placing the files in /boot/efi/EFI/{distname}/refind and then having a
+(Gentoo could use it in an ebuild, though....) You COULD, however, install
+the files to a directory somewhere (/usr/share/refind or whatever) and then
+call install.sh as part of the binary package installation process. Placing
+the files directly in /boot/efi/EFI/{distname}/refind and then having a
 post-install script call efibootmgr is probably the better way to go,
-though.
+but this assumes that the ESP is mounted at /boot/efi.
 
 
 Compiling the EFI Filesystem Drivers
