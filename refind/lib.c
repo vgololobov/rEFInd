@@ -510,7 +510,7 @@ static VOID ScanVolumeDefaultIcon(IN OUT REFIT_VOLUME *Volume)
     } // switch()
 }
 
-static VOID ScanVolume(IN OUT REFIT_VOLUME *Volume)
+VOID ScanVolume(IN OUT REFIT_VOLUME *Volume)
 {
     EFI_STATUS              Status;
     EFI_DEVICE_PATH         *DevicePath, *NextDevicePath;

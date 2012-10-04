@@ -1235,6 +1235,24 @@ static LEGACY_ENTRY * AddLegacyEntry(IN CHAR16 *LoaderTitle, IN REFIT_VOLUME *Vo
 
 
 #ifdef __MAKEWITH_TIANO
+// default volume badge icon based on disk kind
+static EG_IMAGE * GetDiskBadge(IN UINTN DiskType) {
+   EG_IMAGE * Badge = NULL;
+
+   switch (DiskType) {
+      case BBS_HARDDISK:
+         Badge = BuiltinIcon(BUILTIN_ICON_VOL_INTERNAL);
+         break;
+      case BBS_USB:
+         Badge = BuiltinIcon(BUILTIN_ICON_VOL_EXTERNAL);
+         break;
+      case BBS_CDROM:
+         Badge = BuiltinIcon(BUILTIN_ICON_VOL_OPTICAL);
+         break;
+   } // switch()
+   return Badge;
+} // static EG_IMAGE * GetDiskBadge()
+
 /**
     Create a rEFInd boot option from a Legacy BIOS protocol option.
 */
@@ -1255,7 +1273,8 @@ static LEGACY_ENTRY * AddLegacyEntryUEFI(BDS_COMMON_OPTION *BdsOption, IN UINT16
     Entry->me.Image        = LoadOSIcon(L"legacy", L"legacy", TRUE);
     Entry->LoadOptions     = (DiskType == BBS_CDROM) ? L"CD" :
                              ((DiskType == BBS_USB) ? L"USB" : L"HD");
-    Entry->me.BadgeImage   = NULL;
+    Entry->me.BadgeImage   = GetDiskBadge(DiskType);
+//    Entry->me.BadgeImage   = Volume->VolBadgeImage;
     Entry->BdsOption       = BdsOption;
     Entry->Enabled         = TRUE;
 
@@ -1283,8 +1302,9 @@ static LEGACY_ENTRY * AddLegacyEntryUEFI(BDS_COMMON_OPTION *BdsOption, IN UINT16
     Scan for legacy BIOS targets on machines that implement EFI_LEGACY_BIOS_PROTOCOL.
     In testing, protocol has not been implemented on Macs but has been
     implemented on several Dell PCs and an ASUS motherboard.
+    Restricts output to disks of the specified DiskType.
 */
-static VOID ScanLegacyNonMac(IN UINTN DiskType)
+static VOID ScanLegacyUEFI(IN UINTN DiskType)
 {
     EFI_STATUS                Status;
     EFI_LEGACY_BIOS_PROTOCOL  *LegacyBios;
@@ -1296,18 +1316,19 @@ static VOID ScanLegacyNonMac(IN UINTN DiskType)
     BDS_COMMON_OPTION *BdsOption;
     LIST_ENTRY        TempList;
     BBS_BBS_DEVICE_PATH * BbsDevicePath = NULL;
+//    REFIT_VOLUME          Volume;
 
     InitializeListHead (&TempList);
     ZeroMem (Buffer, sizeof (Buffer));
 
     // If LegacyBios protocol is not implemented on this platform, then
     //we do not support this type of legacy boot on this machine.
-    Status = gBS->LocateProtocol (&gEfiLegacyBootProtocolGuid, NULL, (VOID **) &LegacyBios);
+    Status = gBS->LocateProtocol(&gEfiLegacyBootProtocolGuid, NULL, (VOID **) &LegacyBios);
     if (EFI_ERROR (Status))
         return;
 
     // Grab the boot order
-    BootOrder = BdsLibGetVariableAndSize (L"BootOrder", &gEfiGlobalVariableGuid, &BootOrderSize);
+    BootOrder = BdsLibGetVariableAndSize(L"BootOrder", &gEfiGlobalVariableGuid, &BootOrderSize);
     if (BootOrder == NULL) {
         BootOrderSize = 0;
     }
@@ -1320,22 +1341,21 @@ static VOID ScanLegacyNonMac(IN UINTN DiskType)
         UnicodeSPrint (BootOption, sizeof (BootOption), L"Boot%04x", BootOrder[Index]);
         BdsOption = BdsLibVariableToOption (&TempList, BootOption);
 
-        if(BdsOption != NULL) {
+        if (BdsOption != NULL) {
            //Print(L"Option description = '%s'\n", BdsOption->Description);
            BbsDevicePath = (BBS_BBS_DEVICE_PATH *)BdsOption->DevicePath;
 
            // Only add the entry if it is of a supported type (e.g. USB, HD)
            // See BdsHelper.c for currently supported types
            if (BbsDevicePath->DeviceType == DiskType) {
-//           if(IsBbsDeviceTypeSupported(BbsDevicePath->DeviceType)) {
               AddLegacyEntryUEFI(BdsOption, BbsDevicePath->DeviceType);
            }
         }
         Index++;
     }
-} /* static VOID ScanLegacyNonMac() */
+} /* static VOID ScanLegacyUEFI() */
 #else
-static VOID ScanLegacyNonMac(IN UINTN DiskType){}
+static VOID ScanLegacyUEFI(IN UINTN DiskType){}
 #endif // __MAKEWITH_TIANO
 
 static VOID ScanLegacyVolume(REFIT_VOLUME *Volume, UINTN VolumeIndex) {
@@ -1382,7 +1402,7 @@ static VOID ScanLegacyDisc(VOID)
             ScanLegacyVolume(Volume, VolumeIndex);
       } // for
    } else if (GlobalConfig.LegacyType == LEGACY_TYPE_UEFI) {
-      ScanLegacyNonMac(BBS_CDROM);
+      ScanLegacyUEFI(BBS_CDROM);
    }
 } /* static VOID ScanLegacyDisc() */
 
@@ -1400,7 +1420,7 @@ static VOID ScanLegacyInternal(VOID)
                ScanLegacyVolume(Volume, VolumeIndex);
        } // for
     } else if (GlobalConfig.LegacyType == LEGACY_TYPE_UEFI) {
-       ScanLegacyNonMac(BBS_HARDDISK);
+       ScanLegacyUEFI(BBS_HARDDISK);
     }
 } /* static VOID ScanLegacyInternal() */
 
@@ -1418,7 +1438,7 @@ static VOID ScanLegacyExternal(VOID)
             ScanLegacyVolume(Volume, VolumeIndex);
       } // for
    } else if (GlobalConfig.LegacyType == LEGACY_TYPE_UEFI) {
-      ScanLegacyNonMac(BBS_USB);
+      ScanLegacyUEFI(BBS_USB);
    }
 } /* static VOID ScanLegacyExternal() */
 
