@@ -32,7 +32,6 @@ UpdateBbsTable (
 {
     UINT16  Idx;
     EFI_LEGACY_BIOS_PROTOCOL  *LegacyBios;
-//    EFI_GUID EfiLegacyBootProtocolGuid     = { 0xdb9a1e3d, 0x45cb, 0x4abb, { 0x85, 0x3b, 0xe5, 0x38, 0x7f, 0xdb, 0x2e, 0x2d }};
     EFI_STATUS                Status;
     UINT16                       HddCount = 0;
     HDD_INFO                     *HddInfo = NULL; 
@@ -85,17 +84,17 @@ UpdateBbsTable (
 }
 
 // Internal helper function
-BOOLEAN ArrayContains(UINT16* Arr, UINT8 ArrLen, UINT8 Target)
-{
-    UINT8 i;
-    for(i = 0; i < ArrLen; i++)
-    {
-       if(Arr[i] == Target)
-          return TRUE;
-    }
-
-  return FALSE;
-}
+// BOOLEAN ArrayContains(UINT16* Arr, UINT8 ArrLen, UINT8 Target)
+// {
+//     UINT8 i;
+//     for(i = 0; i < ArrLen; i++)
+//     {
+//        if(Arr[i] == Target)
+//           return TRUE;
+//     }
+// 
+//   return FALSE;
+// }
 
 /**
     Boot the legacy system with the boot option
@@ -122,24 +121,23 @@ BdsLibDoLegacyBoot (
     }
     OptionBBS = (BBS_BBS_DEVICE_PATH *) Option->DevicePath;
 
-    //Print(L"\n\n");
-    //Print(L"Option->Name='%s'\n", Option->OptionName);
-    //Print(L"Option->Number='%d'\n", Option->OptionNumber);
-    //Print(L"Option->Description='%s'\n", Option->Description);
-    //Print(L"Option->LoadOptionsSize='%d'\n",Option->LoadOptionsSize);
-    //Print(L"Option->BootCurrent='%d'\n",Option->BootCurrent);
-    //Print(L"Option->DevicePath->Type= '%d'\n", Option->DevicePath->Type);
-    //Print(L"Option->DevicePath->SubType= '%d'\n", Option->DevicePath->SubType);
-    //Print(L"Option->DevicePath->Length[0]= '%d'\n", Option->DevicePath->Length[0]);
-    //Print(L"Option->DevicePath->Length[1]= '%d'\n", Option->DevicePath->Length[1]); 
-    //Print(L"OptionBBS->DeviceType='%d'\n",OptionBBS->DeviceType);
-    //Print(L"OptionBBS->StatusFlag='%d'\n",OptionBBS->StatusFlag);
-    //Print(L"OptionBBS->String[0]='%c'\n",OptionBBS->String[0]);
-    //Print(L"About to legacy boot!\n");
-    //PauseForKey();
+//     Print(L"\n\n");
+//     Print(L"Option->Name='%s'\n", Option->OptionName);
+//     Print(L"Option->Number='%d'\n", Option->OptionNumber);
+//     Print(L"Option->Description='%s'\n", Option->Description);
+//     Print(L"Option->LoadOptionsSize='%d'\n",Option->LoadOptionsSize);
+//     Print(L"Option->BootCurrent='%d'\n",Option->BootCurrent);
+//     Print(L"Option->DevicePath->Type= '%d'\n", Option->DevicePath->Type);
+//     Print(L"Option->DevicePath->SubType= '%d'\n", Option->DevicePath->SubType);
+//     Print(L"Option->DevicePath->Length[0]= '%d'\n", Option->DevicePath->Length[0]);
+//     Print(L"Option->DevicePath->Length[1]= '%d'\n", Option->DevicePath->Length[1]);
+//     Print(L"OptionBBS->DeviceType='%d'\n",OptionBBS->DeviceType);
+//     Print(L"OptionBBS->StatusFlag='%d'\n",OptionBBS->StatusFlag);
+//     Print(L"OptionBBS->String[0]='%c'\n",OptionBBS->String[0]);
+//     Print(L"About to legacy boot!\n");
+//     PauseForKey();
 
     UpdateBbsTable(OptionBBS->DeviceType); 
 
     return LegacyBios->LegacyBoot (LegacyBios, (BBS_BBS_DEVICE_PATH *) Option->DevicePath, Option->LoadOptionsSize, Option->LoadOptions);
 }
-

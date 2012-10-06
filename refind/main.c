@@ -115,7 +115,7 @@ static VOID AboutrEFInd(VOID)
 
     if (AboutMenu.EntryCount == 0) {
         AboutMenu.TitleImage = BuiltinIcon(BUILTIN_ICON_FUNC_ABOUT);
-        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.4.5.5");
+        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.4.5.6");
         AddMenuInfoLine(&AboutMenu, L"");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2006-2010 Christoph Pfisterer");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2012 Roderick W. Smith");
@@ -1263,6 +1263,8 @@ static LEGACY_ENTRY * AddLegacyEntryUEFI(BDS_COMMON_OPTION *BdsOption, IN UINT16
     CHAR16                  ShortcutLetter = 0;
     CHAR16 *LegacyDescription = BdsOption->Description;
 
+//    ScanVolume(Volume);
+
     // prepare the menu entry
     Entry = AllocateZeroPool(sizeof(LEGACY_ENTRY));
     Entry->me.Title = AllocateZeroPool(256 * sizeof(CHAR16));
@@ -1310,7 +1312,7 @@ static VOID ScanLegacyUEFI(IN UINTN DiskType)
     EFI_LEGACY_BIOS_PROTOCOL  *LegacyBios;
     UINT16                    *BootOrder = NULL;
     UINTN                     Index = 0;
-    UINT16                    BootOption[10];
+    CHAR16                    BootOption[10];
     UINTN                     BootOrderSize = 0;
     CHAR16            Buffer[20];
     BDS_COMMON_OPTION *BdsOption;
@@ -1339,15 +1341,18 @@ static VOID ScanLegacyUEFI(IN UINTN DiskType)
         // Grab each boot option variable from the boot order, and convert
         // the variable into a BDS boot option
         UnicodeSPrint (BootOption, sizeof (BootOption), L"Boot%04x", BootOrder[Index]);
+        Print(L"Scanning '%s'\n", BootOption);
         BdsOption = BdsLibVariableToOption (&TempList, BootOption);
 
         if (BdsOption != NULL) {
-           //Print(L"Option description = '%s'\n", BdsOption->Description);
            BbsDevicePath = (BBS_BBS_DEVICE_PATH *)BdsOption->DevicePath;
 
-           // Only add the entry if it is of a supported type (e.g. USB, HD)
-           // See BdsHelper.c for currently supported types
-           if (BbsDevicePath->DeviceType == DiskType) {
+           // Only add the entry if it is of a requested type (e.g. USB, HD)
+
+           // Two checks necessary because some systems return EFI boot loaders
+           // with a DeviceType value that would inappropriately include them
+           // as legacy loaders....
+           if ((BbsDevicePath->DeviceType == DiskType) && (BdsOption->DevicePath->Type == DEVICE_TYPE_BIOS)) {
               AddLegacyEntryUEFI(BdsOption, BbsDevicePath->DeviceType);
            }
         }
@@ -1793,7 +1798,11 @@ efi_main (IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable)
         return Status;
 
     // read configuration
-    CopyMem(GlobalConfig.ScanFor, "ieom      ", NUM_SCAN_OPTIONS);
+    FindLegacyBootType();
+    if (GlobalConfig.LegacyType == LEGACY_TYPE_MAC)
+       CopyMem(GlobalConfig.ScanFor, "ihebocm   ", NUM_SCAN_OPTIONS);
+    else
+       CopyMem(GlobalConfig.ScanFor, "ieom      ", NUM_SCAN_OPTIONS);
     ReadConfig();
     MainMenu.TimeoutSeconds = GlobalConfig.Timeout;
 
@@ -1801,7 +1810,6 @@ efi_main (IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable)
     refit_call4_wrapper(BS->SetWatchdogTimer, 0x0000, 0x0000, 0x0000, NULL);
 
     // further bootstrap (now with config available)
-    FindLegacyBootType();
     SetupScreen();
     if (GlobalConfig.ScanDelay > 0) {
        BGColor.b = 255;

@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 3/14/2012; last Web page update:
-8/12/2012, referencing rEFInd 0.4.5</p>
+10/6/2012, referencing rEFInd 0.4.6</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -196,7 +196,7 @@ timeout 20
 <tr>
    <td><tt>scanfor</tt></td>
    <td><tt>internal</tt>, <tt>external</tt>, <tt>optical</tt>, <tt>hdbios</tt>, <tt>biosexternal</tt>, <tt>cd</tt>, and <tt>manual</tt></td>
-   <td>Tells rEFInd what methods to use to locate boot loaders. The <tt>internal</tt>, <tt>external</tt>, and <tt>optical</tt> parameters tell rEFInd to scan for EFI boot loaders on internal, external, and optical (CD, DVD, and Blu-ray) devices, respectively. The <tt>hdbios</tt>, <tt>biosexternal</tt>, and <tt>cd</tt> parameters are similar, but scan for BIOS boot loaders. (Note that the BIOS options are likely to be useless on UEFI PCs.) The <tt>manual</tt> parameter tells rEFInd to scan the configuration file for manual settings. You can specify multiple parameters to have the program scan for multiple boot loader types. When you do so, the order determines the order in which the boot loaders appear in the menu. The default is <tt>internal, external, optical</tt>.</td>
+   <td>Tells rEFInd what methods to use to locate boot loaders. The <tt>internal</tt>, <tt>external</tt>, and <tt>optical</tt> parameters tell rEFInd to scan for EFI boot loaders on internal, external, and optical (CD, DVD, and Blu-ray) devices, respectively. The <tt>hdbios</tt>, <tt>biosexternal</tt>, and <tt>cd</tt> parameters are similar, but scan for BIOS boot loaders. (Note that the BIOS options scan more thoroughly and actively on Macs than on UEFI-based PCs; for the latter, only options in the firmware's boot list are scanned.) The <tt>manual</tt> parameter tells rEFInd to scan the configuration file for manual settings. You can specify multiple parameters to have the program scan for multiple boot loader types. When you do so, the order determines the order in which the boot loaders appear in the menu. The default is <tt>internal, external, optical, manual</tt> on most systems, but <tt>internal, hdbios, external, biosexternal, optical, cd, manual</tt> on Macs.</td>
 </tr>
 <tr>
    <td><tt>scan_delay</tt></td>

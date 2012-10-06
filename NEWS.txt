@@ -4,11 +4,19 @@
 - Added new "scan_delay" feature to impose a delay before scanning
   for disks.
 
-- Changed default "scanfor" option from internal-external-optical to
-  internal-external-optical-manual. This will have no effect with the
-  standard refind.conf file, which has no manual stanzas defined; but some
-  users seem to overlook this setting, and think that adding manual stanzas
-  is enough to activate them. This will make it so.
+- Changed default "scanfor" option from internal-external-optical to either
+  internal-external-optical-manual (for non-Macs) or
+  internal-hdbios-external-biosexternal-optical-cd-manual (for Macs). I've
+  done this for two reasons:
+  - Many Mac users have been confused by the fact that rEFInd needs
+    reconfiguration to detect Windows (or Linux installed in BIOS mode),
+    since rEFIt scans BIOS devices by default. Adding the BIOS options as
+    default for them should help them.
+  - Adding the "manual" option enables users to simply add manual boot
+    stanzas and have them work, which is more intuitive. Adding the
+    "manual" option will have no effect unless manual stanzas are created
+    or uncommented, so this part of the change won't affect users' working
+    default configurations.
 
 - Added new legacy (BIOS) boot support for UEFI-based PCs.
 

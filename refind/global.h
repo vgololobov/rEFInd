@@ -100,6 +100,14 @@
 #define BBS_UNKNOWN       0xff
 #endif
 
+// BIOS Boot Specification (BBS) device types, as returned in DevicePath->Type field
+#define DEVICE_TYPE_HW         0x01
+#define DEVICE_TYPE_ACPI       0x02 /* returned by UEFI boot loader on USB */
+#define DEVICE_TYPE_MESSAGING  0x03
+#define DEVICE_TYPE_MEDIA      0x04 /* returned by EFI boot loaders on hard disk */
+#define DEVICE_TYPE_BIOS       0x05 /* returned by legacy (BIOS) boot loaders */
+#define DEVICE_TYPE_END        0x75 /* end of path */
+
 //TODO: may want to make this configurable via config file
 //static UINT16 SupportedLegacyDevices[] = {BBS_HARDDISK, BBS_CDROM, BBS_USB};
 
