@@ -67,7 +67,7 @@
 #define TAG_EXIT     (7)
 #define TAG_SHELL    (8)
 #define TAG_GPTSYNC  (9)
-#define TAG_LEGACY_NON_MAC (10)
+#define TAG_LEGACY_UEFI (10)
 #define NUM_TOOLS    (9)
 
 #define NUM_SCAN_OPTIONS 10

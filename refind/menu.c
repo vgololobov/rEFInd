@@ -308,11 +308,6 @@ VOID AddMenuEntry(IN REFIT_MENU_SCREEN *Screen, IN REFIT_MENU_ENTRY *Entry)
     AddListElement((VOID ***) &(Screen->Entries), &(Screen->EntryCount), Entry);
 }
 
-VOID FreeMenu(IN REFIT_MENU_SCREEN *Screen)
-{
-    if (Screen->Entries)
-        FreePool(Screen->Entries);
-}
 
 static INTN FindMenuShortcutEntry(IN REFIT_MENU_SCREEN *Screen, IN CHAR16 *Shortcut)
 {
@@ -552,8 +547,8 @@ static VOID TextMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, 
         case MENU_FUNCTION_CLEANUP:
             // release temporary memory
             for (i = 0; i <= State->MaxIndex; i++)
-                FreePool(DisplayStrings[i]);
-            FreePool(DisplayStrings);
+                MyFreePool(DisplayStrings[i]);
+            MyFreePool(DisplayStrings);
             break;
 
         case MENU_FUNCTION_PAINT_ALL:
@@ -874,7 +869,7 @@ VOID MainMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, IN UINT
             break;
 
         case MENU_FUNCTION_CLEANUP:
-            FreePool(itemPosX);
+            MyFreePool(itemPosX);
             break;
 
         case MENU_FUNCTION_PAINT_ALL:

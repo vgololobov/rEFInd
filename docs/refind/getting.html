@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 3/14/2012; last Web page update:
-8/12/2012, referencing rEFInd 0.4.5</p>
+10/6/2012, referencing rEFInd 0.4.6</p>
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
 
@@ -97,46 +97,49 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <ul>
 
-<li><b><a href="http://sourceforge.net/projects/refind/files/0.4.5/refind-src-0.4.5.zip/download">A
+<li><b><a
+    href="http://sourceforge.net/projects/refind/files/0.4.6/refind-src-0.4.6.zip/download">A
     source code zip file</a></b>&mdash;This is useful if you want to
     compile the software locally. Note that I use Linux with the <a
-    href="http://sourceforge.net/projects/gnu-efi">GNU-EFI</a> development
-    tools to build the main rEFInd binary, and Linux with the <a
-    href="https://sourceforge.net/projects/tianocore/">TianoCore
-    development kit</a> for the drivers. rEFIt used an Intel/Microsoft
+    href="https://sourceforge.net/projects/tianocore/">TianoCore EFI
+    Development Kit 2 (EDK2)</a> to build my binaries (below), although the
+    <a href="http://sourceforge.net/projects/gnu-efi">GNU-EFI</a>
+    development tools are also supported. rEFIt used an Intel/Microsoft
     toolchain. Backporting rEFInd to that toolchain is theoretically
     possible, but I've not attempted it.</li>
 
 <li><b><a
-    href="http://sourceforge.net/projects/refind/files/0.4.5/refind-bin-0.4.5.zip/download">A
-    binary zip file (built with GNU-EFI)</a></b>&mdash;Download this if you
-    want to install rEFInd and/or its filesystem drivers on an <i>x</i>86
-    or <i>x</i>86-64 computer and have no need to test rEFInd first by
-    booting it on an optical disc. This zip file package includes both
-    <i>x</i>86 (aka IA32) and <i>x</i>86-64 (aka <i>x</i>64, AMD64, or
-    EM64T) versions of rEFInd. Which you install depends on your
-    architecture, as described on the <a href="installing.html">Installing
-    rEFInd</a> page.</li>
+    href="http://sourceforge.net/projects/refind/files/0.4.6/refind-bin-0.4.6.zip/download">A
+    binary zip file</a></b>&mdash;Download this if you want to install
+    rEFInd and/or its filesystem drivers on an <i>x</i>86 or <i>x</i>86-64
+    computer and have no need to test rEFInd first by booting it on an
+    optical disc. This zip file package includes both <i>x</i>86 (aka IA32)
+    and <i>x</i>86-64 (aka <i>x</i>64, AMD64, or EM64T) versions of rEFInd.
+    Which you install depends on your architecture, as described on the <a
+    href="installing.html">Installing rEFInd</a> page.</li>
+
+<!--
+<li><b><a
+    href="http://sourceforge.net/projects/refind/files/0.4.6/refind-bin-gnuefi-0.4.6.zip/download">A
+    binary zip file (built with GNU-EFI)</a></b>&mdash;This package is just
+    like the preceding one, except that it was built using the GNU-EFI
+    development kit rather than the TianoCore EFI Development Kit 2 (EDK2)
+    that was used to build the other binary. I originally used GNU-EFI to
+    develop rEFInd, but the GNU-EFI toolkit doesn't support the legacy
+    (BIOS-mode) boot calls on UEFI-based PCs, so I now consider the
+    TianoCore build to be the primary one. (Macs can boot legacy OSes using
+    either build.)</li>
+-->
 
 <li><b><a
-    href="http://sourceforge.net/projects/refind/files/0.4.5/refind-bin-tiano-0.4.5.zip/download">A
-    binary zip file (built with TianoCore EDK2)</a></b>&mdash;This package
-    is just like the preceding one, except that it was built using the
-    TianoCore EFI Development Kit 2 (EDK2) rather than the GNU-EFI that was
-    used to build the other binary. In theory, the two should work
-    identically. In practice, they might not. I originally used GNU-EFI to
-    develop rEFInd, so it's the safer version; however, I would appreciate
-    feedback about the TianoCore EDK2 build.</li>
-
-<li><b><a
-    href="http://sourceforge.net/projects/refind/files/0.4.5/refind-cd-0.4.5.zip/download">A
+    href="http://sourceforge.net/projects/refind/files/0.4.6/refind-cd-0.4.6.zip/download">A
     CD-R image file</a></b>&mdash;This download contains the same files as
-    the GNU-EFI zip file, but you can burn it to a CD-R to test rEFInd (and its
-    filesystem drivers) without installing it first. (It boots on UEFI PCs,
-    but fails on some older Macs.) If you like it, you can then copy the
-    files from the CD-R to your hard disk. The files are named in such a
-    way that the disc should boot on either 64-bit (<i>x</i>86-64) or
-    32-bit (<i>x</i>86) EFI computers. I've included an open source EFI
+    the binary zip file, but you can burn it to a CD-R to test rEFInd
+    (and its filesystem drivers) without installing it first. (It boots on
+    UEFI PCs, but fails on some older Macs.) If you like it, you can then
+    copy the files from the CD-R to your hard disk. The files are named in
+    such a way that the disc should boot on either 64-bit (<i>x</i>86-64)
+    or 32-bit (<i>x</i>86) EFI computers. I've included an open source EFI
     shell program on this disc that's not included in the binary zip file,
     so that you can access an EFI shell from a bootable disc even if you
     don't have an EFI shell available from your regular hard disk. This can
@@ -153,7 +156,7 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 </ul>
 
-<p>If you're using another platform, you can give rEFInd a try; however, you'll need to build it from source code yourself or track down a binary from another source. (Perhaps by the time you read this it will be included in Linux distributions built for unusual CPUs.)</p>
+<p>If you're using a platform other than <i>x</i>86 or <i>x</i>86-64, you can give rEFInd a try; however, you'll need to build it from source code yourself or track down a binary from another source. (Perhaps by the time you read this it will be included in Linux distributions built for unusual CPUs.)</p>
 
 <p>To extract the files from the zip file images I've provided, you'll need a tool such as <tt>unzip</tt>, which is included with Linux and Mac OS X. Numerous Windows utilities also support this format, such as <a href="http://www.pkware.com/software/pkzip/">PKZIP</a> and <a href="http://www.7-zip.org/">7-Zip.</a></p>
 

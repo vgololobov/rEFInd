@@ -99,9 +99,9 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <li>User-configurable graphics and icons&mdash;you can set your own background, set new icons, and so on.</li>
 
-<li>Launch EFI boot loaders</li>
+<li>Launch EFI boot loaders.</li>
 
-<li>Launch legacy (BIOS) boot loaders on Macs and on some UEFI-based PCs. On the latter, the BIOS boot device must be listed in the firmware's boot options. Often only the hard disk and optical disc are listed by default. Scanning for legacy OSes is more thorough on Macs.</li>
+<li>Launch legacy (BIOS) boot loaders on Macs. (rEFInd also supports legacy boots on some UEFI PCs; see below.)</li>
 
 <li>Launch options for an external EFI shell or disk partitioner. (See the <a href="installing.html">Installing rEFInd</a> section for information on how to obtain and install these components.)</li>
 
@@ -125,11 +125,17 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
     <ul>
     <li>Auto-detection of EFI boot loaders, independently on internal hard disks, external hard disks, and optical discs.</li>
-    <li>Auto-detection of BIOS boot loaders, independently on internal hard disks, external hard disks, and optical discs.</li>
+    <li>Auto-detection of legacy BIOS boot loaders, independently on internal hard disks, external hard disks, and optical discs.</li>
     <li>Manually via the configuration file</li>
     </ul>
 
     You can select which of these methods to use to construct the rEFInd main boot menu. Although rEFIt supports auto-detection, it does not support manual configuration; and rEFIt's options to enable, disable, and prioritize individual boot loader detection methods are primitive compared to those in rEFInd.</li>
+
+<li>Support for launching legacy BIOS boot loaders on UEFI PCs with
+suitable CSM support (as of version 0.4.6). This feature requires building
+rEFInd with the TianoCore EDK2 toolkit, which I do for my main binary
+build. Note that some UEFI PCs, such as those with Gigabyte's Hybrid EFI,
+lack a usable CSM.</li>
 
 <li>The ability to fine-tune options passed to EFI boot loaders, via manual configuration.</li>
 

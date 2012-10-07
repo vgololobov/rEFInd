@@ -144,10 +144,9 @@ EFI_STATUS InitRefitLib(IN EFI_HANDLE ImageHandle)
     // find the current directory
     DevicePathAsString = DevicePathToStr(SelfLoadedImage->FilePath);
     CleanUpPathNameSlashes(DevicePathAsString);
-    if (SelfDirPath != NULL)
-       FreePool(SelfDirPath);
+    MyFreePool(SelfDirPath);
     SelfDirPath = FindPath(DevicePathAsString);
-    FreePool(DevicePathAsString);
+    MyFreePool(DevicePathAsString);
 
     return FinishInitRefitLib();
 }
@@ -249,14 +248,14 @@ VOID FreeList(IN OUT VOID ***ListPtr, IN OUT UINTN *ElementCount)
 {
     UINTN i;
 
-    if (*ElementCount > 0) {
+    if ((*ElementCount > 0) && (**ListPtr != NULL)) {
         for (i = 0; i < *ElementCount; i++) {
             // TODO: call a user-provided routine for each element here
-            FreePool((*ListPtr)[i]);
+            MyFreePool((*ListPtr)[i]);
         }
-        FreePool(*ListPtr);
+        MyFreePool(*ListPtr);
     }
-}
+} // VOID FreeList()
 
 //
 // firmware device path discovery
@@ -325,7 +324,7 @@ VOID ExtractLegacyLoaderPaths(EFI_DEVICE_PATH **PathList, UINTN MaxPaths, EFI_DE
 
         PathList[PathCount++] = AppendDevicePath(DevicePath, LegacyLoaderMediaPath);
     }
-    FreePool(Handles);
+    MyFreePool(Handles);
 
     if (HardcodedPathList) {
         for (HardcodedIndex = 0; HardcodedPathList[HardcodedIndex] && PathCount < MaxPaths; HardcodedIndex++)
@@ -730,7 +729,7 @@ VOID ScanVolumes(VOID)
     UINT8                   *SectorBuffer1, *SectorBuffer2;
     UINTN                   SectorSum, i;
 
-    FreePool(Volumes);
+    MyFreePool(Volumes);
     Volumes = NULL;
     VolumesCount = 0;
 
@@ -754,7 +753,7 @@ VOID ScanVolumes(VOID)
         if (Volume->DeviceHandle == SelfLoadedImage->DeviceHandle)
             SelfVolume = Volume;
     }
-    FreePool(Handles);
+    MyFreePool(Handles);
 
     if (SelfVolume == NULL)
         Print(L"WARNING: SelfVolume not found");
@@ -826,8 +825,8 @@ VOID ScanVolumes(VOID)
                 break;
             }
 
-            FreePool(SectorBuffer1);
-            FreePool(SectorBuffer2);
+            MyFreePool(SectorBuffer1);
+            MyFreePool(SectorBuffer2);
         }
 
     }
@@ -924,8 +923,8 @@ EFI_STATUS DirNextEntry(IN EFI_FILE *Directory, IN OUT EFI_FILE_INFO **DirEntry,
 
         // free pointer from last call
         if (*DirEntry != NULL) {
-            FreePool(*DirEntry);
-            *DirEntry = NULL;
+           FreePool(*DirEntry);
+           *DirEntry = NULL;
         }
 
         // read next directory entry
@@ -1049,8 +1048,8 @@ BOOLEAN DirIterNext(IN OUT REFIT_DIR_ITER *DirIter, IN UINTN FilterMode, IN CHAR
     CHAR16  *OnePattern;
 
     if (DirIter->LastFileInfo != NULL) {
-        FreePool(DirIter->LastFileInfo);
-        DirIter->LastFileInfo = NULL;
+       FreePool(DirIter->LastFileInfo);
+       DirIter->LastFileInfo = NULL;
     }
 
     if (EFI_ERROR(DirIter->LastStatus))
@@ -1081,12 +1080,12 @@ BOOLEAN DirIterNext(IN OUT REFIT_DIR_ITER *DirIter, IN UINTN FilterMode, IN CHAR
 
 EFI_STATUS DirIterClose(IN OUT REFIT_DIR_ITER *DirIter)
 {
-    if (DirIter->LastFileInfo != NULL) {
-        FreePool(DirIter->LastFileInfo);
-        DirIter->LastFileInfo = NULL;
-    }
-    if (DirIter->CloseDirHandle)
-        refit_call1_wrapper(DirIter->DirHandle->Close, DirIter->DirHandle);
+   if (DirIter->LastFileInfo != NULL) {
+      FreePool(DirIter->LastFileInfo);
+      DirIter->LastFileInfo = NULL;
+   }
+   if (DirIter->CloseDirHandle)
+      refit_call1_wrapper(DirIter->DirHandle->Close, DirIter->DirHandle);
     return DirIter->LastStatus;
 }
 
@@ -1166,8 +1165,8 @@ BOOLEAN StriSubCmp(IN CHAR16 *SmallStr, IN CHAR16 *BigStr) {
       while ((!Found) && (StartPoint < NumCompares)) {
          Found = (StrnCmp(SmallCopy, &BigCopy[StartPoint++], SmallLen) == 0);
       } // while
-      FreePool(SmallCopy);
-      FreePool(BigCopy);
+      MyFreePool(SmallCopy);
+      MyFreePool(BigCopy);
    } // if
 
    return (Found);
@@ -1202,7 +1201,7 @@ VOID MergeStrings(IN OUT CHAR16 **First, IN CHAR16 *Second, CHAR16 AddChar) {
       } // if (*First != NULL)
       if (Second != NULL)
          StrCat(NewString, Second);
-      FreePool(*First);
+      MyFreePool(*First);
       *First = NewString;
    } else {
       Print(L"Error! Unable to allocate memory in MergeStrings()!\n");
@@ -1368,6 +1367,13 @@ BOOLEAN IsIn(IN CHAR16 *SmallString, IN CHAR16 *List) {
    return Found;
 } // BOOLEAN IsIn()
 
+// Implement FreePool the way it should have been done to begin with, so that
+// it doesn't throw an ASSERT message if fed a NULL pointer....
+VOID MyFreePool(IN OUT VOID *Pointer) {
+   if (Pointer != NULL)
+      FreePool(Pointer);
+}
+
 static EFI_GUID AppleRemovableMediaGuid = APPLE_REMOVABLE_MEDIA_PROTOCOL_GUID;
 
 // Eject all removable media.
@@ -1391,7 +1397,7 @@ BOOLEAN EjectMedia(VOID) {
       if (!EFI_ERROR(Status))
          Ejected++;
    }
-   FreePool(Handles);
+   MyFreePool(Handles);
    return (Ejected > 0);
 } // VOID EjectMedia()
 

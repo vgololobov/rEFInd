@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 3/19/2012; last Web page update:
-8/12/2012, referencing rEFInd 0.4.5</p>
+10/6/2012, referencing rEFInd 0.4.6</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -150,7 +150,7 @@ another possibility.</p>
     initial RAM disk is identified, rEFInd passes a suitable
     <tt>initrd=</tt> option to the kernel when it boots.</li>
 
-<p class="sidebar">rEFInd 0.2.1 and 0.2.2 used a filename of <tt>linux.conf</tt> to hold Linux kernel options; however, the Linux kernel developers plan to use this name themselves, so I've switched to <tt>refind_linux.conf</tt> as of rEFInd 0.2.3. Through version 0.4.2, rEFInd still supported the <tt>linux.conf</tt> filename as a backup to <tt>refind_linux.conf</tt>, but as of version 0.4.3, <tt>linux.conf</tt> no longer works, so you should rename your <tt>linux.conf</tt> file to <tt>refind_linux.conf</tt> if you're upgrading.</p>
+<p class="sidebar">rEFInd 0.2.1 and 0.2.2 used a filename of <tt>linux.conf</tt> to hold Linux kernel options; however, the Linux kernel developers plan to use this name themselves, so I've switched to <tt>refind_linux.conf</tt> as of rEFInd 0.2.3. Through version 0.4.2, rEFInd still supported the <tt>linux.conf</tt> filename as a backup to <tt>refind_linux.conf</tt>, but as of version 0.4.3, <tt>linux.conf</tt> no longer works, so you should rename rEFInd's <tt>linux.conf</tt> file to <tt>refind_linux.conf</tt> if you're upgrading.</p>
 
 <li>rEFInd looks for a file called <tt>refind_linux.conf</tt> in the same
     directory as the kernel file. This file is a practical requirement for

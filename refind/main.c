@@ -115,7 +115,7 @@ static VOID AboutrEFInd(VOID)
 
     if (AboutMenu.EntryCount == 0) {
         AboutMenu.TitleImage = BuiltinIcon(BUILTIN_ICON_FUNC_ABOUT);
-        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.4.5.6");
+        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.4.6");
         AddMenuInfoLine(&AboutMenu, L"");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2006-2010 Christoph Pfisterer");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2012 Roderick W. Smith");
@@ -233,8 +233,7 @@ bailout_unload:
     // unload the image, we don't care if it works or not...
     Status = refit_call1_wrapper(BS->UnloadImage, ChildImageHandle);
 bailout:
-    if (FullLoadOptions != NULL)
-        FreePool(FullLoadOptions);
+    MyFreePool(FullLoadOptions);
     return ReturnStatus;
 } /* static EFI_STATUS StartEFIImageList() */
 
@@ -309,14 +308,13 @@ static CHAR16 * FindInitrd(IN CHAR16 *LoaderPath, IN REFIT_VOLUME *Volume) {
             MergeStrings(&InitrdName, DirEntry->FileName, 0);
          } // if
       } // if/else
-      if (InitrdVersion != NULL)
-         FreePool(InitrdVersion);
+      MyFreePool(InitrdVersion);
    } // while
    DirIterClose(&DirIter);
 
    // Note: Don't FreePool(FileName), since Basename returns a pointer WITHIN the string it's passed.
-   FreePool(KernelVersion);
-   FreePool(Path);
+   MyFreePool(KernelVersion);
+   MyFreePool(Path);
    return (InitrdName);
 } // static CHAR16 * FindInitrd()
 
@@ -335,8 +333,8 @@ static REFIT_MENU_SCREEN* CopyMenuScreen(REFIT_MENU_SCREEN *Entry) {
    NewEntry = AllocateZeroPool(sizeof(REFIT_MENU_SCREEN));
    if ((Entry != NULL) && (NewEntry != NULL)) {
       CopyMem(NewEntry, Entry, sizeof(REFIT_MENU_SCREEN));
-      NewEntry->Title = StrDuplicate(Entry->Title);
-      NewEntry->TimeoutText = StrDuplicate(Entry->TimeoutText);
+      NewEntry->Title = (Entry->Title) ? StrDuplicate(Entry->Title) : NULL;
+      NewEntry->TimeoutText = (Entry->TimeoutText) ? StrDuplicate(Entry->TimeoutText) : NULL;
       if (Entry->TitleImage != NULL) {
          NewEntry->TitleImage = AllocatePool(sizeof(EG_IMAGE));
          if (NewEntry->TitleImage != NULL)
@@ -344,7 +342,7 @@ static REFIT_MENU_SCREEN* CopyMenuScreen(REFIT_MENU_SCREEN *Entry) {
       } // if
       NewEntry->InfoLines = (CHAR16**) AllocateZeroPool(Entry->InfoLineCount * (sizeof(CHAR16*)));
       for (i = 0; i < Entry->InfoLineCount && NewEntry->InfoLines; i++) {
-         NewEntry->InfoLines[i] = StrDuplicate(Entry->InfoLines[i]);
+         NewEntry->InfoLines[i] = (Entry->InfoLines[i]) ? StrDuplicate(Entry->InfoLines[i]) : NULL;
       } // for
       NewEntry->Entries = (REFIT_MENU_ENTRY**) AllocateZeroPool(Entry->EntryCount * (sizeof (REFIT_MENU_ENTRY*)));
       for (i = 0; i < Entry->EntryCount && NewEntry->Entries; i++) {
@@ -365,7 +363,7 @@ static REFIT_MENU_ENTRY* CopyMenuEntry(REFIT_MENU_ENTRY *Entry) {
    NewEntry = AllocateZeroPool(sizeof(REFIT_MENU_ENTRY));
    if ((Entry != NULL) && (NewEntry != NULL)) {
       CopyMem(NewEntry, Entry, sizeof(REFIT_MENU_ENTRY));
-      NewEntry->Title = StrDuplicate(Entry->Title);
+      NewEntry->Title = (Entry->Title) ? StrDuplicate(Entry->Title) : NULL;
       if (Entry->BadgeImage != NULL) {
          NewEntry->BadgeImage = AllocatePool(sizeof(EG_IMAGE));
          if (NewEntry->BadgeImage != NULL)
@@ -399,12 +397,12 @@ LOADER_ENTRY *InitializeLoaderEntry(IN LOADER_ENTRY *Entry) {
       NewEntry->UseGraphicsMode = FALSE;
       NewEntry->OSType          = 0;
       if (Entry != NULL) {
-         NewEntry->LoaderPath      = StrDuplicate(Entry->LoaderPath);
-         NewEntry->VolName         = StrDuplicate(Entry->VolName);
+         NewEntry->LoaderPath      = (Entry->LoaderPath) ? StrDuplicate(Entry->LoaderPath) : NULL;
+         NewEntry->VolName         = (Entry->VolName) ? StrDuplicate(Entry->VolName) : NULL;
          NewEntry->DevicePath      = Entry->DevicePath;
          NewEntry->UseGraphicsMode = Entry->UseGraphicsMode;
-         NewEntry->LoadOptions     = StrDuplicate(Entry->LoadOptions);
-         NewEntry->InitrdPath      = StrDuplicate(Entry->InitrdPath);
+         NewEntry->LoadOptions     = (Entry->LoadOptions) ? StrDuplicate(Entry->LoadOptions) : NULL;
+         NewEntry->InitrdPath      = (Entry->InitrdPath) ? StrDuplicate(Entry->InitrdPath) : NULL;
       }
    } // if
    return (NewEntry);
@@ -438,7 +436,7 @@ REFIT_MENU_SCREEN *InitializeSubScreen(IN LOADER_ENTRY *Entry) {
                MergeStrings(&Temp, L"initrd=", 0);
                MergeStrings(&Temp, SubEntry->InitrdPath, 0);
                MergeStrings(&SubEntry->LoadOptions, Temp, L' ');
-               FreePool(Temp);
+               MyFreePool(Temp);
             } // if
             AddMenuEntry(SubScreen, (REFIT_MENU_ENTRY *)SubEntry);
          } // if (SubEntry != NULL)
@@ -460,7 +458,7 @@ VOID GenerateSubScreen(LOADER_ENTRY *Entry, IN REFIT_VOLUME *Volume) {
 
    // create the submenu
    if (StrLen(Entry->Title) == 0) {
-      FreePool(Entry->Title);
+      MyFreePool(Entry->Title);
       Entry->Title = NULL;
    }
    SubScreen = InitializeSubScreen(Entry);
@@ -527,7 +525,7 @@ VOID GenerateSubScreen(LOADER_ENTRY *Entry, IN REFIT_VOLUME *Volume) {
          SubEntry = InitializeLoaderEntry(Entry);
          if (SubEntry != NULL) {
             SubEntry->me.Title        = L"Run Apple Hardware Test";
-            FreePool(SubEntry->LoaderPath);
+            MyFreePool(SubEntry->LoaderPath);
             SubEntry->LoaderPath      = StrDuplicate(DiagsFileName);
             SubEntry->DevicePath      = FileDevicePath(Volume->DeviceHandle, SubEntry->LoaderPath);
             SubEntry->UseGraphicsMode = GlobalConfig.GraphicsFor & GRAPHICS_FOR_OSX;
@@ -547,19 +545,16 @@ VOID GenerateSubScreen(LOADER_ENTRY *Entry, IN REFIT_VOLUME *Volume) {
          while ((TokenCount = ReadTokenLine(File, &TokenList)) > 1) {
             SubEntry = InitializeLoaderEntry(Entry);
             SubEntry->me.Title = StrDuplicate(TokenList[0]);
-            if (SubEntry->LoadOptions != NULL)
-               FreePool(SubEntry->LoadOptions);
+            MyFreePool(SubEntry->LoadOptions);
             SubEntry->LoadOptions = StrDuplicate(TokenList[1]);
             MergeStrings(&SubEntry->LoadOptions, InitrdOption, L' ');
             FreeTokenLine(&TokenList, &TokenCount);
             SubEntry->UseGraphicsMode = GlobalConfig.GraphicsFor & GRAPHICS_FOR_LINUX;
             AddMenuEntry(SubScreen, (REFIT_MENU_ENTRY *)SubEntry);
          } // while
-         if (InitrdOption)
-            FreePool(InitrdOption);
-         if (Temp)
-            FreePool(Temp);
-         FreePool(File);
+         MyFreePool(InitrdOption);
+         MyFreePool(Temp);
+         MyFreePool(File);
       } // if Linux options file exists
 
    } else if (Entry->OSType == 'E') {   // entries for ELILO
@@ -647,10 +642,8 @@ static CHAR16 * GetMainLinuxOptions(IN CHAR16 * LoaderPath, IN REFIT_VOLUME *Vol
       MergeStrings(&InitrdOption, InitrdName, 0);
    } // if
    MergeStrings(&Options, InitrdOption, ' ');
-   if (InitrdOption != NULL)
-      FreePool(InitrdOption);
-   if (InitrdName != NULL)
-      FreePool(InitrdName);
+   MyFreePool(InitrdOption);
+   MyFreePool(InitrdName);
    return (Options);
 } // static CHAR16 * GetMainLinuxOptions()
 
@@ -676,7 +669,7 @@ VOID SetLoaderDefaults(LOADER_ENTRY *Entry, CHAR16 *LoaderPath, IN REFIT_VOLUME 
 
    Temp = FindLastDirName(LoaderPath);
    MergeStrings(&OSIconName, Temp, L',');
-   FreePool(Temp);
+   MyFreePool(Temp);
    if (OSIconName != NULL) {
       ShortcutLetter = OSIconName[0];
    }
@@ -733,8 +726,7 @@ VOID SetLoaderDefaults(LOADER_ENTRY *Entry, CHAR16 *LoaderPath, IN REFIT_VOLUME 
    Entry->me.ShortcutLetter = ShortcutLetter;
    if (Entry->me.Image == NULL)
       Entry->me.Image = LoadOSIcon(OSIconName, L"unknown", FALSE);
-   if (PathOnly != NULL)
-      FreePool(PathOnly);
+   MyFreePool(PathOnly);
 } // VOID SetLoaderDefaults()
 
 // Add a specified EFI boot loader to the list, using automatic settings
@@ -818,8 +810,8 @@ static VOID CleanUpLoaderList(struct LOADER_LIST *LoaderList) {
    while (LoaderList != NULL) {
       Temp = LoaderList;
       LoaderList = LoaderList->NextEntry;
-      FreePool(Temp->FileName);
-      FreePool(Temp);
+      MyFreePool(Temp->FileName);
+      MyFreePool(Temp);
    } // while
 } // static VOID CleanUpLoaderList()
 
@@ -859,7 +851,7 @@ static VOID ScanLoaderDir(IN REFIT_VOLUME *Volume, IN CHAR16 *Path, IN CHAR16 *P
              NewLoader->TimeStamp = DirEntry->ModificationTime;
              LoaderList = AddLoaderListEntry(LoaderList, NewLoader);
           } // if
-          FreePool(Extension);
+          MyFreePool(Extension);
        } // while
        NewLoader = LoaderList;
        while (NewLoader != NULL) {
@@ -870,9 +862,9 @@ static VOID ScanLoaderDir(IN REFIT_VOLUME *Volume, IN CHAR16 *Path, IN CHAR16 *P
        Status = DirIterClose(&DirIter);
        if (Status != EFI_NOT_FOUND) {
           if (Path)
-                SPrint(FileName, 255, L"while scanning the %s directory", Path);
+             SPrint(FileName, 255, L"while scanning the %s directory", Path);
           else
-                StrCpy(FileName, L"while scanning the root directory");
+             StrCpy(FileName, L"while scanning the root directory");
           CheckError(Status, FileName);
        } // if (Status != EFI_NOT_FOUND)
     } // if not scanning our own directory
@@ -885,9 +877,9 @@ static VOID ScanEfiFiles(REFIT_VOLUME *Volume) {
    CHAR16                  FileName[256], *Directory, *MatchPatterns;
    UINTN                   i, Length;
 
-    MatchPatterns = StrDuplicate(LOADER_MATCH_PATTERNS);
-    if (GlobalConfig.ScanAllLinux)
-       MergeStrings(&MatchPatterns, LINUX_MATCH_PATTERNS, L',');
+   MatchPatterns = StrDuplicate(LOADER_MATCH_PATTERNS);
+   if (GlobalConfig.ScanAllLinux)
+      MergeStrings(&MatchPatterns, LINUX_MATCH_PATTERNS, L',');
 
    if ((Volume->RootDir != NULL) && (Volume->VolName != NULL)) {
       // check for Mac OS X boot loader
@@ -932,7 +924,7 @@ static VOID ScanEfiFiles(REFIT_VOLUME *Volume) {
          Length = StrLen(Directory);
          if (Length > 0)
             ScanLoaderDir(Volume, Directory, MatchPatterns);
-         FreePool(Directory);
+         MyFreePool(Directory);
       } // while
    } // if
 } // static VOID ScanEfiFiles()
@@ -1269,7 +1261,7 @@ static LEGACY_ENTRY * AddLegacyEntryUEFI(BDS_COMMON_OPTION *BdsOption, IN UINT16
     Entry = AllocateZeroPool(sizeof(LEGACY_ENTRY));
     Entry->me.Title = AllocateZeroPool(256 * sizeof(CHAR16));
     SPrint(Entry->me.Title, 255, L"Boot legacy target %s", LegacyDescription);
-    Entry->me.Tag          = TAG_LEGACY_NON_MAC;
+    Entry->me.Tag          = TAG_LEGACY_UEFI;
     Entry->me.Row          = 0;
     Entry->me.ShortcutLetter = ShortcutLetter;
     Entry->me.Image        = LoadOSIcon(L"legacy", L"legacy", TRUE);
@@ -1290,7 +1282,7 @@ static LEGACY_ENTRY * AddLegacyEntryUEFI(BDS_COMMON_OPTION *BdsOption, IN UINT16
     SubEntry = AllocateZeroPool(sizeof(LEGACY_ENTRY));
     SubEntry->me.Title = AllocateZeroPool(256 * sizeof(CHAR16));
     SPrint(SubEntry->me.Title, 255, L"Boot %s", LegacyDescription);
-    SubEntry->me.Tag          = TAG_LEGACY_NON_MAC;
+    SubEntry->me.Tag          = TAG_LEGACY_UEFI;
     Entry->BdsOption          = BdsOption; 
     AddMenuEntry(SubScreen, (REFIT_MENU_ENTRY *)SubEntry);
 
@@ -1341,7 +1333,6 @@ static VOID ScanLegacyUEFI(IN UINTN DiskType)
         // Grab each boot option variable from the boot order, and convert
         // the variable into a BDS boot option
         UnicodeSPrint (BootOption, sizeof (BootOption), L"Boot%04x", BootOrder[Index]);
-        Print(L"Scanning '%s'\n", BootOption);
         BdsOption = BdsLibVariableToOption (&TempList, BootOption);
 
         if (BdsOption != NULL) {
@@ -1474,7 +1465,7 @@ static LOADER_ENTRY * AddToolEntry(IN CHAR16 *LoaderPath, IN CHAR16 *LoaderTitle
     Entry->me.Row = 1;
     Entry->me.ShortcutLetter = ShortcutLetter;
     Entry->me.Image = Image;
-    Entry->LoaderPath = StrDuplicate(LoaderPath);
+    Entry->LoaderPath = (LoaderPath) ? StrDuplicate(LoaderPath) : NULL;
     Entry->DevicePath = FileDevicePath(SelfLoadedImage->DeviceHandle, Entry->LoaderPath);
     Entry->UseGraphicsMode = UseGraphicsMode;
 
@@ -1574,12 +1565,12 @@ static EFI_STATUS ConnectAllDriversToAllControllers(VOID)
             }
         }
 
-        FreePool (HandleBuffer);
-        FreePool (HandleType);
+        MyFreePool (HandleBuffer);
+        MyFreePool (HandleType);
     }
 
 Done:
-    FreePool (AllHandleBuffer);
+    MyFreePool (AllHandleBuffer);
     return Status;
 } /* EFI_STATUS ConnectAllDriversToAllControllers() */
 #else
@@ -1600,12 +1591,12 @@ static VOID LoadDrivers(VOID)
     // load drivers from the subdirectories of rEFInd's home directory specified
     // in the DRIVER_DIRS constant.
     while ((Directory = FindCommaDelimited(DRIVER_DIRS, i++)) != NULL) {
-       SelfDirectory = StrDuplicate(SelfDirPath);
+       SelfDirectory = SelfDirPath ? StrDuplicate(SelfDirPath) : NULL;
        CleanUpPathNameSlashes(SelfDirectory);
        MergeStrings(&SelfDirectory, Directory, L'\\');
        NumFound += ScanDriverDir(SelfDirectory);
-       FreePool(Directory);
-       FreePool(SelfDirectory);
+       MyFreePool(Directory);
+       MyFreePool(SelfDirectory);
     }
 
     // Scan additional user-specified driver directories....
@@ -1615,7 +1606,7 @@ static VOID LoadDrivers(VOID)
        Length = StrLen(Directory);
        if (Length > 0)
           NumFound += ScanDriverDir(Directory);
-       FreePool(Directory);
+       MyFreePool(Directory);
     } // while
 
     // connect all devices
@@ -1648,6 +1639,35 @@ static VOID FindLegacyBootType(VOID) {
    if (StriSubCmp(L"Apple", ST->FirmwareVendor))
       GlobalConfig.LegacyType = LEGACY_TYPE_MAC;
 } // static VOID FindLegacyBootType
+
+// Warn the user if legacy OS scans are enabled but the firmware or this
+// application can't support them....
+static VOID WarnIfLegacyProblems() {
+   BOOLEAN  found = FALSE;
+   UINTN    i = 0;
+
+   if (GlobalConfig.LegacyType == LEGACY_TYPE_NONE) {
+      do {
+         if (GlobalConfig.ScanFor[i] == 'h' || GlobalConfig.ScanFor[i] == 'b' || GlobalConfig.ScanFor[i] == 'c')
+            found = TRUE;
+         i++;
+      } while ((i < NUM_SCAN_OPTIONS) && (!found));
+      if (found) {
+         Print(L"NOTE: refind.conf's 'scanfor' line specifies scanning for one or more legacy\n");
+         Print(L"(BIOS) boot options; however, this is not possible because ");
+#ifdef __MAKEWITH_TIANO
+         Print(L"your computer lacks\n");
+         Print(L"the necessary Compatibility Support Module (CSM) support.\n");
+#else
+         Print(L"this program was\n");
+         Print(L"compiled without the necessary support. Please visit\n");
+         Print(L"http://www.rodsbooks.com/refind/getting.html and download and install a rEFInd\n");
+         Print(L"binary built with the TianoCore EDK2 to enable legacy boot support.\n");
+#endif
+         PauseForKey();
+      } // if (found)
+   } // if no legacy support
+} // static VOID WarnIfLegacyProblems()
 
 // Locates boot loaders. NOTE: This assumes that GlobalConfig.LegacyType is set correctly.
 static VOID ScanForBootloaders(VOID) {
@@ -1734,10 +1754,8 @@ static VOID ScanForTools(VOID) {
             }
             break;
       } // switch()
-      if (FileName != NULL) {
-         FreePool(FileName);
-         FileName = NULL;
-      }
+      MyFreePool(FileName);
+      FileName = NULL;
    } // for
 } // static VOID ScanForTools
 
@@ -1798,12 +1816,12 @@ efi_main (IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable)
         return Status;
 
     // read configuration
+    CopyMem(GlobalConfig.ScanFor, "ieom      ", NUM_SCAN_OPTIONS);
     FindLegacyBootType();
     if (GlobalConfig.LegacyType == LEGACY_TYPE_MAC)
        CopyMem(GlobalConfig.ScanFor, "ihebocm   ", NUM_SCAN_OPTIONS);
-    else
-       CopyMem(GlobalConfig.ScanFor, "ieom      ", NUM_SCAN_OPTIONS);
     ReadConfig();
+    WarnIfLegacyProblems();
     MainMenu.TimeoutSeconds = GlobalConfig.Timeout;
 
     // disable EFI watchdog timer
@@ -1861,7 +1879,7 @@ efi_main (IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable)
                 break;
 
 #ifdef __MAKEWITH_TIANO
-            case TAG_LEGACY_NON_MAC: // Boot a legacy OS on a non-Mac
+            case TAG_LEGACY_UEFI: // Boot a legacy OS on a non-Mac
                 StartLegacyUEFI((LEGACY_ENTRY *)ChosenEntry);
                 break;
 #endif // __MAKEWITH_TIANO
@@ -1876,8 +1894,8 @@ efi_main (IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable)
                 break;
 
         } // switch()
-        FreePool(Selection);
-        Selection = StrDuplicate(ChosenEntry->Title);
+        MyFreePool(Selection);
+        Selection = (ChosenEntry->Title) ? StrDuplicate(ChosenEntry->Title) : NULL;
     } // while()
 
     // If we end up here, things have gone wrong. Try to reboot, and if that

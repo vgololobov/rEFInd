@@ -1,5 +1,7 @@
-0.4.6 (10/??/2012):
--------------------
+0.4.6 (10/6/2012):
+------------------
+
+- Fixed some minor memory management issues.
 
 - Added new "scan_delay" feature to impose a delay before scanning
   for disks.

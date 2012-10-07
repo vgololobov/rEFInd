@@ -228,24 +228,19 @@ LibScanHandleDatabase (
             }
           }
 
-          FreePool (OpenInfo);
+          MyFreePool (OpenInfo);
         }
       }
 
-      FreePool (ProtocolGuidArray);
+      MyFreePool (ProtocolGuidArray);
     }
   }
 
   return EFI_SUCCESS;
 
 Error:
-  if (*HandleType != NULL) {
-    FreePool (*HandleType);
-  }
-
-  if (*HandleBuffer != NULL) {
-    FreePool (*HandleBuffer);
-  }
+  MyFreePool (*HandleType);
+  MyFreePool (*HandleBuffer);
 
   *HandleCount  = 0;
   *HandleBuffer = NULL;

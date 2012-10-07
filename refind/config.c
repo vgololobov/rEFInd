@@ -97,7 +97,7 @@ static EFI_STATUS ReadFile(IN EFI_FILE_HANDLE BaseDir, CHAR16 *FileName, REFIT_F
     File->Buffer = AllocatePool(File->BufferSize);
     Status = refit_call3_wrapper(FileHandle->Read, FileHandle, &File->BufferSize, File->Buffer);
     if (CheckError(Status, L"while loading the configuration file")) {
-        FreePool(File->Buffer);
+        MyFreePool(File->Buffer);
         File->Buffer = NULL;
         refit_call1_wrapper(FileHandle->Close, FileHandle);
         return Status;
@@ -277,8 +277,7 @@ static VOID HandleInt(IN CHAR16 **TokenList, IN UINTN TokenCount, OUT UINTN *Val
 // handle a parameter with a single string argument
 static VOID HandleString(IN CHAR16 **TokenList, IN UINTN TokenCount, OUT CHAR16 **Target) {
    if (TokenCount == 2) {
-      if (*Target != NULL)
-         FreePool(*Target);
+      MyFreePool(*Target);
       *Target = StrDuplicate(TokenList[1]);
    } // if
 } // static VOID HandleString()
@@ -433,7 +432,7 @@ VOID ReadConfig(VOID)
 
         FreeTokenLine(&TokenList, &TokenCount);
     }
-    FreePool(File.Buffer);
+    MyFreePool(File.Buffer);
 } /* VOID ReadConfig() */
 
 static VOID AddSubmenu(LOADER_ENTRY *Entry, REFIT_FILE *File, REFIT_VOLUME *Volume, CHAR16 *Title) {
@@ -454,22 +453,19 @@ static VOID AddSubmenu(LOADER_ENTRY *Entry, REFIT_FILE *File, REFIT_VOLUME *Volu
    while (((TokenCount = ReadTokenLine(File, &TokenList)) > 0) && (StriCmp(TokenList[0], L"}") != 0)) {
 
       if ((StriCmp(TokenList[0], L"loader") == 0) && (TokenCount > 1)) { // set the boot loader filename
-         if (SubEntry->LoaderPath != NULL)
-            FreePool(SubEntry->LoaderPath);
+         MyFreePool(SubEntry->LoaderPath);
          SubEntry->LoaderPath = StrDuplicate(TokenList[1]);
          SubEntry->DevicePath = FileDevicePath(Volume->DeviceHandle, SubEntry->LoaderPath);
 
       } else if (StriCmp(TokenList[0], L"initrd") == 0) {
-         if (SubEntry->InitrdPath != NULL)
-            FreePool(SubEntry->InitrdPath);
+         MyFreePool(SubEntry->InitrdPath);
          SubEntry->InitrdPath = NULL;
          if (TokenCount > 1) {
             SubEntry->InitrdPath = StrDuplicate(TokenList[1]);
          }
 
       } else if (StriCmp(TokenList[0], L"options") == 0) {
-         if (SubEntry->LoadOptions != NULL)
-            FreePool(SubEntry->LoadOptions);
+         MyFreePool(SubEntry->LoadOptions);
          SubEntry->LoadOptions = NULL;
          if (TokenCount > 1) {
             SubEntry->LoadOptions = StrDuplicate(TokenList[1]);
@@ -491,7 +487,7 @@ static VOID AddSubmenu(LOADER_ENTRY *Entry, REFIT_FILE *File, REFIT_VOLUME *Volu
    if (SubEntry->InitrdPath != NULL) {
       MergeStrings(&SubEntry->LoadOptions, L"initrd=", L' ');
       MergeStrings(&SubEntry->LoadOptions, SubEntry->InitrdPath, 0);
-      FreePool(SubEntry->InitrdPath);
+      MyFreePool(SubEntry->InitrdPath);
       SubEntry->InitrdPath = NULL;
    } // if
    if (SubEntry->Enabled == TRUE) {
@@ -562,30 +558,28 @@ static LOADER_ENTRY * AddStanzaEntries(REFIT_FILE *File, REFIT_VOLUME *Volume, C
          Entry->LoaderPath = StrDuplicate(TokenList[1]);
          Entry->DevicePath = FileDevicePath(CurrentVolume->DeviceHandle, Entry->LoaderPath);
          SetLoaderDefaults(Entry, TokenList[1], CurrentVolume);
-         FreePool(Entry->LoadOptions);
+         MyFreePool(Entry->LoadOptions);
          Entry->LoadOptions = NULL; // Discard default options, if any
          DefaultsSet = TRUE;
       } else if ((StriCmp(TokenList[0], L"volume") == 0) && (TokenCount > 1)) {
          if (FindVolume(&CurrentVolume, TokenList[1])) {
-            FreePool(Entry->me.Title);
+            MyFreePool(Entry->me.Title);
             Entry->me.Title        = AllocateZeroPool(256 * sizeof(CHAR16));
             SPrint(Entry->me.Title, 255, L"Boot %s from %s", (Title != NULL) ? Title : L"Unknown", CurrentVolume->VolName);
             Entry->me.BadgeImage   = CurrentVolume->VolBadgeImage;
             Entry->VolName         = CurrentVolume->VolName;
          } // if match found
       } else if ((StriCmp(TokenList[0], L"icon") == 0) && (TokenCount > 1)) {
-         FreePool(Entry->me.Image);
+         MyFreePool(Entry->me.Image);
          Entry->me.Image = LoadIcns(CurrentVolume->RootDir, TokenList[1], 128);
          if (Entry->me.Image == NULL) {
             Entry->me.Image = DummyImage(128);
          }
       } else if ((StriCmp(TokenList[0], L"initrd") == 0) && (TokenCount > 1)) {
-         if (Entry->InitrdPath)
-            FreePool(Entry->InitrdPath);
+         MyFreePool(Entry->InitrdPath);
          Entry->InitrdPath = StrDuplicate(TokenList[1]);
       } else if ((StriCmp(TokenList[0], L"options") == 0) && (TokenCount > 1)) {
-         if (Entry->LoadOptions)
-            FreePool(Entry->LoadOptions);
+         MyFreePool(Entry->LoadOptions);
          Entry->LoadOptions = StrDuplicate(TokenList[1]);
       } else if ((StriCmp(TokenList[0], L"ostype") == 0) && (TokenCount > 1)) {
          if (TokenCount > 1) {
@@ -608,7 +602,7 @@ static LOADER_ENTRY * AddStanzaEntries(REFIT_FILE *File, REFIT_VOLUME *Volume, C
    if (Entry->InitrdPath) {
       MergeStrings(&Entry->LoadOptions, L"initrd=", L' ');
       MergeStrings(&Entry->LoadOptions, Entry->InitrdPath, 0);
-      FreePool(Entry->InitrdPath);
+      MyFreePool(Entry->InitrdPath);
       Entry->InitrdPath = NULL;
    } // if
 
@@ -646,9 +640,9 @@ VOID ScanUserConfigured(VOID)
                   GenerateSubScreen(Entry, Volume);
                AddPreparedLoaderEntry(Entry);
             } else {
-               FreePool(Entry);
+               MyFreePool(Entry);
             } // if/else
-            FreePool(Title);
+            MyFreePool(Title);
          } // if
          FreeTokenLine(&TokenList, &TokenCount);
       } // while()
@@ -694,10 +688,8 @@ REFIT_FILE * ReadLinuxOptionsFile(IN CHAR16 *LoaderPath, IN REFIT_VOLUME *Volume
       } else { // a filename string is NULL
          GoOn = FALSE;
       } // if/else
-      if (OptionsFilename != NULL)
-         FreePool(OptionsFilename);
-      if (FullFilename != NULL)
-         FreePool(FullFilename);
+      MyFreePool(OptionsFilename);
+      MyFreePool(FullFilename);
       OptionsFilename = FullFilename = NULL;
    } while (GoOn);
    return (File);
@@ -717,7 +709,7 @@ CHAR16 * GetFirstOptionsFromFile(IN CHAR16 *LoaderPath, IN REFIT_VOLUME *Volume)
          Options = StrDuplicate(TokenList[1]);
       FreeTokenLine(&TokenList, &TokenCount);
       FreePool(File);
-   }
+   } // if
    return Options;
 } // static CHAR16 * GetOptionsFile()
 

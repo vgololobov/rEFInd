@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 3/14/2012; last Web page update:
-8/12/2012, referencing rEFInd 0.4.5</p>
+10/6/2012, referencing rEFInd 0.4.6</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -131,6 +131,14 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
     <ul>
 
+    <li>The support for booting legacy (BIOS) OSes on UEFI-based PCs
+	currently has a number of limitations. Most importantly, it works
+	off of the list of boot devices stored in the computer's NVRAM. I'd
+	prefer to have it scan disks and partitions, as the Mac's legacy
+	boot support does. Also, the UEFI legacy boot code presents empty
+	optical drives and uses generic icons rather than OS-specific
+	icons.</li>
+
     <li>Currently, rEFInd can detect whether it's compiled for <i>x</i>86
 	or <i>x</i>86-64 systems and displays this information in its
 	"About" screen (<tt>AboutrEFInd()</tt> in <tt>main.c</tt>). I'd
@@ -186,14 +194,6 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 <li><b>Known bugs that need squashing:</b>
 
     <ul>
-
-    <li>I'd like to find a way to get rEFInd to launch BIOS boot loaders on
-	UEFI-based systems. This option currently works only on
-	Macs&mdash;or at least, I've not gotten it to work on any of my
-	UEFI-based PCs. (I've done some experiments to try to get this to
-	work, but so far without success. If you'd like to help on this, <a
-	href="mailto:rodsmith@rodsbooks.com">e-mail me</a> for my
-	thoughts.)</li>
 
     <li>The <a href="http://www.rodsbooks.com/gb-hybrid-efi/">Gigabyte
 	Hybrid EFI</a> has a bug that causes the allegedly case-insensitive

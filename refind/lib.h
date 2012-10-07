@@ -111,6 +111,7 @@ CHAR16 *FindPath(IN CHAR16* FullPath);
 CHAR16 *FindNumbers(IN CHAR16 *InString);
 CHAR16 *FindCommaDelimited(IN CHAR16 *InString, IN UINTN Index);
 BOOLEAN IsIn(IN CHAR16 *SmallString, IN CHAR16 *List);
+VOID MyFreePool(IN OUT VOID *Pointer);
 
 BOOLEAN EjectMedia(VOID);
 

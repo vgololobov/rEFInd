@@ -119,7 +119,10 @@ timeout 20
 #  biosexternal  - BIOS external boot loaders (USB, eSATA, etc.)
 #  cd            - BIOS optical-disc boot loaders
 #  manual        - use stanzas later in this configuration file
-# Default is internal,external,optical,manual
+# Note that the legacy BIOS options require firmware support, which is
+# not present on all computers.
+# On UEFI PCs, default is internal,external,optical,manual
+# On Macs, default is internal,hdbios,external,biosexternal,optical,cd,manual
 #
 #scanfor internal,external,optical,manual
 
