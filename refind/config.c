@@ -428,6 +428,10 @@ VOID ReadConfig(VOID)
 
         } else if (StriCmp(TokenList[0], L"max_tags") == 0) {
            HandleInt(TokenList, TokenCount, &(GlobalConfig.MaxTags));
+
+        } else if ((StriCmp(TokenList[0], L"space_after_boot_options") == 0) && (TokenCount == 2)) {
+           GlobalConfig.SpaceAfterBootOptions = (StriCmp(TokenList[1], L"true") == 0);
+
         }
 
         FreeTokenLine(&TokenList, &TokenCount);

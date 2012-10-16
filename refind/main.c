@@ -93,7 +93,7 @@ static REFIT_MENU_ENTRY MenuEntryExit     = { L"Exit rEFInd", TAG_EXIT, 1, 0, 0,
 static REFIT_MENU_SCREEN MainMenu       = { L"Main Menu", NULL, 0, NULL, 0, NULL, 0, L"Automatic boot" };
 static REFIT_MENU_SCREEN AboutMenu      = { L"About", NULL, 0, NULL, 0, NULL, 0, NULL };
 
-REFIT_CONFIG GlobalConfig = { FALSE, FALSE, 0, 0, 20, 0, 0, GRAPHICS_FOR_OSX, LEGACY_TYPE_MAC, 0,
+REFIT_CONFIG GlobalConfig = { FALSE, FALSE, TRUE, 0, 0, 20, 0, 0, GRAPHICS_FOR_OSX, LEGACY_TYPE_MAC, 0,
                               NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
                               {TAG_SHELL, TAG_ABOUT, TAG_SHUTDOWN, TAG_REBOOT, 0, 0, 0, 0, 0 }};
 
@@ -115,7 +115,7 @@ static VOID AboutrEFInd(VOID)
 
     if (AboutMenu.EntryCount == 0) {
         AboutMenu.TitleImage = BuiltinIcon(BUILTIN_ICON_FUNC_ABOUT);
-        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.4.6");
+        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.4.6.1");
         AddMenuInfoLine(&AboutMenu, L"");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2006-2010 Christoph Pfisterer");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2012 Roderick W. Smith");
@@ -200,9 +200,11 @@ static EFI_STATUS StartEFIImageList(IN EFI_DEVICE_PATH **DevicePaths,
         if (LoadOptionsPrefix != NULL) {
             MergeStrings(&FullLoadOptions, LoadOptionsPrefix, 0);
             MergeStrings(&FullLoadOptions, LoadOptions, L' ');
-            MergeStrings(&FullLoadOptions, L" ", 0);
-            // NOTE: That last space is also added by the EFI shell and seems to be significant
-            //  when passing options to Apple's boot.efi...
+            if (GlobalConfig.SpaceAfterBootOptions) {
+               MergeStrings(&FullLoadOptions, L" ", 0);
+               // NOTE: That last space is also added by the EFI shell and seems to be significant
+               //  when passing options to Apple's boot.efi...
+            } // if
         } else {
             MergeStrings(&FullLoadOptions, LoadOptions, 0);
         } // if/else

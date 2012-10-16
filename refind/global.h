@@ -200,6 +200,7 @@ typedef struct {
 typedef struct {
    BOOLEAN     TextOnly;
    BOOLEAN     ScanAllLinux;
+   BOOLEAN     SpaceAfterBootOptions;
    UINTN       RequestedScreenWidth;
    UINTN       RequestedScreenHeight;
    UINTN       Timeout;

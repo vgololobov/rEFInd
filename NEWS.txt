@@ -1,3 +1,8 @@
+0.4.7 (??/?/2012):
+------------------
+
+- Added new "space_after_boot_options" token to refind.conf.
+
 0.4.6 (10/6/2012):
 ------------------
 
