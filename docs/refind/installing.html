@@ -327,6 +327,12 @@ $ <b>ioreg -l -p IODeviceTree | grep firmware-abi</b>
     unless you're certain you do <i>not</i> have an Advanced Format hard
     disk.</li>
 
+<li>If you don't want to reboot immediately after installing rEFInd, you
+    may optionally unmount the ESP by typing <tt class="userinput">sudo
+    umount /dev/disk0s1</tt> or <tt class="userinput">sudo umount
+    /Volumes/esp</tt>. This step isn't strictly required, but if you want
+    to keep the ESP out of your directory tree, it can be useful.</li>
+
 </ol>
 
 <p>When you reboot, your Mac should bring up the rEFInd menu, and should continue to do so thereafter. If you make changes that break this association, you can re-run the <tt>bless</tt> command (if necessary, restoring the rEFInd files first). This might be necessary after installing system updates from Apple or if you upgrade rEFInd to a newer version.</p>

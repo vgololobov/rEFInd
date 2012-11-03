@@ -1,7 +1,10 @@
 0.4.7 (??/?/2012):
 ------------------
 
-- Added new "space_after_boot_options" token to refind.conf.
+- Modified rEFInd to add a space after the command-line options only when
+  launching Mac OS X. On some early Macs, the extra space (which had been
+  present by default, as a carryover from rEFIt) causes problems when
+  booting Linux kernels from FAT partitions.
 
 0.4.6 (10/6/2012):
 ------------------

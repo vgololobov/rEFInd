@@ -19,6 +19,7 @@
  */
 
 #include "driver_support.h"
+#include "lib.h"
 #include "../include/refit_call_wrapper.h"
 
 #ifdef __MAKEWITH_GNUEFI

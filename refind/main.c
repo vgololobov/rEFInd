@@ -93,7 +93,7 @@ static REFIT_MENU_ENTRY MenuEntryExit     = { L"Exit rEFInd", TAG_EXIT, 1, 0, 0,
 static REFIT_MENU_SCREEN MainMenu       = { L"Main Menu", NULL, 0, NULL, 0, NULL, 0, L"Automatic boot" };
 static REFIT_MENU_SCREEN AboutMenu      = { L"About", NULL, 0, NULL, 0, NULL, 0, NULL };
 
-REFIT_CONFIG GlobalConfig = { FALSE, FALSE, TRUE, 0, 0, 20, 0, 0, GRAPHICS_FOR_OSX, LEGACY_TYPE_MAC, 0,
+REFIT_CONFIG GlobalConfig = { FALSE, FALSE, 0, 0, 20, 0, 0, GRAPHICS_FOR_OSX, LEGACY_TYPE_MAC, 0,
                               NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
                               {TAG_SHELL, TAG_ABOUT, TAG_SHUTDOWN, TAG_REBOOT, 0, 0, 0, 0, 0 }};
 
@@ -115,7 +115,7 @@ static VOID AboutrEFInd(VOID)
 
     if (AboutMenu.EntryCount == 0) {
         AboutMenu.TitleImage = BuiltinIcon(BUILTIN_ICON_FUNC_ABOUT);
-        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.4.6.1");
+        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.4.6.2");
         AddMenuInfoLine(&AboutMenu, L"");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2006-2010 Christoph Pfisterer");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2012 Roderick W. Smith");
@@ -157,7 +157,7 @@ static VOID AboutrEFInd(VOID)
 
 static EFI_STATUS StartEFIImageList(IN EFI_DEVICE_PATH **DevicePaths,
                                     IN CHAR16 *LoadOptions, IN CHAR16 *LoadOptionsPrefix,
-                                    IN CHAR16 *ImageTitle,
+                                    IN CHAR16 *ImageTitle, IN CHAR8 OSType,
                                     OUT UINTN *ErrorInStep,
                                     IN BOOLEAN Verbose)
 {
@@ -200,7 +200,7 @@ static EFI_STATUS StartEFIImageList(IN EFI_DEVICE_PATH **DevicePaths,
         if (LoadOptionsPrefix != NULL) {
             MergeStrings(&FullLoadOptions, LoadOptionsPrefix, 0);
             MergeStrings(&FullLoadOptions, LoadOptions, L' ');
-            if (GlobalConfig.SpaceAfterBootOptions) {
+            if (OSType == 'M') {
                MergeStrings(&FullLoadOptions, L" ", 0);
                // NOTE: That last space is also added by the EFI shell and seems to be significant
                //  when passing options to Apple's boot.efi...
@@ -241,7 +241,7 @@ bailout:
 
 static EFI_STATUS StartEFIImage(IN EFI_DEVICE_PATH *DevicePath,
                                 IN CHAR16 *LoadOptions, IN CHAR16 *LoadOptionsPrefix,
-                                IN CHAR16 *ImageTitle,
+                                IN CHAR16 *ImageTitle, IN CHAR8 OSType,
                                 OUT UINTN *ErrorInStep,
                                 IN BOOLEAN Verbose)
 {
@@ -249,7 +249,7 @@ static EFI_STATUS StartEFIImage(IN EFI_DEVICE_PATH *DevicePath,
 
     DevicePaths[0] = DevicePath;
     DevicePaths[1] = NULL;
-    return StartEFIImageList(DevicePaths, LoadOptions, LoadOptionsPrefix, ImageTitle, ErrorInStep, Verbose);
+    return StartEFIImageList(DevicePaths, LoadOptions, LoadOptionsPrefix, ImageTitle, OSType, ErrorInStep, Verbose);
 } /* static EFI_STATUS StartEFIImage() */
 
 //
@@ -261,8 +261,8 @@ static VOID StartLoader(IN LOADER_ENTRY *Entry)
     UINTN ErrorInStep = 0;
 
     BeginExternalScreen(Entry->UseGraphicsMode, L"Booting OS");
-    StartEFIImage(Entry->DevicePath, Entry->LoadOptions,
-                  Basename(Entry->LoaderPath), Basename(Entry->LoaderPath), &ErrorInStep, !Entry->UseGraphicsMode);
+    StartEFIImage(Entry->DevicePath, Entry->LoadOptions, Basename(Entry->LoaderPath),
+                  Basename(Entry->LoaderPath), Entry->OSType, &ErrorInStep, !Entry->UseGraphicsMode);
     FinishExternalScreen();
 }
 
@@ -1144,7 +1144,7 @@ static VOID StartLegacy(IN LEGACY_ENTRY *Entry)
 
     ExtractLegacyLoaderPaths(DiscoveredPathList, MAX_DISCOVERED_PATHS, LegacyLoaderList);
 
-    Status = StartEFIImageList(DiscoveredPathList, Entry->LoadOptions, NULL, L"legacy loader", &ErrorInStep, TRUE);
+    Status = StartEFIImageList(DiscoveredPathList, Entry->LoadOptions, NULL, L"legacy loader", 0, &ErrorInStep, TRUE);
     if (Status == EFI_NOT_FOUND) {
         if (ErrorInStep == 1) {
             Print(L"\nPlease make sure that you have the latest firmware update installed.\n");
@@ -1448,7 +1448,7 @@ static VOID StartTool(IN LOADER_ENTRY *Entry)
 {
    BeginExternalScreen(Entry->UseGraphicsMode, Entry->me.Title + 6);  // assumes "Start <title>" as assigned below
    StartEFIImage(Entry->DevicePath, Entry->LoadOptions, Basename(Entry->LoaderPath),
-                 Basename(Entry->LoaderPath), NULL, TRUE);
+                 Basename(Entry->LoaderPath), Entry->OSType, NULL, TRUE);
    FinishExternalScreen();
 } /* static VOID StartTool() */
 
@@ -1497,7 +1497,7 @@ static UINTN ScanDriverDir(IN CHAR16 *Path)
         SPrint(FileName, 255, L"%s\\%s", Path, DirEntry->FileName);
         NumFound++;
         Status = StartEFIImage(FileDevicePath(SelfLoadedImage->DeviceHandle, FileName),
-                               L"", DirEntry->FileName, DirEntry->FileName, NULL, FALSE);
+                               L"", DirEntry->FileName, DirEntry->FileName, 0, NULL, FALSE);
     }
     Status = DirIterClose(&DirIter);
     if (Status != EFI_NOT_FOUND) {
