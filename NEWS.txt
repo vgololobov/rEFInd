@@ -1,6 +1,14 @@
 0.4.7 (??/?/2012):
 ------------------
 
+- Added a boot option editor: Pressing the Insert or F2 key from a boot
+  tag's options menu opens a simple text-mode line editor on which the boot
+  options may be edited for a one-time boot with altered options.
+
+- Modified the "scan_delay" feature to delay and then perform a re-scan,
+  which may work better than the first attempt at this feature (which I'm
+  told isn't working as planned).
+
 - Modified rEFInd to add a space after the command-line options only when
   launching Mac OS X. On some early Macs, the extra space (which had been
   present by default, as a carryover from rEFIt) causes problems when

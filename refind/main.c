@@ -115,7 +115,7 @@ static VOID AboutrEFInd(VOID)
 
     if (AboutMenu.EntryCount == 0) {
         AboutMenu.TitleImage = BuiltinIcon(BUILTIN_ICON_FUNC_ABOUT);
-        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.4.6.2");
+        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.4.6.3");
         AddMenuInfoLine(&AboutMenu, L"");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2006-2010 Christoph Pfisterer");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2012 Roderick W. Smith");
@@ -1831,6 +1831,10 @@ efi_main (IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable)
 
     // further bootstrap (now with config available)
     SetupScreen();
+    LoadDrivers();
+    ScanForBootloaders();
+    ScanForTools();
+
     if (GlobalConfig.ScanDelay > 0) {
        BGColor.b = 255;
        BGColor.g = 175;
@@ -1839,10 +1843,8 @@ efi_main (IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable)
        egDisplayMessage(L"Pausing before disk scan; please wait....", &BGColor);
        for (i = 0; i < GlobalConfig.ScanDelay; i++)
           refit_call1_wrapper(BS->Stall, 1000000);
+       RescanAll();
     } // if
-    LoadDrivers();
-    ScanForBootloaders();
-    ScanForTools();
 
     Selection = StrDuplicate(GlobalConfig.DefaultSelection);
     while (MainLoopRunning) {

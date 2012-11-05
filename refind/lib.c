@@ -1400,4 +1400,3 @@ BOOLEAN EjectMedia(VOID) {
    MyFreePool(Handles);
    return (Ejected > 0);
 } // VOID EjectMedia()
-

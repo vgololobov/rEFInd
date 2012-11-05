@@ -486,7 +486,7 @@ static UINTN RunGenericMenu(IN REFIT_MENU_SCREEN *Screen, IN MENU_STYLE_FUNC Sty
     if (ChosenEntry)
         *ChosenEntry = Screen->Entries[State.CurrentSelection];
     return MenuExit;
-} /* static UINTN RunGenericMenu( */
+} /* static UINTN RunGenericMenu() */
 
 //
 // text-mode generic style
@@ -705,7 +705,7 @@ static VOID GraphicsMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *Sta
             break;
 
     }
-}
+} // static VOID GraphicsMenuStyle()
 
 //
 // graphical main menu style
@@ -901,7 +901,37 @@ VOID MainMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, IN UINT
             break;
 
     }
-}
+} // VOID MainMenuStyle()
+
+// Enable the user to edit boot loader options.
+// Returns TRUE if the user exited with edited options; FALSE if the user
+// pressed Esc to terminate the edit.
+static BOOLEAN EditOptions(LOADER_ENTRY *MenuEntry) {
+   UINTN x_max, y_max;
+   CHAR16 *EditedOptions;
+   CHAR16 message[] = L"Use cursor keys to edit, Esc to exit, Enter to boot with edited options";
+   EG_PIXEL DarkBackgroundPixel  = { 0x0, 0x0, 0x0, 0 };
+   BOOLEAN retval = FALSE;
+
+   refit_call4_wrapper(ST->ConOut->QueryMode, ST->ConOut, ST->ConOut->Mode->Mode, &x_max, &y_max);
+
+   if (!GlobalConfig.TextOnly)
+      SwitchToText(TRUE);
+
+   egClearScreen(&DarkBackgroundPixel);
+
+   refit_call3_wrapper(ST->ConOut->SetCursorPosition, ST->ConOut, 0, y_max - 1);
+   refit_call2_wrapper(ST->ConOut->OutputString, ST->ConOut, message);
+
+   if (line_edit(MenuEntry->LoadOptions, &EditedOptions, x_max, 1)) {
+      MyFreePool(MenuEntry->LoadOptions);
+      MenuEntry->LoadOptions = EditedOptions;
+      retval = TRUE;
+   } // if
+   if (!GlobalConfig.TextOnly)
+      SwitchToGraphics();
+   return retval;
+} // VOID EditOptions()
 
 //
 // user-callable dispatcher functions
@@ -944,6 +974,10 @@ UINTN RunMainMenu(IN REFIT_MENU_SCREEN *Screen, IN CHAR16* DefaultSelection, OUT
             MenuExit = RunGenericMenu(TempChosenEntry->SubScreen, Style, -1, &TempChosenEntry);
             if (MenuExit == MENU_EXIT_ESCAPE || TempChosenEntry->Tag == TAG_RETURN)
                 MenuExit = 0;
+            if (MenuExit == MENU_EXIT_DETAILS) {
+               if (!EditOptions((LOADER_ENTRY *) TempChosenEntry))
+                  MenuExit = 0;
+            } // if
         }
     }
 
