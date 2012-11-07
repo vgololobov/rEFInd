@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 3/14/2012; last Web page update:
-10/6/2012, referencing rEFInd 0.4.6</p>
+11/6/2012, referencing rEFInd 0.4.7</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -491,13 +491,13 @@ $ <b>ioreg -l -p IODeviceTree | grep firmware-abi</b>
 <h2>Fixing a Sluggish Macintosh Boot</h2>
 </a>
 
-<p>I've received a few reports of a sluggish boot process (a delay of about 30 seconds before starting rEFInd) on some Macs after installing rEFInd. I've been unable to replicate this problem myself, and its true cause remains mysterious to me. I have found <a href="http://ubuntuforums.org/showpost.php?p=12256273&postcount=200">a Web forum post</a> describing a possible fix. Be aware, though, that this procedure involves using the <tt>efibootmgr</tt> utility on Macs, which has been known to damage the firmware on some Macs. Other reports indicate that this problem has been fixed with recent kernels. Thus, I present this information cautiously and with a strong "use at your own risk" warning. If you care to proceed, I recommend you update your Linux kernel to the latest possible and then proceed as follows:</p>
+<p>I've received a few reports of a sluggish boot process (a delay of about 30 seconds before starting rEFInd) on some Macs after installing rEFInd. I've been unable to replicate this problem myself, and its true cause remains mysterious to me. I have found <a href="http://ubuntuforums.org/showpost.php?p=12256273&postcount=200">a Web forum post</a> describing a possible fix. Be aware, though, that this procedure involves using the <tt>efibootmgr</tt> utility on Macs, which has been known to damage the firmware on some Macs. Other reports indicate that this problem has been fixed with 3.3.0 and later kernels. Thus, I present this information cautiously and with a strong "use at your own risk" warning. If you care to proceed, I recommend you update your Linux kernel to the latest possible version and then proceed as follows:</p>
 
 <ol>
 
 <li>Boot into Linux.</li>
 
-<li>Type <tt class="userinput">efibootmgr</tt> as <tt>root</tt> to obtain a list of your boot loader entries. Each entry is preceded by a boot number, as in <tt>Boot0003</tt> or <tt>Boot0027</tt>.</li>
+<li>Type <tt class="userinput">efibootmgr</tt> as <tt>root</tt> to obtain a list of your boot loader entries. Each entry includes a boot number, as in <tt>Boot0003</tt> or <tt>Boot0027</tt>.</li>
 
 <li>Remove all of the boot loader entries <i>except</i> rEFInd's by using <tt>efibootmgr</tt>'s <tt>-b <tt class="variable">bootnum</tt></tt> option to specify the boot entry and <tt>-B</tt> to delete it. For instance, typing <tt class="userinput">efibootmgr -b 0027 -B</tt> as <tt>root</tt> deletes boot entry <tt>Boot0027</tt>. Issue a separate <tt>efibootmgr</tt> command for each boot entry.</li>
 

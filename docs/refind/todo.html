@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 3/14/2012; last Web page update:
-10/6/2012, referencing rEFInd 0.4.6</p>
+11/6/2012, referencing rEFInd 0.4.7</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -245,6 +245,14 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 <li><b>New features I'd like to add:</b>
 
     <ul>
+
+    <li>With the arrival of PCs preloaded with Windows 8 and with Secure
+	Boot enabled, some way to cope is in order. I'm thinking of adding
+	code to limit or prohibit booting of unsigned boot loaders if
+	rEFInd detects that Secure Boot is active, and link with the <a
+	href="http://mjg59.dreamwidth.org/18945.html">Shim</a>
+	pre-bootloader to help handle signing and authentication. I need to
+	research the technical details more, though.</li>
 
     <li>EFI supports network boots. rEFInd doesn't, but it would be nice if
 	it would.</li>

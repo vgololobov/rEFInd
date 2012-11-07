@@ -193,17 +193,6 @@ timeout 20
 #
 #default_selection 1
 
-# Enable or disable the usual adding of a space after the boot options
-# when launching an EFI binary. Ordinarily rEFInd adds a space at the
-# end of the options line, since rEFIt's code indicated this was
-# required on some Macs. I've heard of problems on some systems when
-# these spaces are added, though, so this option enables you to set
-# the option explicitly. Setting it to anything but "true" causes the
-# trailing space to be omitted.
-# Default value is "true".
-#
-#space_after_boot_options false
-
 # Sample manual configuration stanzas. Each begins with the "menuentry"
 # keyword followed by a name that's to appear in the menu (use quotes
 # if you want the name to contain a space) and an open curly brace

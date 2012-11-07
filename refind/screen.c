@@ -496,7 +496,9 @@ VOID BltImageCompositeBadge(IN EG_IMAGE *BaseImage, IN EG_IMAGE *TopImage, IN EG
      GraphicsScreenDirty = TRUE;
 }
 
-// Line-editing functions borrowed from gummiboot (cursor_left(), cursor_right(), & line_edit())
+// Line-editing functions borrowed from gummiboot (cursor_left(), cursor_right(), & line_edit()).
+// gummiboot is copyright (c) 2012 by Kay Sievers <kay.sievers@vrfy.org> and Harald Hoyer
+// <harald@redhat.com> and is licensed under the LGPL 2.1.
 
 static void cursor_left(UINTN *cursor, UINTN *first)
 {

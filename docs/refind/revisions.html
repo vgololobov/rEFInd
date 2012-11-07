@@ -14,7 +14,7 @@
 <p class="subhead">by Roderick W. Smith, <a
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
-<p>Last Web page update: 10/6/2012</p>
+<p>Last Web page update: 11/6/2012</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -92,6 +92,8 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 <p>The following summarizes changes in rEFInd's public releases:</p>
 
 <ul>
+
+<li><b>0.4.7 (11/6/2012)</b>&mdash;The most important new feature in this version is a boot options editor. From rEFInd's main menu, press Insert or F2 to see the options menu. Select one of the options and press Insert or F2 again and the screen switches to a text-mode display in which you can edit the options that will be passed to the boot loader. A second new feature is a new icon for <a href="http://freedesktop.org/wiki/Software/gummiboot">gummiboot,</a> which is another EFI boot manager. This version also alters the behavior of the <tt>scan_delay</tt> option, since I've been told that the previous version didn't work; the new one does. Finally, this version omits the space that followed boot options when booting most OSes. This behavior was inherited from rEFIt; a comment in the source code indicates it's needed by OS X, but I've been told it causes boot failures when launching Linux on some Macs. Thus, rEFInd now adds this space only when booting Mac OS X.</li>
 
 <li><b>0.4.6 (10/6/2012)</b>&mdash;Thanks to contributor John Bressler, rEFInd can now boot legacy (BIOS) boot loaders on many UEFI PCs. (Previously, rEFInd could do this only on Macs.) Other changes include a new <tt>scan_delay</tt> option that inserts a delay between rEFInd starting and disk scans (to help detect disks that are slow to appear to the firmware) and a change in the default <tt>scanfor</tt> value so that legacy OSes are detected by default on Macs (but not on PCs). I've also fixed some memory management problems that caused error messages to appear on some systems when rEFInd was compiled with the TianoCore EDK2 toolkit. Finally, I'm now using the TianoCore toolkit to make my primary binary builds, since the new UEFI legacy boot support requires the TianoCore environment. (rEFInd still builds with GNU-EFI, but it doesn't support booting legacy OSes on UEFI systems when built in this way.)</li>
 

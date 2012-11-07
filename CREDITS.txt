@@ -37,8 +37,15 @@ I've incorporated into the current version. Specifically:
 * The Arch Linux icon was created by ~IDRGSKYWALKER on Deviant Art
   (http://idrgskywalker.deviantart.com/art/Arch-Linux-Logo-186211022).
 
+* The gummiboot icon is taken from the gummiboot Web page
+  (http://freedesktop.org/wiki/Software/gummiboot) and scaled down
+  slightly.
+
 * Dave Vasilevsky (dave@vasilevsky.ca) contributed the disk-ejection
   code.
 
 * John Bressler (jrb1327@gmail.com) contributed the code to boot BIOS-based
   OSes on UEFI-based PCs.
+
+* The code for editing boot options (cursor_left(), cursor_right(), and
+  line_edit() in screen.c) is taken from gummiboot.
