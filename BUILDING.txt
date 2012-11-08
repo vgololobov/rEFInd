@@ -178,7 +178,8 @@ installed the toolkit:
     *_GCC46_X64_ASM_FLAGS            = DEF(GCC46_ASM_FLAGS) -m64
 
 11) Type "make -C /usr/local/UDK2010/MyWorkSpace/BaseTools/Source/C".
-    (This step is not documented on the EDK Web page.)
+    (This step is not documented on the EDK Web page.) Note that this
+    requires the g++ compiler and UUID development libraries.
     
 10) Type "build" to build the main set of EDK2 files. This process is
     likely to take a few minutes.

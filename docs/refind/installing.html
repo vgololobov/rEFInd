@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 3/14/2012; last Web page update:
-11/6/2012, referencing rEFInd 0.4.7</p>
+11/7/2012, referencing rEFInd 0.4.7</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -232,6 +232,8 @@ Filesystem     1K-blocks  Used Available Use% Mounted on
 
 <li>Rename the configuration file by typing <tt><b>mv refind.conf-sample refind.conf</b></tt>. Consult the <a href="configfile.html">Editing the rEFInd Configuration File</a> page for information on how to adjust your options.</li>
 
+<p class="sidebar"><b>Weird:</b> I've received one report about a Lenovo computer that works only if rEFInd is installed using the name (<tt>-L</tt> parameter) <tt>Windows Boot Manager</tt> and the existing Windows boot loader, if present, is renamed.</p>
+
 <a name="efibootmgr">
 <li>On a UEFI-based system, type <tt><b>efibootmgr -c -l \\EFI\\refind\\refind_x64.efi -L rEFInd</b></tt> to add rEFInd to your EFI's list of available boot loaders, which it stores in NVRAM. (Adjust the path to the binary as required if you install somewhere else.) You may need to install this program on some systems; it's a standard part of most distributions' repositories.</li>
 </a>
@@ -406,6 +408,8 @@ $ <b>ioreg -l -p IODeviceTree | grep firmware-abi</b>
 </ol>
 
 <p>When you reboot, rEFInd should come up. With any luck, it will detect your old boot loader as an option, if one was installed before.</p>
+
+<p>If your computer seems to insist on booting an EFI boot loader called <tt>EFI/Microsoft/BOOT/bootmgfw.efi</tt>, be aware that it might not actually be looking for that filename, but for a boot manager with the EFI description <tt>Microsoft Boot Manager</tt>. Changing the description of the "real" <tt>EFI/Microsoft/BOOT/bootmgfw.efi</tt> using <tt>efibootmgr</tt> and then giving rEFInd that description, even when rEFInd is installed in a more conventional location, may work. I've received a report that at least one Lenovo model has this peculiar affliction.</p>
 
 <a name="upgrading">
 <h2>Upgrading rEFInd</h2>

@@ -105,8 +105,9 @@ timeout 20
 # controllers, etc. In most cases none are needed, but if you add
 # EFI drivers and you want rEFInd to automatically load them, you
 # should specify one or more paths here. rEFInd always scans the
-# "drivers" subdirectory of its own installation directory; this
-# option specifies ADDITIONAL directories to scan.
+# "drivers" and "drivers_{arch}" subdirectories of its own installation
+# directory (where "{arch}" is your architecture code); this option
+# specifies ADDITIONAL directories to scan.
 # Default is to scan no additional directories for EFI drivers
 #
 #scan_driver_dirs EFI/tools/drivers,drivers

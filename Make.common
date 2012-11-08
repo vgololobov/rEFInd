@@ -16,7 +16,7 @@ CPPFLAGS        = -I$(EFIINC) -I$(EFIINC)/$(ARCH) -I$(EFIINC)/protocol -DCONFIG_
 OPTIMFLAGS      = -O2 -fno-strict-aliasing
 DEBUGFLAGS      = -Wall
 #CFLAGS          = $(ARCH3264) $(OPTIMFLAGS) -fpic -fshort-wchar $(DEBUGFLAGS)
-CFLAGS          = $(ARCH3264) $(OPTIMFLAGS) -fno-stack-protector -fpic -fshort-wchar $(DEBUGFLAGS)
+CFLAGS          = $(ARCH3264) $(OPTIMFLAGS) -fno-stack-protector -fpic -fshort-wchar -mno-red-zone $(DEBUGFLAGS)
 ASFLAGS         = $(ARCH3264)
 LDFLAGS         = -nostdlib -znocombreloc
 
