@@ -156,9 +156,10 @@ installed the toolkit:
    drivers) must be typed in the shell you use for this step.
 
 9) Edit Conf/target.txt and change the following:
-   - ACTIVE_PLATFORM = MdeModulePkg/MdeModulePkg.dsc
+   - ACTIVE_PLATFORM = MdePkg/MdePkg.dsc
    - TARGET = RELEASE (DEBUG might work, but I've not tested it).
-   - TARGET_ARCH = X64 (on x86-64; leave this as IA32 on x86)
+   - TARGET_ARCH = X64 (on x86-64; leave this as IA32 on x86). If you plan
+     to build both architectures, you can set this to "IA32 X64".
    - TOOL_CHAIN_TAG = GCC46 (or other value depending on your GCC version;
      type "gcc -v" to learn your GCC version number). Note that GCC 4.7
      doesn't have its own entry, so use GCC46 for GCC 4.7.
@@ -207,7 +208,11 @@ With your development system set up, you can compile rEFInd as follows:
 4) Type "make gnuefi" to build with GNU-EFI, or either "make" alone or
    "make tiano" to build with TianoCore EDK2. With any luck, rEFInd will
    compile without error, leaving the "refind_ia32.efi" or "refind_x64.efi"
-   file, depending on your platform, in the "refind" subdirectory.
+   file, depending on your platform, in the "refind" subdirectory. If you
+   want to build IA32 binaries on an x86-64 (X64) system, type "ARCH=ia32
+   make". This works only if you're using the TianoCore build kit, and only
+   if you set TARGET_ARCH to either "IA32" or "IA32 X64" in target.txt when
+   you set up the TianoCore.
 
 5) The default build process does NOT build the filesystem drivers. If you
    want to build them, you must type "make fs" in the main rEFInd source

@@ -4,7 +4,7 @@
 #
 
 HOSTARCH        = $(shell uname -m | sed s,i[3456789]86,ia32,)
-ARCH            := $(HOSTARCH)
+ARCH            ?= $(HOSTARCH)
 
 # Note: IA64 options are untested; taken from Debian's rEFIt package.
 ifeq ($(ARCH),ia64)
@@ -16,13 +16,17 @@ endif
 ifeq ($(ARCH),ia32)
   ARCH_C_FLAGS = -m32 -DEFI32 -malign-double
   ARCHDIR = Ia32
+  UC_ARCH = IA32
   FILENAME_CODE = ia32
+  LD_CODE = elf_i386
 endif
 
 ifeq ($(ARCH),x86_64)
   ARCH_C_FLAGS = "-DEFIAPI=__attribute__((ms_abi))" -DEFIX64 -mcmodel=large -m64
   ARCHDIR = X64
+  UC_ARCH = X64
   FILENAME_CODE = x64
+  LD_CODE = elf_x86_64
 endif
 
 EDK2BASE = /usr/local/UDK2010/MyWorkSpace
@@ -56,7 +60,7 @@ GENFW           = $(EDK2BASE)/BaseTools/Source/C/bin/GenFw
 LDSCRIPT = $(EDK2BASE)/BaseTools/Scripts/gcc4.4-ld-script
 
 LDFLAGS         = -nostdlib -n -q --gc-sections --script=$(EDK2BASE)/BaseTools/Scripts/gcc4.4-ld-script \
-                  --entry efi_main -u efi_main
+                  --entry efi_main -u efi_main -m $(LD_CODE)
 
 %.obj: %.c
 	$(CC) $(ARCH_C_FLAGS) $(CFLAGS) $(INCLUDE_DIRS) -DNO_BUILTIN_VA_FUNCS -D__MAKEWITH_TIANO -c $< -o $@

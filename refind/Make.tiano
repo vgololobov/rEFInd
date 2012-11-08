@@ -7,7 +7,7 @@
 
 include ../Make.tiano
 
-EFILIB          = $(EDK2BASE)/Build/MdeModule/$(TARGET)_$(TOOL_CHAIN_TAG)/$(TARGET_ARCH)/MdePkg/Library
+EFILIB          = $(EDK2BASE)/Build/Mde/$(TARGET)_$(TOOL_CHAIN_TAG)/$(UC_ARCH)/MdePkg/Library
 ALL_EFILIBS     = $(EFILIB)/BaseDebugPrintErrorLevelLib/BaseDebugPrintErrorLevelLib/OUTPUT/BaseDebugPrintErrorLevelLib.lib \
                   $(EFILIB)/BasePrintLib/BasePrintLib/OUTPUT/BasePrintLib.lib \
                   $(EFILIB)/BasePcdLibNull/BasePcdLibNull/OUTPUT/BasePcdLibNull.lib \
