@@ -159,7 +159,7 @@ Installation has completed successfully.</pre>
     the Terminal window. You'll need to press the Return or Enter key to
     run the script.</li>
 
-<li>Under OS X, passing the "esp" option causes the script to install
+<li>Under OS X, passing the "--esp" option causes the script to install
     rEFInd to the ESP. The script finds the first ESP that's identified by
     the <tt>diskutil</tt> program and, if it's not already mounted, mounts
     it to install rEFInd. Thus, it's conceivable that <tt>install.sh</tt>
@@ -168,7 +168,7 @@ Installation has completed successfully.</pre>
     may need to re-install manually.</li>
 
 <li>If you're using OS X 10.7's Whole Disk Encryption (WDE) feature, you
-    <i>must</i> install rEFInd to the ESP, so the <tt>esp</tt> option to
+    <i>must</i> install rEFInd to the ESP, so the <tt>--esp</tt> option to
     <tt>install.sh</tt> is required. I'm still a little bit foggy about
     what's required to boot the system once this is done; see <a
     href="https://sourceforge.net/p/refind/discussion/general/thread/5c7d0195/">this
@@ -197,6 +197,25 @@ Installation has completed successfully.</pre>
     <tt>refind.conf</tt> file, as noted near the end of the installation
     script's output. (Note that rEFInd can only boot such OSes on Macs at
     the moment.)</li>
+
+<li>Under both Linux and OS X, you can add the <tt>--drivers</tt> option to
+    have <tt>install.sh</tt> install all the filesystem drivers along with
+    the main rEFInd program. (The default is to <i>not</i> install any
+    drivers.)</li>
+
+<li>Under both Linux and OS X, you can add the <tt>--usedefault <tt
+    class="variable">devicepath</tt></tt> option to install rEFInd to the
+    specified device as <tt>EFI/BOOT/bootx64.efi</tt> and
+    <tt>EFI/BOOT/bootia32.efi</tt>. The specified device must be a valid
+    FAT partition. The idea is that you can easily create a bootable USB
+    flash drive with this option: Create a proper FAT-formatted ESP on a
+    disk (say, <tt>/dev/sdd1</tt>) and then type <tt class="userinput">sh
+    ./install --usedefault /dev/sdd1</tt> to turn the disk into an
+    emergency disk. This option can also be used to install rEFInd to an
+    ESP using the <a href="#naming">alternative naming options</a>
+    described later. This latter usage will result in a bootable rEFInd
+    only if no other OS has already created an NVRAM variable pointing to
+    itself.</li>
 
 </ul>
 

@@ -2,11 +2,13 @@
 #
 # Script to prepare source code and binary distribution files of rEFInd.
 # By Rod Smith, 3/11/2012
+# Updated 11/8/2012 to do more things automatically
 #
 # Usage: ./mkdistrib version
 # where "version" is a version number
-# MUST be run from an x86-64 system, on which the current IA32 build
-# (refind_ia32.efi) is already present in the same directory as this script
+# MUST be run from an x86-64 system, on which the TianoCore build
+# includes both X64 and IA32 build support ("TARGET_ARCH = IA32 X64"
+# in Conf/target.txt).
 
 
 StartDir=`pwd`
@@ -22,21 +24,30 @@ cp -a docs images include EfiLib libeg refind filesystems install.sh CREDITS.txt
 cd ../snapshots/$1/
 zip -9r refind-src-$1.zip refind-$1
 
-# Build the source code into binaries
+# Build the IA32 binaries
 cd refind-$1
+ARCH=ia32 make
+ARCH=ia32 make fs
+mkdir -p refind-bin-$1/refind/drivers_ia32
+cp --preserve=timestamps drivers/*_ia32.efi refind-bin-$1/refind/drivers_ia32/
+cp --preserve=timestamps filesystems/LICENSE*txt refind-bin-$1/refind/drivers_ia32/
+cp refind/refind_ia32.efi refind-bin-$1/refind/refind_ia32.efi
+cp refind/refind_ia32.efi $StartDir/
+
+# Build the X64 binaries
+make clean
 make
 make fs
 mkdir -p refind-bin-$1/refind/drivers_x64
-mkdir -p refind-bin-$1/refind/drivers_ia32
 cp -a icons refind-bin-$1/refind/
 cp --preserve=timestamps drivers/*_x64.efi refind-bin-$1/refind/drivers_x64/
 cp --preserve=timestamps filesystems/LICENSE*txt refind-bin-$1/refind/drivers_x64/
-cp --preserve=timestamps filesystems/LICENSE*txt refind-bin-$1/refind/drivers_ia32/
 cp --preserve=timestamps refind.conf-sample refind-bin-$1/refind/
 cp refind/refind_x64.efi refind-bin-$1/refind/refind_x64.efi
-cp $StartDir/refind_ia32.efi refind-bin-$1/refind/
-cp $StartDir/drivers/*_ia32.efi refind-bin-$1/refind/drivers_ia32/
+cp refind/refind_x64.efi $StartDir
 cp -a COPYING.txt LICENSE.txt README.txt docs CREDITS.txt install.sh refind-bin-$1
+
+# Prepare the final .zip file and clean up
 zip -9r ../refind-bin-$1.zip refind-bin-$1
 cd ..
 rm -r refind-$1
