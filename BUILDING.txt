@@ -159,7 +159,8 @@ installed the toolkit:
    - ACTIVE_PLATFORM = MdePkg/MdePkg.dsc
    - TARGET = RELEASE (DEBUG might work, but I've not tested it).
    - TARGET_ARCH = X64 (on x86-64; leave this as IA32 on x86). If you plan
-     to build both architectures, you can set this to "IA32 X64".
+     to build both architectures on an x86-64 system, you can set this to
+     "IA32 X64".
    - TOOL_CHAIN_TAG = GCC46 (or other value depending on your GCC version;
      type "gcc -v" to learn your GCC version number). Note that GCC 4.7
      doesn't have its own entry, so use GCC46 for GCC 4.7.
@@ -212,11 +213,15 @@ With your development system set up, you can compile rEFInd as follows:
    want to build IA32 binaries on an x86-64 (X64) system, type "ARCH=ia32
    make". This works only if you're using the TianoCore build kit, and only
    if you set TARGET_ARCH to either "IA32" or "IA32 X64" in target.txt when
-   you set up the TianoCore.
+   you set up the TianoCore. If you plan to build both architectures, be
+   sure to copy the .efi file for the first build out of the refind
+   subdirectory before building the second architecture.
 
 5) The default build process does NOT build the filesystem drivers. If you
    want to build them, you must type "make fs" in the main rEFInd source
-   directory. The result is filesystem drivers in the filesystems
+   directory. (Typing "ARCH=ia32 make fs" builds IA32 filesystem drivers on
+   an x86-64 system, provided TianoCore is properly configured, as
+   described earlier.) The result is filesystem drivers in the filesystems
    subdirectory, and also copies placed in the drivers subdirectory. You
    must install the TianoCore EDK2 to build the drivers.
 
@@ -263,8 +268,8 @@ Installing rEFInd
 With rEFInd compiled, you can install it. The easiest way to do this is
 with the install.sh script, which works on both Linux and Mac OS X.
 Alternatively, you can type "make install" to install using this script.
-Note that this installation copies files to the ESP and uses "efibootmgr"
-(on Linux) or "bless" (on OS X) to add rEFInd to the firmware's boot loader
+Note that this script copies files to the ESP and uses "efibootmgr" (on
+Linux) or "bless" (on OS X) to add rEFInd to the firmware's boot loader
 list. The docs/refind/installing.html file provides more details on this
 script and its use.
 
@@ -310,14 +315,16 @@ change into the "filesystems" directory and type "make {fsname}", where
 To install drivers, you can type "make install" in the "filesystems"
 directory. This copies all the drivers to the
 "/boot/efi/EFI/refind/drivers" directory. Alternatively, you can copy the
-files you want manually.
+files you want manually. As of version 0.4.8, the install.sh script
+includes an optional "--drivers" option that will install the drivers along
+with the main rEFInd program.
 
 *CAUTION:* Install drivers for your system's architecture *ONLY*.
 Installing drivers for the wrong architecture causes some systems to hang
 at boot time.
 
 The drivers all rely on filesystem wrapper code created by rEFIt's author,
-Christoph Phisterer. Most of the drivers seem to have passed through
+Christoph Pfisterer. Most of the drivers seem to have passed through
 Oracle's VirtualBox project (https://www.virtualbox.org) and the Clover
 boot loader project (https://sourceforge.net/projects/cloverefiboot/),
 which I used as the source for this build.

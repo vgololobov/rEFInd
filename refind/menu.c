@@ -526,10 +526,24 @@ static VOID TextMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, 
             // prepare strings for display
             DisplayStrings = AllocatePool(sizeof(CHAR16 *) * Screen->EntryCount);
             for (i = 0; i <= State->MaxIndex; i++) {
-                DisplayStrings[i] = AllocateZeroPool(256 * sizeof(CHAR16));
-                SPrint(DisplayStrings[i], 255, L" %-.*s ", MenuWidth, Screen->Entries[i]->Title);
-            // TODO: use more elaborate techniques for shortening too long strings (ellipses in the middle)
-            // TODO: account for double-width characters
+                // Note: Theoretically, SPrint() is a cleaner way to do this; but the
+                // description of the StrSize parameter to SPrint implies it's measured
+                // in characters, but in practice both TianoCore and GNU-EFI seem to
+                // use bytes instead, resulting in truncated displays. I could just
+                // double the size of the StrSize parameter, but that seems unsafe in
+                // case a future library change starts treating this as characters, so
+                // I'm doing it the hard way in this instance.
+                // TODO: Review the above and possibly change other uses of SPrint()
+                DisplayStrings[i] = AllocateZeroPool(2 * sizeof(CHAR16));
+                DisplayStrings[i][0] = L' ';
+                MergeStrings(&DisplayStrings[i], Screen->Entries[i]->Title, 0);
+                if (StrLen(DisplayStrings[i]) > MenuWidth)
+                   DisplayStrings[i][MenuWidth - 1] = 0;
+//                DisplayStrings[i] = AllocateZeroPool(256 * sizeof(CHAR16));
+//                SPrint(DisplayStrings[i], ((MenuWidth < 255) ? MenuWidth : 255) * sizeof(CHAR16),
+//                       L" %s ", Screen->Entries[i]->Title);
+                // TODO: use more elaborate techniques for shortening too long strings (ellipses in the middle)
+                // TODO: account for double-width characters
             } // for
 
             // initial painting

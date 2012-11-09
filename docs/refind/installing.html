@@ -99,7 +99,11 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p class="sidebar"><b>Warning:</b> If you're using a Macintosh, you should run <tt>install.sh</tt> from Mac OS X rather than from Linux. If run from Linux, rEFInd is unlikely to be fully installed. Worse, it's conceivable that running <tt>install.sh</tt> from Linux will damage your firmware, requiring that it be re-flashed. The reason is that Apple uses non-standard methods to enable a boot loader, and the Linux functions in <tt>install.sh</tt> assume standard EFI installation methods.</p>
 
-<p>If you're using Linux or Mac OS X, the easiest way to install rEFInd is to use the <tt>install.sh</tt> script. Under Linux, this script installs rEFInd to your disk's ESP. Under Mac OS X, the script installs rEFInd to your current OS X boot partition by default; but you can install to your ESP instead by passing the script the <tt>esp</tt> option.</p>
+<p>If you're using Linux or Mac OS X, the easiest way to install rEFInd is to use the <tt>install.sh</tt> script. This script automatically copies rEFInd's files to your ESP or other target location and makes changes to your firmware's NVRAM settings so that rEFInd will start the next time you boot. If you've booted to OS X or in EFI mode to Linux on a UEFI-based PC, <tt>install.sh</tt> will probably do the right thing, so you can get by with the quick instructions. If your setup is unusual, though, or if you want to create a USB flash drive with rEFInd on it, you should read the <a href="#extra_installsh">extra instructions</a> for this utility.</p>
+
+<h3>Quick <tt>install.sh</tt> Instructions</h3>
+
+<p>Under Linux, the <tt>install.sh</tt> script installs rEFInd to your disk's ESP. Under Mac OS X, the script installs rEFInd to your current OS X boot partition by default; but you can install to your ESP instead by passing the script the <tt>--esp</tt> option.</p>
 
 <p>Before running this script under Linux, you should ensure that your ESP is mounted at <tt>/boot</tt> or <tt>/boot/efi</tt>, as described in more detail in the <a href="#linux">Installing rEFInd Manually Using Linux</a> section. (If you installed Linux in EFI mode, chances are your ESP is properly mounted.) This precaution isn't necessary under OS X.</p>
 
@@ -135,15 +139,16 @@ WARNING: If you have an Advanced Format disk, *DO NOT* attempt to check the
 bless status with 'bless --info', since this is known to cause disk corruption
 on some systems!!
 
-NOTE: If you want to boot an OS via BIOS emulation (such as Windows or some
-Linux installations), you *MUST* edit the ///EFI/refind/refind.conf
-file's 'scanfor' line to include the 'hdbios' option, and perhaps
-'biosexternal' and 'cd', as well.
-
 
 Installation has completed successfully.</pre>
 
-<p>In either case, the details of the output differ depending on your existing configuration and how you ran the program. Some details that can affect how the script runs include the following:</p>
+<p>In either case, the details of the output differ depending on your existing configuration and how you ran the program. Unless you see an obvious warning or error, you shouldn't be concerned about minor deviations from these examples. If you run into such a situation, or if you want to install in an unusual way, read on....</p>
+
+<a name="extra_installsh">
+<h3>Extra <tt>install.sh</tt> Instructions</h3>
+</a>
+
+<p>Some details that can affect how the script runs include the following:</p>
 
 <ul>
 
@@ -159,13 +164,13 @@ Installation has completed successfully.</pre>
     the Terminal window. You'll need to press the Return or Enter key to
     run the script.</li>
 
-<li>Under OS X, passing the "--esp" option causes the script to install
-    rEFInd to the ESP. The script finds the first ESP that's identified by
-    the <tt>diskutil</tt> program and, if it's not already mounted, mounts
-    it to install rEFInd. Thus, it's conceivable that <tt>install.sh</tt>
-    will install rEFInd to the wrong partition if you have multiple disks
-    or if a disk has multiple ESPs. If you believe this has happened, you
-    may need to re-install manually.</li>
+<li>Under OS X, passing the <tt>--esp</tt> option causes the script to
+    install rEFInd to the ESP. The script finds the first ESP that's
+    identified by the <tt>diskutil</tt> program and, if it's not already
+    mounted, mounts it to install rEFInd. Thus, it's conceivable that
+    <tt>install.sh</tt> will install rEFInd to the wrong partition if you
+    have multiple disks or if a disk has multiple ESPs. If you believe this
+    has happened, you may need to re-install manually.</li>
 
 <li>If you're using OS X 10.7's Whole Disk Encryption (WDE) feature, you
     <i>must</i> install rEFInd to the ESP, so the <tt>--esp</tt> option to
@@ -175,12 +180,12 @@ Installation has completed successfully.</pre>
     forum thread</a> for a discussion of the topic.</li>
 
 <li>If you're replacing rEFIt with rEFInd on a Mac, there's a chance that
-    <tt>install.sh</tt> will warn you about the presence of a file called
-    <tt>/Library/StartupItems/rEFItBlesser</tt> and ask if you want to
-    delete the file. This file is designed to keep rEFIt set as the boot
+    <tt>install.sh</tt> will warn you about the presence of a program
+    called <tt>/Library/StartupItems/rEFItBlesser</tt> and ask if you want
+    to delete it. This program is designed to keep rEFIt set as the boot
     manager by automatically re-blessing it if the default boot manager
     changes. This is obviously undesirable if you install rEFInd as your
-    primary boot manager, so it's generally best to remove this file. If
+    primary boot manager, so it's generally best to remove this program. If
     you prefer to keep your options open, you can answer <tt
     class="userinput">N</tt> when <tt>install.sh</tt> asks if you want to
     delete rEFItBlesser, and instead manually copy it elsewhere. If you
@@ -192,11 +197,11 @@ Installation has completed successfully.</pre>
     --info</tt> to check your installation status; this combination has
     been reported to cause disk corruption on some Macs!</li>
 
-<li>If you intend to boot BIOS-based OSes, such as most Windows
-    installations and some Linux installations, you <i>must</i> edit the
-    <tt>refind.conf</tt> file, as noted near the end of the installation
-    script's output. (Note that rEFInd can only boot such OSes on Macs at
-    the moment.)</li>
+<li>If you intend to boot BIOS-based OSes on a UEFI-based PC, you
+    <i>must</i> edit the <tt>refind.conf</tt> file's <tt>scanfor</tt> line
+    to enable the relevant searches. This is <i>not</i> necessary on Macs,
+    though; because of the popularity of dual boots with Windows on Macs,
+    the BIOS/legacy scans are enabled by default on Macs.</li>
 
 <li>Under both Linux and OS X, you can add the <tt>--drivers</tt> option to
     have <tt>install.sh</tt> install all the filesystem drivers along with
@@ -207,15 +212,16 @@ Installation has completed successfully.</pre>
     class="variable">devicepath</tt></tt> option to install rEFInd to the
     specified device as <tt>EFI/BOOT/bootx64.efi</tt> and
     <tt>EFI/BOOT/bootia32.efi</tt>. The specified device must be a valid
-    FAT partition. The idea is that you can easily create a bootable USB
-    flash drive with this option: Create a proper FAT-formatted ESP on a
-    disk (say, <tt>/dev/sdd1</tt>) and then type <tt class="userinput">sh
-    ./install --usedefault /dev/sdd1</tt> to turn the disk into an
-    emergency disk. This option can also be used to install rEFInd to an
-    ESP using the <a href="#naming">alternative naming options</a>
-    described later. This latter usage will result in a bootable rEFInd
-    only if no other OS has already created an NVRAM variable pointing to
-    itself.</li>
+    FAT partition. This option also tells the script to <i>not</i> make
+    changes to the computer's NVRAM. The idea is that you can easily create
+    a bootable USB flash drive with this option: Create a proper
+    FAT-formatted ESP on a disk (say, <tt>/dev/sdd1</tt>) and then type <tt
+    class="userinput">sh ./install --usedefault /dev/sdd1</tt> to turn the
+    disk into an emergency disk. This option can also be used to install
+    rEFInd to an ESP using the <a href="#naming">alternative naming
+    options</a> described later. This latter usage will result in a
+    bootable rEFInd only if no other OS has already created an NVRAM
+    variable pointing to itself.</li>
 
 </ul>
 

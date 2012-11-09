@@ -1,6 +1,10 @@
 0.4.8 (??/??/2012):
 -------------------
 
+- Fixed bug that caused text-mode ("textonly" refind.conf option enabled)
+  menu entries to be right-aligned rather than left-aligned when rEFInd was
+  compiled with the TianoCore EDK2.
+
 - Added "--usedefault {devicename}" and "--drivers" options to the
   install.sh script and changed the "esp" option to "--esp". 
 
