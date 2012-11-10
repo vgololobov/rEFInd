@@ -436,6 +436,39 @@ VOID ReadConfig(VOID)
     MyFreePool(File.Buffer);
 } /* VOID ReadConfig() */
 
+// Finds a volume with the specified Identifier (a volume label or a number
+// followed by a colon, for the moment). If found, sets *Volume to point to
+// that volume. If not, leaves it unchanged.
+// Returns TRUE if a match was found, FALSE if not.
+static BOOLEAN FindVolume(REFIT_VOLUME **Volume, CHAR16 *Identifier) {
+   UINTN     i = 0, CountedVolumes = 0;
+   INTN      Number = -1;
+   BOOLEAN   Found = FALSE;
+
+   if ((StrLen(Identifier) >= 2) && (Identifier[StrLen(Identifier) - 1] == L':') &&
+       (Identifier[0] >= L'0') && (Identifier[0] <= L'9')) {
+      Number = (INTN) Atoi(Identifier);
+   }
+   while ((i < VolumesCount) && (!Found)) {
+      if (Number >= 0) { // User specified a volume by number
+         if (Volumes[i]->IsReadable) {
+            if (CountedVolumes == Number) {
+               *Volume = Volumes[i];
+               Found = TRUE;
+            }
+            CountedVolumes++;
+         } // if
+      } else { // User specified a volume by label
+         if (StriCmp(Identifier, Volumes[i]->VolName) == 0) {
+            *Volume = Volumes[i];
+            Found = TRUE;
+         } // if
+      } // if/else
+      i++;
+   } // while()
+   return (Found);
+} // static VOID FindVolume()
+
 static VOID AddSubmenu(LOADER_ENTRY *Entry, REFIT_FILE *File, REFIT_VOLUME *Volume, CHAR16 *Title) {
    REFIT_MENU_SCREEN  *SubScreen;
    LOADER_ENTRY       *SubEntry;
@@ -457,6 +490,15 @@ static VOID AddSubmenu(LOADER_ENTRY *Entry, REFIT_FILE *File, REFIT_VOLUME *Volu
          MyFreePool(SubEntry->LoaderPath);
          SubEntry->LoaderPath = StrDuplicate(TokenList[1]);
          SubEntry->DevicePath = FileDevicePath(Volume->DeviceHandle, SubEntry->LoaderPath);
+
+      } else if ((StriCmp(TokenList[0], L"volume") == 0) && (TokenCount > 1)) {
+         if (FindVolume(&Volume, TokenList[1])) {
+            MyFreePool(SubEntry->me.Title);
+            SubEntry->me.Title        = AllocateZeroPool(256 * sizeof(CHAR16));
+            SPrint(SubEntry->me.Title, 255, L"Boot %s from %s", (Title != NULL) ? Title : L"Unknown", Volume->VolName);
+            SubEntry->me.BadgeImage   = Volume->VolBadgeImage;
+            SubEntry->VolName         = Volume->VolName;
+         } // if match found
 
       } else if (StriCmp(TokenList[0], L"initrd") == 0) {
          MyFreePool(SubEntry->InitrdPath);
@@ -496,39 +538,6 @@ static VOID AddSubmenu(LOADER_ENTRY *Entry, REFIT_FILE *File, REFIT_VOLUME *Volu
    }
    Entry->me.SubScreen = SubScreen;
 } // VOID AddSubmenu()
-
-// Finds a volume with the specified Identifier (a volume label or a number
-// followed by a colon, for the moment). If found, sets *Volume to point to
-// that volume. If not, leaves it unchanged.
-// Returns TRUE if a match was found, FALSE if not.
-static BOOLEAN FindVolume(REFIT_VOLUME **Volume, CHAR16 *Identifier) {
-   UINTN     i = 0, CountedVolumes = 0;
-   INTN      Number = -1;
-   BOOLEAN   Found = FALSE;
-
-   if ((StrLen(Identifier) >= 2) && (Identifier[StrLen(Identifier) - 1] == L':') &&
-       (Identifier[0] >= L'0') && (Identifier[0] <= L'9')) {
-      Number = (INTN) Atoi(Identifier);
-   }
-   while ((i < VolumesCount) && (!Found)) {
-      if (Number >= 0) { // User specified a volume by number
-         if (Volumes[i]->IsReadable) {
-            if (CountedVolumes == Number) {
-               *Volume = Volumes[i];
-               Found = TRUE;
-            }
-            CountedVolumes++;
-         } // if
-      } else { // User specified a volume by label
-         if (StriCmp(Identifier, Volumes[i]->VolName) == 0) {
-            *Volume = Volumes[i];
-            Found = TRUE;
-         } // if
-      } // if/else
-      i++;
-   } // while()
-   return (Found);
-} // static VOID FindVolume()
 
 // Adds the options from a SINGLE refind.conf stanza to a new loader entry and returns
 // that entry. The calling function is then responsible for adding the entry to the
