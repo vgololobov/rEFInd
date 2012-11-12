@@ -87,16 +87,17 @@ timeout 20
 
 # Which non-bootloader tools to show on the tools line, and in what
 # order to display them:
-#  shell     - the EFI shell (requires external program; see rEFInd
-#              documentation for details)
-#  gptsync   - the (dangerous) gptsync.efi utility (requires external
-#              program; see rEFInd documentation for details)
-#  about     - an "about this program" option
-#  exit      - a tag to exit from rEFInd
-#  shutdown  - shuts down the computer (a bug causes this to reboot EFI
-#              systems)
-#  reboot    - a tag to reboot the computer
-# Default is shell,about,shutdown,reboot
+#  shell           - the EFI shell (requires external program; see rEFInd
+#                    documentation for details)
+#  gptsync         - the (dangerous) gptsync.efi utility (requires external
+#                    program; see rEFInd documentation for details)
+#  about           - an "about this program" option
+#  apple_recovery  - boots the Apple Recovery HD partition, if present
+#  exit            - a tag to exit from rEFInd
+#  shutdown        - shuts down the computer (a bug causes this to reboot
+#                    EFI systems)
+#  reboot          - a tag to reboot the computer
+# Default is shell,about,apple_recovery,shutdown,reboot
 #
 #showtools shell, about, reboot
 
