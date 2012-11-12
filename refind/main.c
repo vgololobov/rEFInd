@@ -95,7 +95,7 @@ static REFIT_MENU_SCREEN AboutMenu      = { L"About", NULL, 0, NULL, 0, NULL, 0,
 
 REFIT_CONFIG GlobalConfig = { FALSE, FALSE, 0, 0, 20, 0, 0, GRAPHICS_FOR_OSX, LEGACY_TYPE_MAC, 0,
                               NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-                              {TAG_SHELL, TAG_ABOUT, TAG_SHUTDOWN, TAG_REBOOT, 0, 0, 0, 0, 0 }};
+                              {TAG_SHELL, TAG_ABOUT, TAG_APPLE_RECOVERY, TAG_SHUTDOWN, TAG_REBOOT, 0, 0, 0, 0, 0 }};
 
 // Structure used to hold boot loader filenames and time stamps in
 // a linked list; used to sort entries within a directory.
@@ -115,7 +115,7 @@ static VOID AboutrEFInd(VOID)
 
     if (AboutMenu.EntryCount == 0) {
         AboutMenu.TitleImage = BuiltinIcon(BUILTIN_ICON_FUNC_ABOUT);
-        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.4.7.2");
+        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.4.7.3");
         AddMenuInfoLine(&AboutMenu, L"");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2006-2010 Christoph Pfisterer");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2012 Roderick W. Smith");
@@ -1452,7 +1452,7 @@ static VOID StartTool(IN LOADER_ENTRY *Entry)
    FinishExternalScreen();
 } /* static VOID StartTool() */
 
-static LOADER_ENTRY * AddToolEntry(IN CHAR16 *LoaderPath, IN CHAR16 *LoaderTitle, IN EG_IMAGE *Image,
+static LOADER_ENTRY * AddToolEntry(EFI_HANDLE DeviceHandle, IN CHAR16 *LoaderPath, IN CHAR16 *LoaderTitle, IN EG_IMAGE *Image,
                                    IN CHAR16 ShortcutLetter, IN BOOLEAN UseGraphicsMode)
 {
     LOADER_ENTRY *Entry;
@@ -1468,7 +1468,8 @@ static LOADER_ENTRY * AddToolEntry(IN CHAR16 *LoaderPath, IN CHAR16 *LoaderTitle
     Entry->me.ShortcutLetter = ShortcutLetter;
     Entry->me.Image = Image;
     Entry->LoaderPath = (LoaderPath) ? StrDuplicate(LoaderPath) : NULL;
-    Entry->DevicePath = FileDevicePath(SelfLoadedImage->DeviceHandle, Entry->LoaderPath);
+//    Entry->DevicePath = FileDevicePath(SelfLoadedImage->DeviceHandle, Entry->LoaderPath);
+    Entry->DevicePath = FileDevicePath(DeviceHandle, Entry->LoaderPath);
     Entry->UseGraphicsMode = UseGraphicsMode;
 
     AddMenuEntry(&MainMenu, (REFIT_MENU_ENTRY *)Entry);
@@ -1715,9 +1716,9 @@ static VOID ScanForBootloaders(VOID) {
 // Add the second-row tags containing built-in and external tools (EFI shell,
 // reboot, etc.)
 static VOID ScanForTools(VOID) {
-   CHAR16 *FileName = NULL;
+   CHAR16 *FileName = NULL, Description[256];
    REFIT_MENU_ENTRY *TempMenuEntry;
-   UINTN i, j;
+   UINTN i, j, VolumeIndex;
 
    for (i = 0; i < NUM_TOOLS; i++) {
       switch(GlobalConfig.ShowTools[i]) {
@@ -1745,15 +1746,29 @@ static VOID ScanForTools(VOID) {
             j = 0;
             while ((FileName = FindCommaDelimited(SHELL_NAMES, j++)) != NULL) {
                if (FileExists(SelfRootDir, FileName)) {
-                  AddToolEntry(FileName, L"EFI Shell", BuiltinIcon(BUILTIN_ICON_TOOL_SHELL), 'S', FALSE);
+                  AddToolEntry(SelfLoadedImage->DeviceHandle, FileName, L"EFI Shell", BuiltinIcon(BUILTIN_ICON_TOOL_SHELL), 'S', FALSE);
                }
             } // while
             break;
          case TAG_GPTSYNC:
+            MyFreePool(FileName);
+            FileName = NULL;
             MergeStrings(&FileName, L"\\efi\\tools\\gptsync.efi", 0);
             if (FileExists(SelfRootDir, FileName)) {
-               AddToolEntry(FileName, L"Make Hybrid MBR", BuiltinIcon(BUILTIN_ICON_TOOL_PART), 'P', FALSE);
+               AddToolEntry(SelfLoadedImage->DeviceHandle, FileName, L"Make Hybrid MBR", BuiltinIcon(BUILTIN_ICON_TOOL_PART), 'P', FALSE);
             }
+            break;
+         case TAG_APPLE_RECOVERY:
+            MyFreePool(FileName);
+            FileName = NULL;
+            MergeStrings(&FileName, L"\\com.apple.recovery.boot\\boot.efi", 0);
+            for (VolumeIndex = 0; VolumeIndex < VolumesCount; VolumeIndex++) {
+               if ((Volumes[VolumeIndex]->RootDir != NULL) && (FileExists(Volumes[VolumeIndex]->RootDir, FileName))) {
+                  SPrint(Description, 255, L"Apple Recovery on %s", Volumes[VolumeIndex]->VolName);
+                  AddToolEntry(Volumes[VolumeIndex]->DeviceHandle, FileName, Description,
+                               BuiltinIcon(BUILTIN_ICON_TOOL_APPLE_RESCUE), 'R', TRUE);
+               }
+            } // for
             break;
       } // switch()
       MyFreePool(FileName);

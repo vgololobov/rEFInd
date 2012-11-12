@@ -383,6 +383,8 @@ VOID ReadConfig(VOID)
                    GlobalConfig.ShowTools[i - 1] = TAG_REBOOT;
                 } else if (StriCmp(FlagName, L"shutdown") == 0) {
                    GlobalConfig.ShowTools[i - 1] = TAG_SHUTDOWN;
+                } else if (StriCmp(FlagName, L"apple_recovery") == 0) {
+                   GlobalConfig.ShowTools[i - 1] = TAG_APPLE_RECOVERY;
                 } else {
                    Print(L" unknown showtools flag: '%s'\n", FlagName);
                 }
@@ -571,6 +573,7 @@ static LOADER_ENTRY * AddStanzaEntries(REFIT_FILE *File, REFIT_VOLUME *Volume, C
          MyFreePool(Entry->LoadOptions);
          Entry->LoadOptions = NULL; // Discard default options, if any
          DefaultsSet = TRUE;
+
       } else if ((StriCmp(TokenList[0], L"volume") == 0) && (TokenCount > 1)) {
          if (FindVolume(&CurrentVolume, TokenList[1])) {
             MyFreePool(Entry->me.Title);
@@ -579,29 +582,37 @@ static LOADER_ENTRY * AddStanzaEntries(REFIT_FILE *File, REFIT_VOLUME *Volume, C
             Entry->me.BadgeImage   = CurrentVolume->VolBadgeImage;
             Entry->VolName         = CurrentVolume->VolName;
          } // if match found
+
       } else if ((StriCmp(TokenList[0], L"icon") == 0) && (TokenCount > 1)) {
          MyFreePool(Entry->me.Image);
          Entry->me.Image = LoadIcns(CurrentVolume->RootDir, TokenList[1], 128);
          if (Entry->me.Image == NULL) {
             Entry->me.Image = DummyImage(128);
          }
+
       } else if ((StriCmp(TokenList[0], L"initrd") == 0) && (TokenCount > 1)) {
          MyFreePool(Entry->InitrdPath);
          Entry->InitrdPath = StrDuplicate(TokenList[1]);
+
       } else if ((StriCmp(TokenList[0], L"options") == 0) && (TokenCount > 1)) {
          MyFreePool(Entry->LoadOptions);
          Entry->LoadOptions = StrDuplicate(TokenList[1]);
+
       } else if ((StriCmp(TokenList[0], L"ostype") == 0) && (TokenCount > 1)) {
          if (TokenCount > 1) {
             Entry->OSType = TokenList[1][0];
          }
+
       } else if ((StriCmp(TokenList[0], L"graphics") == 0) && (TokenCount > 1)) {
          Entry->UseGraphicsMode = (StriCmp(TokenList[1], L"on") == 0);
+
       } else if (StriCmp(TokenList[0], L"disabled") == 0) {
          Entry->Enabled = FALSE;
+
       } else if ((StriCmp(TokenList[0], L"submenuentry") == 0) && (TokenCount > 1)) {
          AddSubmenu(Entry, File, CurrentVolume, TokenList[1]);
          AddedSubmenu = TRUE;
+
       } // set options to pass to the loader program
       FreeTokenLine(&TokenList, &TokenCount);
    } // while()

@@ -68,7 +68,8 @@
 #define TAG_SHELL    (8)
 #define TAG_GPTSYNC  (9)
 #define TAG_LEGACY_UEFI (10)
-#define NUM_TOOLS    (9)
+#define TAG_APPLE_RECOVERY (11)
+#define NUM_TOOLS    (10)
 
 #define NUM_SCAN_OPTIONS 10
 
