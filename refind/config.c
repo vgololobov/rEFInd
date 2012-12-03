@@ -67,19 +67,21 @@ static REFIT_MENU_ENTRY MenuEntryReturn   = { L"Return to Main Menu", TAG_RETURN
 // read a file into a buffer
 //
 
-static EFI_STATUS ReadFile(IN EFI_FILE_HANDLE BaseDir, CHAR16 *FileName, REFIT_FILE *File)
+EFI_STATUS ReadFile(IN EFI_FILE_HANDLE BaseDir, IN CHAR16 *FileName, IN OUT REFIT_FILE *File, OUT UINTN *size)
 {
     EFI_STATUS      Status;
     EFI_FILE_HANDLE FileHandle;
     EFI_FILE_INFO   *FileInfo;
     UINT64          ReadSize;
+    CHAR16          Message[256];
 
     File->Buffer = NULL;
     File->BufferSize = 0;
 
     // read the file, allocating a buffer on the way
     Status = refit_call5_wrapper(BaseDir->Open, BaseDir, &FileHandle, FileName, EFI_FILE_MODE_READ, 0);
-    if (CheckError(Status, L"while loading the configuration file"))
+    SPrint(Message, 255, L"while loading the file '%s'", FileName);
+    if (CheckError(Status, Message))
         return Status;
 
     FileInfo = LibFileInfo(FileHandle);
@@ -89,14 +91,18 @@ static EFI_STATUS ReadFile(IN EFI_FILE_HANDLE BaseDir, CHAR16 *FileName, REFIT_F
         return EFI_LOAD_ERROR;
     }
     ReadSize = FileInfo->FileSize;
-    if (ReadSize > MAXCONFIGFILESIZE)
-        ReadSize = MAXCONFIGFILESIZE;
     FreePool(FileInfo);
 
-    File->BufferSize = (UINTN)ReadSize;   // was limited to a few K before, so this is safe
+    File->BufferSize = (UINTN)ReadSize;
     File->Buffer = AllocatePool(File->BufferSize);
+    if (File->Buffer == NULL) {
+       size = 0;
+       return EFI_OUT_OF_RESOURCES;
+    } else {
+       *size = File->BufferSize;
+    } // if/else
     Status = refit_call3_wrapper(FileHandle->Read, FileHandle, &File->BufferSize, File->Buffer);
-    if (CheckError(Status, L"while loading the configuration file")) {
+    if (CheckError(Status, Message)) {
         MyFreePool(File->Buffer);
         File->Buffer = NULL;
         refit_call1_wrapper(FileHandle->Close, FileHandle);
@@ -126,7 +132,7 @@ static EFI_STATUS ReadFile(IN EFI_FILE_HANDLE BaseDir, CHAR16 *FileName, REFIT_F
         }
         // TODO: detect other encodings as they are implemented
     }
- 
+
     return EFI_SUCCESS;
 }
 
@@ -312,9 +318,11 @@ VOID ReadConfig(VOID)
         return;
     }
 
-    Status = ReadFile(SelfDir, CONFIG_FILE_NAME, &File);
+    Status = ReadFile(SelfDir, CONFIG_FILE_NAME, &File, &i);
     if (EFI_ERROR(Status))
         return;
+
+    GlobalConfig.DontScan = StrDuplicate(SelfDirPath);
 
     for (;;) {
         TokenCount = ReadTokenLine(&File, &TokenList);
@@ -385,6 +393,8 @@ VOID ReadConfig(VOID)
                    GlobalConfig.ShowTools[i - 1] = TAG_SHUTDOWN;
                 } else if (StriCmp(FlagName, L"apple_recovery") == 0) {
                    GlobalConfig.ShowTools[i - 1] = TAG_APPLE_RECOVERY;
+                } else if (StriCmp(FlagName, L"mok_tool") == 0) {
+                   GlobalConfig.ShowTools[i - 1] = TAG_MOK_TOOL;
                 } else {
                    Print(L" unknown showtools flag: '%s'\n", FlagName);
                 }
@@ -642,11 +652,11 @@ VOID ScanUserConfigured(VOID)
    REFIT_VOLUME      *Volume;
    CHAR16            **TokenList;
    CHAR16            *Title = NULL;
-   UINTN             TokenCount;
+   UINTN             TokenCount, size;
    LOADER_ENTRY      *Entry;
 
    if (FileExists(SelfDir, CONFIG_FILE_NAME)) {
-      Status = ReadFile(SelfDir, CONFIG_FILE_NAME, &File);
+      Status = ReadFile(SelfDir, CONFIG_FILE_NAME, &File, &size);
       if (EFI_ERROR(Status))
          return;
 
@@ -686,7 +696,7 @@ VOID ScanUserConfigured(VOID)
 REFIT_FILE * ReadLinuxOptionsFile(IN CHAR16 *LoaderPath, IN REFIT_VOLUME *Volume) {
    CHAR16       *OptionsFilename, *FullFilename;
    BOOLEAN      GoOn = TRUE;
-   UINTN        i = 0;
+   UINTN        i = 0, size;
    REFIT_FILE   *File = NULL;
    EFI_STATUS   Status;
 
@@ -697,7 +707,7 @@ REFIT_FILE * ReadLinuxOptionsFile(IN CHAR16 *LoaderPath, IN REFIT_VOLUME *Volume
          MergeStrings(&FullFilename, OptionsFilename, '\\');
          if (FileExists(Volume->RootDir, FullFilename)) {
             File = AllocateZeroPool(sizeof(REFIT_FILE));
-            Status = ReadFile(Volume->RootDir, FullFilename, File);
+            Status = ReadFile(Volume->RootDir, FullFilename, File, &size);
             GoOn = FALSE;
             if (CheckError(Status, L"while loading the Linux options file")) {
                if (File != NULL)

@@ -45,7 +45,7 @@ Headers collection for procedures
 //#include <Protocol/FSInjectProtocol.h>
 //#include <Protocol/MsgLog.h>
 
-#include "lib.h"
+//#include "lib.h"
 //#include "boot.h"
 //#include "BiosVideo.h"
 #include "../include/Bmp.h"

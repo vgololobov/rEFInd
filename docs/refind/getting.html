@@ -166,9 +166,39 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <h2>Getting rEFInd from Your OS's Repositories</h2>
 
-<p>If you use Arch Linux, you can obtain rEFInd from its repositories, in both <a href="https://www.archlinux.org/packages/extra/any/refind-efi/">stable</a> and <a href="https://aur.archlinux.org/packages/refind-efi-tianocore-git/">git (experimental)</a> releases. The git release is likely to include pre-release bug fixes and new features, but those features may be poorly tested or undocumented.</p>
+<p>I know of a small number of pre-packaged versions of rEFInd, either in official OS repositories or in ancillary repositories:</p>
 
-<p>You can also obtain rEFInd from the <a href="http://nixos.org/nixpkgs/">Nix Packages collection,</a> which creates packages for a number of OSes using its own packaging system.</p>
+<ul>
+
+<li><b>Arch Linux</b>&mdash;You can obtain rEFInd from the Arch
+    repositories, in both <a
+    href="https://www.archlinux.org/packages/extra/any/refind-efi/">stable</a>
+    and <a
+    href="https://aur.archlinux.org/packages/refind-efi-tianocore-git/">git
+    (experimental)</a> releases. The git release is likely to include
+    pre-release bug fixes and new features, but those features may be
+    poorly tested or undocumented. The last I checked, both builds used the
+    Tianocore toolkit, and so support booting BIOS/legacy boot loaders on
+    UEFI-based PCs.</li>
+
+<li><b>The <a href="http://nixos.org/nixpkgs/">Nix Packages
+    collection</a></b>&mdash;This site creates packages for a number of
+    OSes using its own packaging system.</li>
+
+<li><b><a
+    href="https://build.opensuse.org/package/show?package=refind&project=home%3Amichael-chang%3AUEFI">OpenSUSE
+    Build Service (OBS)</a></b>&mdash;This site holds a binary x86-64 build
+    of rEFInd that should install on any RPM-based distribution. It doesn't
+    completely set up rEFInd, though; it just places the rEFInd files in
+    the <tt>/usr/share/refind</tt> directory, and a copy of
+    <tt>install.sh</tt> as <tt>/usr/sbin/refind_install</tt>.
+    Unfortunately, the script makes assumptions about the locations of
+    files and so is useless when files are moved around in this way. Thus,
+    you'll need to install manually after installing this RPM, so you might
+    as well download the rEFInd binary <tt>.zip</tt> file from Sourceforge
+    instead.</li>
+
+</ul>
 
 <p>To the best of my knowledge, no other Linux distribution yet includes rEFInd in its repositories. That's likely to change in time. If you hear of rEFInd being included in an OS's official package set, feel free to <a href="mailto:rodsmith@rodsbooks.com">drop me a line.</a></p>
 

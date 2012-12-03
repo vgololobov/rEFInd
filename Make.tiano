@@ -36,6 +36,7 @@ include $(EDK2BASE)/Conf/target.txt
 
 INCLUDE_DIRS    = -I $(EDK2BASE)/MdePkg \
                   -I $(EDK2BASE)/MdePkg/Include \
+		  -I $(EDK2BASE)/MdeModulePkg/ \
                   -I $(EDK2BASE)/MdeModulePkg/Include \
                   -I $(EDK2BASE)/IntelFrameworkPkg/Include \
                   -I $(EDK2BASE)/MdePkg/Include/$(ARCHDIR) \

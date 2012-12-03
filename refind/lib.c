@@ -94,7 +94,7 @@ static VOID UninitVolumes(VOID);
 //
 
 // Converts forward slashes to backslashes, removes duplicate slashes, and
-// removes slashes from both the start and end of the pathname.
+// removes slashes from the end of the pathname.
 // Necessary because some (buggy?) EFI implementations produce "\/" strings
 // in pathnames, because some user inputs can produce duplicate directory
 // separators, and because we want consistent start and end slashes for
@@ -106,20 +106,23 @@ VOID CleanUpPathNameSlashes(IN OUT CHAR16 *PathName) {
    UINTN    i, FinalChar = 0;
    BOOLEAN  LastWasSlash = FALSE;
 
-   NewName = AllocateZeroPool(sizeof(CHAR16) * (StrLen(PathName) + 2));
+   NewName = AllocateZeroPool(sizeof(CHAR16) * (StrLen(PathName) + 4));
    if (NewName != NULL) {
       for (i = 0; i < StrLen(PathName); i++) {
          if ((PathName[i] == L'/') || (PathName[i] == L'\\')) {
-            if ((!LastWasSlash) && (FinalChar != 0))
+            if ((!LastWasSlash) /* && (FinalChar != 0) */)
                NewName[FinalChar++] = L'\\';
             LastWasSlash = TRUE;
          } else {
+            if (FinalChar == 0) {
+               NewName[FinalChar++] = L'\\';
+            }
             NewName[FinalChar++] = PathName[i];
             LastWasSlash = FALSE;
          } // if/else
       } // for
       NewName[FinalChar] = 0;
-      if ((FinalChar > 0) && (NewName[FinalChar - 1] == L'\\'))
+      if ((FinalChar > 1) && (NewName[FinalChar - 1] == L'\\'))
          NewName[--FinalChar] = 0;
       if (FinalChar == 0) {
          NewName[0] = L'\\';
@@ -1086,7 +1089,7 @@ EFI_STATUS DirIterClose(IN OUT REFIT_DIR_ITER *DirIter)
    }
    if (DirIter->CloseDirHandle)
       refit_call1_wrapper(DirIter->DirHandle->Close, DirIter->DirHandle);
-    return DirIter->LastStatus;
+   return DirIter->LastStatus;
 }
 
 //
@@ -1286,6 +1289,62 @@ CHAR16 *FindPath(IN CHAR16* FullPath) {
    return (PathOnly);
 }
 
+// Splits an EFI device path into device and filename components. For instance, if InString is
+// PciRoot(0x0)/Pci(0x1f,0x2)/Ata(Secondary,Master,0x0)/HD(2,GPT,8314ae90-ada3-48e9-9c3b-09a88f80d921,0x96028,0xfa000)/\bzImage-3.5.1.efi,
+// this function will truncate that input to
+// PciRoot(0x0)/Pci(0x1f,0x2)/Ata(Secondary,Master,0x0)/HD(2,GPT,8314ae90-ada3-48e9-9c3b-09a88f80d921,0x96028,0xfa000)
+// and return bzImage-3.5.1.efi as its return value.
+// It does this by searching for the last ")" character in InString, copying everything
+// after that string (after some cleanup) as the return value, and truncating the original
+// input value.
+// If InString contains no ")" character, this function leaves the original input string
+// unmodified and returns a NULL value.
+static CHAR16* SplitDeviceString(IN OUT CHAR16 *InString) {
+   INTN i;
+   CHAR16 *FileName = NULL;
+   BOOLEAN Found = FALSE;
+
+   i = StrLen(InString) - 1;
+   while ((i >= 0) && (!Found)) {
+      if (InString[i] == L')') {
+         Found = TRUE;
+         FileName = StrDuplicate(&InString[i + 1]);
+         CleanUpPathNameSlashes(FileName);
+         InString[i + 1] = '\0';
+      } // if
+      i--;
+   } // while
+   return FileName;
+} // static CHAR16* SplitDeviceString()
+
+// Takes an input loadpath, splits it into disk and filename components, finds a matching
+// DeviceVolume, and returns that and the filename (*loader).
+VOID FindVolumeAndFilename(IN EFI_DEVICE_PATH *loadpath, OUT REFIT_VOLUME **DeviceVolume, OUT CHAR16 **loader) {
+   CHAR16 *DeviceString, *VolumeDeviceString, *Temp;
+   UINTN i = 0;
+   BOOLEAN Found = FALSE;
+
+   MyFreePool(*loader);
+   MyFreePool(*DeviceVolume);
+   *DeviceVolume = NULL;
+   DeviceString = DevicePathToStr(loadpath);
+   *loader = SplitDeviceString(DeviceString);
+
+   while ((i < VolumesCount) && (!Found)) {
+      VolumeDeviceString = DevicePathToStr(Volumes[i]->DevicePath);
+      Temp = SplitDeviceString(VolumeDeviceString);
+      if (StriCmp(DeviceString, VolumeDeviceString) == 0) {
+         Found = TRUE;
+         *DeviceVolume = Volumes[i];
+      }
+      MyFreePool(Temp);
+      MyFreePool(VolumeDeviceString);
+      i++;
+   } // while
+
+   MyFreePool(DeviceString);
+} // VOID FindVolumeAndFilename()
+
 // Returns all the digits in the input string, including intervening
 // non-digit characters. For instance, if InString is "foo-3.3.4-7.img",
 // this function returns "3.3.4-7". If InString contains no digits,
@@ -1400,3 +1459,20 @@ BOOLEAN EjectMedia(VOID) {
    MyFreePool(Handles);
    return (Ejected > 0);
 } // VOID EjectMedia()
+
+
+// Return the GUID as a string, suitable for display to the user. Note that the calling
+// function is responsible for freeing the allocated memory.
+CHAR16 * GuidAsString(EFI_GUID *GuidData) {
+   CHAR16 *TheString;
+
+   TheString = AllocateZeroPool(42 * sizeof(CHAR16));
+   if (TheString != 0) {
+      SPrint (TheString, 82, L"%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+              (UINTN)GuidData->Data1, (UINTN)GuidData->Data2, (UINTN)GuidData->Data3,
+              (UINTN)GuidData->Data4[0], (UINTN)GuidData->Data4[1], (UINTN)GuidData->Data4[2],
+              (UINTN)GuidData->Data4[3], (UINTN)GuidData->Data4[4], (UINTN)GuidData->Data4[5],
+              (UINTN)GuidData->Data4[6], (UINTN)GuidData->Data4[7]);
+   }
+   return TheString;
+} // GuidAsString(EFI_GUID *GuidData)

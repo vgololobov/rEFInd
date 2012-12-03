@@ -31,6 +31,9 @@ I've incorporated into the current version. Specifically:
   pages correctly, the original creator was David Vignoni (aka
   "deviantdark" on the deviantart site).
 
+* The keys icon for MOK keys management comes from the
+  kdeartwork-iconthemes-4.8.5 package on Gentoo.
+
 * The Linux Mint icon comes from the Linux Mint 11.1 user guide
   (http://ftp.heanet.ie/pub/linuxmint.com/docs/user-guide/)
 

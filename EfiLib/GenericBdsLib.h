@@ -222,22 +222,22 @@ BdsLibBuildOptionFromShell (
   IN OUT LIST_ENTRY              *BdsBootOptionList
   );
 
-//
-// Bds misc lib functions
-//
-/**
-  Get boot mode by looking up the configuration table and parsing the HOB list.
-
-  @param  BootMode              The boot mode from PEI handoff HOB.
-
-  @retval EFI_SUCCESS           Successfully got boot mode.
-
-**/
-EFI_STATUS
-EFIAPI
-BdsLibGetBootMode (
-  OUT EFI_BOOT_MODE       *BootMode
-  );
+// //
+// // Bds misc lib functions
+// //
+// /**
+//   Get boot mode by looking up the configuration table and parsing the HOB list.
+// 
+//   @param  BootMode              The boot mode from PEI handoff HOB.
+// 
+//   @retval EFI_SUCCESS           Successfully got boot mode.
+// 
+// **/
+// EFI_STATUS
+// EFIAPI
+// BdsLibGetBootMode (
+//   OUT EFI_BOOT_MODE       *BootMode
+//   );
 
 
 /**

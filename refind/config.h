@@ -74,6 +74,7 @@ typedef struct {
 #define HIDEUI_FLAG_ARROWS     (0x0010)
 #define HIDEUI_ALL             ((0xffff))
 
+EFI_STATUS ReadFile(IN EFI_FILE_HANDLE BaseDir, CHAR16 *FileName, REFIT_FILE *File, UINTN *size);
 VOID ReadConfig(VOID);
 VOID ScanUserConfigured(VOID);
 UINTN ReadTokenLine(IN REFIT_FILE *File, OUT CHAR16 ***TokenList);

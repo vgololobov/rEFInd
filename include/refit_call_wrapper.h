@@ -58,6 +58,9 @@
 #define refit_call10_wrapper(f, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) \
         f(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10)
 
+#define uefi_call_wrapper(f, n, ...) \
+        f(__VA_ARGS__)
+
 #endif /* not GNU EFI -- TianoCore EDK2 */
 
 #endif /* !__REFIT_CALL_WRAPPER_H__ */

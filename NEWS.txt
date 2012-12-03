@@ -1,6 +1,19 @@
 0.4.8 (??/??/2012):
 -------------------
 
+- Added the directory from which rEFInd launched to dont_scan_dirs. This
+  works around a bug in which rEFInd would show itself as a bogus Windows
+  entry if it's installed as EFI/Microsoft/boot/bootmgfw.efi.
+
+- Added support for launching MokManager.efi for managing the Machine Owner
+  Keys (MOKs) maintained by the Shim boot loader developed by Fedora and
+  SUSE.
+
+- Added support for Apple's Recovery HD partition: If it's detected, a new
+  icon appears on the second row. This icon can be removed by explicitly
+  setting the "showtools" option in refind.conf and excluding the
+  "apple_recovery" option from that line.
+
 - Fixed bug that caused text-mode ("textonly" refind.conf option enabled)
   menu entries to be right-aligned rather than left-aligned when rEFInd was
   compiled with the TianoCore EDK2.

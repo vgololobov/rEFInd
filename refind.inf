@@ -40,6 +40,7 @@
   refind/menu.c
   refind/screen.c
   refind/driver_support.c
+  refind/mok.c
   libeg/image.c
   libeg/load_bmp.c
   libeg/load_icns.c
@@ -48,7 +49,7 @@
 
 [Packages]
   MdePkg/MdePkg.dec
-#  MdeModulePkg/MdeModulePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
   IntelFrameworkPkg/IntelFrameworkPkg.dec
   IntelFrameworkModulePkg/IntelFrameworkModulePkg.dec
 
@@ -66,6 +67,7 @@
   HobLib
   MemoryAllocationLib
   IoLib
+  PerformanceLib
 
 [Guids]
   gEfiAcpiTableGuid
@@ -132,6 +134,10 @@
   gEfiExtScsiPassThruProtocolGuid               ## PROTOCOL SOMETIMES_CONSUMES
 
   gEfiLegacyBiosProtocolGuid                    # PROTOCOL TO_START
+
+  gEfiLoadFile2ProtocolGuid
+  gEfiLoadFileProtocolGuid
+  gEfiHiiPackageListProtocolGuid
 
 [FeaturePcd]
   gEfiMdePkgTokenSpaceGuid.PcdUgaConsumeSupport

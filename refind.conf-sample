@@ -91,13 +91,15 @@ timeout 20
 #                    documentation for details)
 #  gptsync         - the (dangerous) gptsync.efi utility (requires external
 #                    program; see rEFInd documentation for details)
-#  about           - an "about this program" option
 #  apple_recovery  - boots the Apple Recovery HD partition, if present
+#  mok_tool        - makes available the Machine Owner Key (MOK) maintenance
+#                    tool, MokManager.efi, used on Secure Boot systems
+#  about           - an "about this program" option
 #  exit            - a tag to exit from rEFInd
 #  shutdown        - shuts down the computer (a bug causes this to reboot
 #                    EFI systems)
 #  reboot          - a tag to reboot the computer
-# Default is shell,about,apple_recovery,shutdown,reboot
+# Default is shell,apple_recovery,mok_tool,about,shutdown,reboot
 #
 #showtools shell, about, reboot
 
@@ -283,5 +285,18 @@ menuentry "Windows via shell script" {
 	icon \EFI\refind\icons\os_win.icns
 	loader \EFI\tools\shell.efi
 	options "fs0:\EFI\tools\launch_windows.nsh"
+	disabled
+}
+
+# Mac OS is normally detected and run automatically; however,
+# if you want to do something unusual, a manual boot stanza may
+# be the way to do it. This one does nothing very unusual, but
+# it may serve as a starting point. Note that you'll almost
+# certainly need to change the "volume" line for this example
+# to work.
+menuentry "My Mac OS X" {
+	icon \EFI\refind\icons\os_mac.icns
+	volume "OS X boot"
+	loader \System\Library\CoreServices\boot.efi
 	disabled
 }

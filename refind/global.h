@@ -58,18 +58,19 @@
 #define REFIT_DEBUG (0)
 
 // Tag classifications; used in various ways.
-#define TAG_ABOUT    (1)
-#define TAG_REBOOT   (2)
-#define TAG_SHUTDOWN (3)
-#define TAG_TOOL     (4)
-#define TAG_LOADER   (5)
-#define TAG_LEGACY   (6)
-#define TAG_EXIT     (7)
-#define TAG_SHELL    (8)
-#define TAG_GPTSYNC  (9)
-#define TAG_LEGACY_UEFI (10)
+#define TAG_ABOUT          (1)
+#define TAG_REBOOT         (2)
+#define TAG_SHUTDOWN       (3)
+#define TAG_TOOL           (4)
+#define TAG_LOADER         (5)
+#define TAG_LEGACY         (6)
+#define TAG_EXIT           (7)
+#define TAG_SHELL          (8)
+#define TAG_GPTSYNC        (9)
+#define TAG_LEGACY_UEFI    (10)
 #define TAG_APPLE_RECOVERY (11)
-#define NUM_TOOLS    (10)
+#define TAG_MOK_TOOL       (12)
+#define NUM_TOOLS          (11)
 
 #define NUM_SCAN_OPTIONS 10
 

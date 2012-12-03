@@ -26,9 +26,15 @@ ALL_EFILIBS     = $(EFILIB)/BaseDebugPrintErrorLevelLib/BaseDebugPrintErrorLevel
                   $(EFILIB)/DxeHobLib/DxeHobLib/OUTPUT/DxeHobLib.lib \
                   $(EFILIB)/BaseIoLibIntrinsic/BaseIoLibIntrinsic/OUTPUT/BaseIoLibIntrinsic.lib \
                   $(EFILIB)/BasePeCoffLib/BasePeCoffLib/OUTPUT/BasePeCoffLib.lib
+#		  /usr/local/UDK2010/MyWorkSpace/Build/Mde/RELEASE_GCC46/X64/MdePkg/Library/SecPeiDxeTimerLibCpu/SecPeiDxeTimerLibCpu/OUTPUT/SecPeiDxeTimerLibCpu.lib \
+#		  /usr/local/UDK2010/MyWorkSpace/Build/MdeModule/RELEASE_GCC46/X64/MdeModulePkg/Core/Dxe/DxeMain/OUTPUT/DxeCore.lib \
+#		  /usr/local/UDK2010/MyWorkSpace/Build/Mde/RELEASE_GCC46/X64/MdePkg/Library/BaseCacheMaintenanceLib/BaseCacheMaintenanceLib/OUTPUT/BaseCacheMaintenanceLib.lib \
+#		  /usr/local/UDK2010/MyWorkSpace/Build/Mde/RELEASE_GCC46/X64/MdePkg/Library/BasePerformanceLibNull/BasePerformanceLibNull/OUTPUT/BasePerformanceLibNull.lib
+#                  $(EFILIB)/../../MdeModulePkg/Core/Dxe/DxeMain/OUTPUT/DxeCore.lib
+#		  /usr/local/UDK2010/MyWorkSpace/Build/MdeModule/RELEASE_GCC46/X64/MdeModulePkg/Core/Dxe/DxeMain/OUTPUT/DxeMain/DxeMain.obj
 
 
-SOURCE_NAMES     = config driver_support icns lib main menu screen AutoGen
+SOURCE_NAMES     = config driver_support icns lib main menu screen mok AutoGen
 OBJS             = $(SOURCE_NAMES:=.obj)
 
 all: $(BUILDME)

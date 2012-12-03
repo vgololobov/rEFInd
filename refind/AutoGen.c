@@ -60,7 +60,7 @@ GLOBAL_REMOVE_IF_UNREFERENCED EFI_GUID gEfiPciIoProtocolGuid = { 0x4CF5B200, 0x6
 GLOBAL_REMOVE_IF_UNREFERENCED EFI_GUID gEfiScsiIoProtocolGuid = { 0x932F47e6, 0x2362, 0x4002, { 0x80, 0x3E, 0x3C, 0xD5, 0x4B, 0x13, 0x8F, 0x85 }};
 GLOBAL_REMOVE_IF_UNREFERENCED EFI_GUID gEfiScsiPassThruProtocolGuid = { 0xA59E8FCF, 0xBDA0, 0x43BB, { 0x90, 0xB1, 0xD3, 0x73, 0x2E, 0xCA, 0xA8, 0x77 }};
 GLOBAL_REMOVE_IF_UNREFERENCED EFI_GUID gEfiSimpleNetworkProtocolGuid = { 0xA19832B9, 0xAC25, 0x11D3, { 0x9A, 0x2D, 0x00, 0x90, 0x27, 0x3F, 0xC1, 0x4D }};
-GLOBAL_REMOVE_IF_UNREFERENCED EFI_GUID gEfiUgaDrawProtocolGuid = { 0x982C298B, 0xF4FA, 0x41CB, { 0xB8, 0x38, 0x77, 0xAA, 0x68, 0x8F, 0xB8, 0x39 }};
+//GLOBAL_REMOVE_IF_UNREFERENCED EFI_GUID gEfiUgaDrawProtocolGuid = { 0x982C298B, 0xF4FA, 0x41CB, { 0xB8, 0x38, 0x77, 0xAA, 0x68, 0x8F, 0xB8, 0x39 }};
 GLOBAL_REMOVE_IF_UNREFERENCED EFI_GUID gEfiAbsolutePointerProtocolGuid = { 0x8D59D32B, 0xC655, 0x4AE9, { 0x9B, 0x15, 0xF2, 0x59, 0x04, 0x99, 0x2A, 0x43 } };
 GLOBAL_REMOVE_IF_UNREFERENCED EFI_GUID gEfiAcpiTableProtocolGuid = { 0xFFE06BDD, 0x6107, 0x46A6, { 0x7B, 0xB2, 0x5A, 0x9C, 0x7E, 0xC5, 0x27, 0x5C }};
 GLOBAL_REMOVE_IF_UNREFERENCED EFI_GUID gEfiEdidActiveProtocolGuid = { 0xBD8C1056, 0x9F36, 0x44EC, { 0x92, 0xA8, 0xA6, 0x33, 0x7F, 0x81, 0x79, 0x86 }};
@@ -71,103 +71,84 @@ GLOBAL_REMOVE_IF_UNREFERENCED EFI_GUID gEfiHiiProtocolGuid = { 0xd7ad636e, 0xb99
 GLOBAL_REMOVE_IF_UNREFERENCED EFI_GUID gEfiSimplePointerProtocolGuid = { 0x31878C87, 0x0B75, 0x11D5, { 0x9A, 0x4F, 0x00, 0x90, 0x27, 0x3F, 0xC1, 0x4D }};
 GLOBAL_REMOVE_IF_UNREFERENCED EFI_GUID gEfiSmbiosProtocolGuid = {0x3583ff6, 0xcb36, 0x4940, { 0x94, 0x7e, 0xb9, 0xb3, 0x9f, 0x4a, 0xfa, 0xf7}};
 GLOBAL_REMOVE_IF_UNREFERENCED EFI_GUID gEfiSecurityArchProtocolGuid = { 0xA46423E3, 0x4617, 0x49F1, { 0xB9, 0xFF, 0xD1, 0xBF, 0xA9, 0x11, 0x58, 0x39 }};
+GLOBAL_REMOVE_IF_UNREFERENCED EFI_GUID gEfiLegacyBiosProtocolGuid = { 0xdb9a1e3d, 0x45cb, 0x4abb, { 0x85, 0x3b, 0xe5, 0x38, 0x7f, 0xdb, 0x2e, 0x2d }};
+GLOBAL_REMOVE_IF_UNREFERENCED EFI_GUID gEfiLoadFile2ProtocolGuid = { 0x4006c0c1, 0xfcb3, 0x403e, {0x99, 0x6d, 0x4a, 0x6c, 0x87, 0x24, 0xe0, 0x6d }};
+GLOBAL_REMOVE_IF_UNREFERENCED EFI_GUID gEfiLoadFileProtocolGuid = { 0x56EC3091, 0x954C, 0x11D2, { 0x8E, 0x3F, 0x00, 0xA0, 0xC9, 0x69, 0x72, 0x3B }};
+GLOBAL_REMOVE_IF_UNREFERENCED EFI_GUID gEfiHiiPackageListProtocolGuid = { 0x6a1ee763, 0xd47a, 0x43b4, {0xaa, 0xbe, 0xef, 0x1d, 0xe2, 0xab, 0x56, 0xfc}};
 GLOBAL_REMOVE_IF_UNREFERENCED EFI_GUID gEfiDriverBindingProtocolGuid = { 0x18A031AB, 0xB443, 0x4D1A, { 0xA5, 0xC0, 0x0C, 0x09, 0x26, 0x1E, 0x9F, 0x71 }};
 GLOBAL_REMOVE_IF_UNREFERENCED EFI_GUID gEfiComponentNameProtocolGuid = { 0x107A772C, 0xD5E1, 0x11D4, { 0x9A, 0x46, 0x00, 0x90, 0x27, 0x3F, 0xC1, 0x4D }};
 GLOBAL_REMOVE_IF_UNREFERENCED EFI_GUID gEfiDriverConfigurationProtocolGuid = { 0x107A772B, 0xD5E1, 0x11D4, { 0x9A, 0x46, 0x00, 0x90, 0x27, 0x3F, 0xC1, 0x4D }};
 GLOBAL_REMOVE_IF_UNREFERENCED EFI_GUID gEfiDriverConfiguration2ProtocolGuid = { 0xBFD7DC1D, 0x24F1, 0x40D9, { 0x82, 0xE7, 0x2E, 0x09, 0xBB, 0x6B, 0x4E, 0xBE }};
 GLOBAL_REMOVE_IF_UNREFERENCED EFI_GUID gEfiDriverDiagnosticsProtocolGuid = { 0x0784924F, 0xE296, 0x11D4, { 0x9A, 0x49, 0x00, 0x90, 0x27, 0x3F, 0xC1, 0x4D }};
 GLOBAL_REMOVE_IF_UNREFERENCED EFI_GUID gEfiDriverDiagnostics2ProtocolGuid = { 0x4D330321, 0x025F, 0x4AAC, { 0x90, 0xD8, 0x5E, 0xD9, 0x00, 0x17, 0x3B, 0x63 }};
-GLOBAL_REMOVE_IF_UNREFERENCED EFI_GUID gEfiLoadFileProtocolGuid = { 0x56EC3091, 0x954C, 0x11D2, { 0x8E, 0x3F, 0x00, 0xA0, 0xC9, 0x69, 0x72, 0x3B }};
-GLOBAL_REMOVE_IF_UNREFERENCED EFI_GUID gEfiLoadFile2ProtocolGuid = { 0x4006c0c1, 0xfcb3, 0x403e, {0x99, 0x6d, 0x4a, 0x6c, 0x87, 0x24, 0xe0, 0x6d }};
 
 // Definition of PCDs used in this module
-GLOBAL_REMOVE_IF_UNREFERENCED const BOOLEAN _gPcd_FixedAtBuild_PcdUgaConsumeSupport = _PCD_VALUE_PcdUgaConsumeSupport;
+//GLOBAL_REMOVE_IF_UNREFERENCED const BOOLEAN _gPcd_FixedAtBuild_PcdUgaConsumeSupport = _PCD_VALUE_PcdUgaConsumeSupport;
 
 // Definition of PCDs used in libraries
 
-#define _PCD_TOKEN_PcdDebugPrintErrorLevel  5U
-#define _PCD_VALUE_PcdDebugPrintErrorLevel  0x80000000U
-GLOBAL_REMOVE_IF_UNREFERENCED const UINT32 _gPcd_FixedAtBuild_PcdDebugPrintErrorLevel = _PCD_VALUE_PcdDebugPrintErrorLevel;
-extern const  UINT32  _gPcd_FixedAtBuild_PcdDebugPrintErrorLevel;
-#define _PCD_GET_MODE_32_PcdDebugPrintErrorLevel  _gPcd_FixedAtBuild_PcdDebugPrintErrorLevel
-//#define _PCD_SET_MODE_32_PcdDebugPrintErrorLevel  ASSERT(FALSE)  // It is not allowed to set value for a FIXED_AT_BUILD PCD
-
-#define _PCD_TOKEN_PcdDebugClearMemoryValue  10U
-#define _PCD_VALUE_PcdDebugClearMemoryValue  0xAFU
-GLOBAL_REMOVE_IF_UNREFERENCED const UINT8 _gPcd_FixedAtBuild_PcdDebugClearMemoryValue = _PCD_VALUE_PcdDebugClearMemoryValue;
-extern const  UINT8  _gPcd_FixedAtBuild_PcdDebugClearMemoryValue;
-#define _PCD_GET_MODE_8_PcdDebugClearMemoryValue  _gPcd_FixedAtBuild_PcdDebugClearMemoryValue
-//#define _PCD_SET_MODE_8_PcdDebugClearMemoryValue  ASSERT(FALSE)  // It is not allowed to set value for a FIXED_AT_BUILD PCD
-
-#define _PCD_TOKEN_PcdDebugPropertyMask  11U
-#define _PCD_VALUE_PcdDebugPropertyMask  0x0fU
-GLOBAL_REMOVE_IF_UNREFERENCED const UINT8 _gPcd_FixedAtBuild_PcdDebugPropertyMask = _PCD_VALUE_PcdDebugPropertyMask;
-extern const  UINT8  _gPcd_FixedAtBuild_PcdDebugPropertyMask;
-#define _PCD_GET_MODE_8_PcdDebugPropertyMask  _gPcd_FixedAtBuild_PcdDebugPropertyMask
-//#define _PCD_SET_MODE_8_PcdDebugPropertyMask  ASSERT(FALSE)  // It is not allowed to set value for a FIXED_AT_BUILD PCD
-
-#define _PCD_TOKEN_PcdMaximumLinkedListLength  6U
+#define _PCD_TOKEN_PcdMaximumLinkedListLength  2U
 #define _PCD_VALUE_PcdMaximumLinkedListLength  1000000U
 GLOBAL_REMOVE_IF_UNREFERENCED const UINT32 _gPcd_FixedAtBuild_PcdMaximumLinkedListLength = _PCD_VALUE_PcdMaximumLinkedListLength;
 extern const  UINT32  _gPcd_FixedAtBuild_PcdMaximumLinkedListLength;
 #define _PCD_GET_MODE_32_PcdMaximumLinkedListLength  _gPcd_FixedAtBuild_PcdMaximumLinkedListLength
-//#define _PCD_SET_MODE_32_PcdMaximumLinkedListLength  ASSERT(FALSE)  // It is not allowed to set value for a FIXED_AT_BUILD PCD
+#define _PCD_SET_MODE_32_PcdMaximumLinkedListLength  ASSERT(FALSE)  // It is not allowed to set value for a FIXED_AT_BUILD PCD
 
-#define _PCD_TOKEN_PcdMaximumAsciiStringLength  7U
+#define _PCD_TOKEN_PcdMaximumAsciiStringLength  3U
 #define _PCD_VALUE_PcdMaximumAsciiStringLength  1000000U
 GLOBAL_REMOVE_IF_UNREFERENCED const UINT32 _gPcd_FixedAtBuild_PcdMaximumAsciiStringLength = _PCD_VALUE_PcdMaximumAsciiStringLength;
 extern const  UINT32  _gPcd_FixedAtBuild_PcdMaximumAsciiStringLength;
 #define _PCD_GET_MODE_32_PcdMaximumAsciiStringLength  _gPcd_FixedAtBuild_PcdMaximumAsciiStringLength
-//#define _PCD_SET_MODE_32_PcdMaximumAsciiStringLength  ASSERT(FALSE)  // It is not allowed to set value for a FIXED_AT_BUILD PCD
+#define _PCD_SET_MODE_32_PcdMaximumAsciiStringLength  ASSERT(FALSE)  // It is not allowed to set value for a FIXED_AT_BUILD PCD
 
-#define _PCD_TOKEN_PcdMaximumUnicodeStringLength  8U
+#define _PCD_TOKEN_PcdMaximumUnicodeStringLength  4U
 #define _PCD_VALUE_PcdMaximumUnicodeStringLength  1000000U
 GLOBAL_REMOVE_IF_UNREFERENCED const UINT32 _gPcd_FixedAtBuild_PcdMaximumUnicodeStringLength = _PCD_VALUE_PcdMaximumUnicodeStringLength;
 extern const  UINT32  _gPcd_FixedAtBuild_PcdMaximumUnicodeStringLength;
 #define _PCD_GET_MODE_32_PcdMaximumUnicodeStringLength  _gPcd_FixedAtBuild_PcdMaximumUnicodeStringLength
-//#define _PCD_SET_MODE_32_PcdMaximumUnicodeStringLength  ASSERT(FALSE)  // It is not allowed to set value for a FIXED_AT_BUILD PCD
+#define _PCD_SET_MODE_32_PcdMaximumUnicodeStringLength  ASSERT(FALSE)  // It is not allowed to set value for a FIXED_AT_BUILD PCD
 
-#define _PCD_TOKEN_PcdVerifyNodeInList  9U
+#define _PCD_TOKEN_PcdVerifyNodeInList  5U
 #define _PCD_VALUE_PcdVerifyNodeInList  ((BOOLEAN)0U)
 GLOBAL_REMOVE_IF_UNREFERENCED const BOOLEAN _gPcd_FixedAtBuild_PcdVerifyNodeInList = _PCD_VALUE_PcdVerifyNodeInList;
 extern const  BOOLEAN  _gPcd_FixedAtBuild_PcdVerifyNodeInList;
 #define _PCD_GET_MODE_BOOL_PcdVerifyNodeInList  _gPcd_FixedAtBuild_PcdVerifyNodeInList
-//#define _PCD_SET_MODE_BOOL_PcdVerifyNodeInList  ASSERT(FALSE)  // It is not allowed to set value for a FIXED_AT_BUILD PCD
+#define _PCD_SET_MODE_BOOL_PcdVerifyNodeInList  ASSERT(FALSE)  // It is not allowed to set value for a FIXED_AT_BUILD PCD
 
-#define _PCD_TOKEN_PcdDriverDiagnosticsDisable  12U
+#define _PCD_TOKEN_PcdDriverDiagnosticsDisable  6U
 #define _PCD_VALUE_PcdDriverDiagnosticsDisable  ((BOOLEAN)0U)
 GLOBAL_REMOVE_IF_UNREFERENCED const BOOLEAN _gPcd_FixedAtBuild_PcdDriverDiagnosticsDisable = _PCD_VALUE_PcdDriverDiagnosticsDisable;
 extern const  BOOLEAN  _gPcd_FixedAtBuild_PcdDriverDiagnosticsDisable;
 #define _PCD_GET_MODE_BOOL_PcdDriverDiagnosticsDisable  _gPcd_FixedAtBuild_PcdDriverDiagnosticsDisable
-//#define _PCD_SET_MODE_BOOL_PcdDriverDiagnosticsDisable  ASSERT(FALSE)  // It is not allowed to set value for a FIXED_AT_BUILD PCD
+#define _PCD_SET_MODE_BOOL_PcdDriverDiagnosticsDisable  ASSERT(FALSE)  // It is not allowed to set value for a FIXED_AT_BUILD PCD
 
-#define _PCD_TOKEN_PcdComponentNameDisable  13U
+#define _PCD_TOKEN_PcdComponentNameDisable  7U
 #define _PCD_VALUE_PcdComponentNameDisable  ((BOOLEAN)0U)
 GLOBAL_REMOVE_IF_UNREFERENCED const BOOLEAN _gPcd_FixedAtBuild_PcdComponentNameDisable = _PCD_VALUE_PcdComponentNameDisable;
 extern const  BOOLEAN  _gPcd_FixedAtBuild_PcdComponentNameDisable;
 #define _PCD_GET_MODE_BOOL_PcdComponentNameDisable  _gPcd_FixedAtBuild_PcdComponentNameDisable
-//#define _PCD_SET_MODE_BOOL_PcdComponentNameDisable  ASSERT(FALSE)  // It is not allowed to set value for a FIXED_AT_BUILD PCD
+#define _PCD_SET_MODE_BOOL_PcdComponentNameDisable  ASSERT(FALSE)  // It is not allowed to set value for a FIXED_AT_BUILD PCD
 
-#define _PCD_TOKEN_PcdDriverDiagnostics2Disable  14U
-#define _PCD_VALUE_PcdDriverDiagnostics2Disable  ((BOOLEAN)1U)
+#define _PCD_TOKEN_PcdDriverDiagnostics2Disable  8U
+#define _PCD_VALUE_PcdDriverDiagnostics2Disable  ((BOOLEAN)0U)
 GLOBAL_REMOVE_IF_UNREFERENCED const BOOLEAN _gPcd_FixedAtBuild_PcdDriverDiagnostics2Disable = _PCD_VALUE_PcdDriverDiagnostics2Disable;
 extern const  BOOLEAN  _gPcd_FixedAtBuild_PcdDriverDiagnostics2Disable;
 #define _PCD_GET_MODE_BOOL_PcdDriverDiagnostics2Disable  _gPcd_FixedAtBuild_PcdDriverDiagnostics2Disable
-//#define _PCD_SET_MODE_BOOL_PcdDriverDiagnostics2Disable  ASSERT(FALSE)  // It is not allowed to set value for a FIXED_AT_BUILD PCD
+#define _PCD_SET_MODE_BOOL_PcdDriverDiagnostics2Disable  ASSERT(FALSE)  // It is not allowed to set value for a FIXED_AT_BUILD PCD
 
-#define _PCD_TOKEN_PcdComponentName2Disable  15U
-#define _PCD_VALUE_PcdComponentName2Disable  ((BOOLEAN)1U)
+#define _PCD_TOKEN_PcdComponentName2Disable  9U
+#define _PCD_VALUE_PcdComponentName2Disable  ((BOOLEAN)0U)
 GLOBAL_REMOVE_IF_UNREFERENCED const BOOLEAN _gPcd_FixedAtBuild_PcdComponentName2Disable = _PCD_VALUE_PcdComponentName2Disable;
 extern const  BOOLEAN  _gPcd_FixedAtBuild_PcdComponentName2Disable;
 #define _PCD_GET_MODE_BOOL_PcdComponentName2Disable  _gPcd_FixedAtBuild_PcdComponentName2Disable
-//#define _PCD_SET_MODE_BOOL_PcdComponentName2Disable  ASSERT(FALSE)  // It is not allowed to set value for a FIXED_AT_BUILD PCD
+#define _PCD_SET_MODE_BOOL_PcdComponentName2Disable  ASSERT(FALSE)  // It is not allowed to set value for a FIXED_AT_BUILD PCD
 
-#define _PCD_TOKEN_PcdUefiLibMaxPrintBufferSize  17U
+#define _PCD_TOKEN_PcdUefiLibMaxPrintBufferSize  10U
 #define _PCD_VALUE_PcdUefiLibMaxPrintBufferSize  320U
 GLOBAL_REMOVE_IF_UNREFERENCED const UINT32 _gPcd_FixedAtBuild_PcdUefiLibMaxPrintBufferSize = _PCD_VALUE_PcdUefiLibMaxPrintBufferSize;
 extern const  UINT32  _gPcd_FixedAtBuild_PcdUefiLibMaxPrintBufferSize;
 #define _PCD_GET_MODE_32_PcdUefiLibMaxPrintBufferSize  _gPcd_FixedAtBuild_PcdUefiLibMaxPrintBufferSize
-//#define _PCD_SET_MODE_32_PcdUefiLibMaxPrintBufferSize  ASSERT(FALSE)  // It is not allowed to set value for a FIXED_AT_BUILD PCD
+#define _PCD_SET_MODE_32_PcdUefiLibMaxPrintBufferSize  ASSERT(FALSE)  // It is not allowed to set value for a FIXED_AT_BUILD PCD
 
 
 EFI_STATUS
@@ -206,57 +187,57 @@ HobLibConstructor (
   );
 
 
-VOID
-EFIAPI
-ProcessLibraryConstructorList (
-  IN EFI_HANDLE        ImageHandle,
-  IN EFI_SYSTEM_TABLE  *SystemTable
-  )
-{
-  EFI_STATUS  Status;
+// VOID
+// EFIAPI
+// ProcessLibraryConstructorList (
+//   IN EFI_HANDLE        ImageHandle,
+//   IN EFI_SYSTEM_TABLE  *SystemTable
+//   )
+// {
+//   EFI_STATUS  Status;
+// 
+//   Status = UefiBootServicesTableLibConstructor (ImageHandle, SystemTable);
+//   ASSERT_EFI_ERROR (Status);
+// 
+//   Status = UefiRuntimeServicesTableLibConstructor (ImageHandle, SystemTable);
+//   ASSERT_EFI_ERROR (Status);
+// 
+//   Status = UefiLibConstructor (ImageHandle, SystemTable);
+//   ASSERT_EFI_ERROR (Status);
+// 
+//   Status = DxeServicesTableLibConstructor (ImageHandle, SystemTable);
+//   ASSERT_EFI_ERROR (Status);
+// 
+//   Status = HobLibConstructor (ImageHandle, SystemTable);
+//   ASSERT_EFI_ERROR (Status);
+// 
+// }
 
-  Status = UefiBootServicesTableLibConstructor (ImageHandle, SystemTable);
-  ASSERT_EFI_ERROR (Status);
-
-  Status = UefiRuntimeServicesTableLibConstructor (ImageHandle, SystemTable);
-  ASSERT_EFI_ERROR (Status);
-
-  Status = UefiLibConstructor (ImageHandle, SystemTable);
-  ASSERT_EFI_ERROR (Status);
-
-  Status = DxeServicesTableLibConstructor (ImageHandle, SystemTable);
-  ASSERT_EFI_ERROR (Status);
-
-  Status = HobLibConstructor (ImageHandle, SystemTable);
-  ASSERT_EFI_ERROR (Status);
-
-}
 
 
-
-VOID
-EFIAPI
-ProcessLibraryDestructorList (
-  IN EFI_HANDLE        ImageHandle,
-  IN EFI_SYSTEM_TABLE  *SystemTable
-  )
-{
-
-}
+// VOID
+// EFIAPI
+// ProcessLibraryDestructorList (
+//   IN EFI_HANDLE        ImageHandle,
+//   IN EFI_SYSTEM_TABLE  *SystemTable
+//   )
+// {
+//
+// }
 
 const UINT32 _gUefiDriverRevision = 0x00010000U;
 
 
-EFI_STATUS
-EFIAPI
-ProcessModuleEntryPointList (
-  IN EFI_HANDLE        ImageHandle,
-  IN EFI_SYSTEM_TABLE  *SystemTable
-  )
-
-{
-  return efi_main (ImageHandle, SystemTable);
-}
+// EFI_STATUS
+// EFIAPI
+// ProcessModuleEntryPointList (
+//   IN EFI_HANDLE        ImageHandle,
+//   IN EFI_SYSTEM_TABLE  *SystemTable
+//   )
+// 
+// {
+//   return efi_main (ImageHandle, SystemTable);
+// }
 
 VOID
 EFIAPI
@@ -270,13 +251,37 @@ ExitDriver (
   gBS->Exit (gImageHandle, Status, 0, NULL);
 }
 
-GLOBAL_REMOVE_IF_UNREFERENCED const UINT8 _gDriverUnloadImageCount = 0U;
+//GLOBAL_REMOVE_IF_UNREFERENCED const UINT8 _gDriverUnloadImageCount = 0U;
 
-EFI_STATUS
-EFIAPI
-ProcessModuleUnloadList (
-  IN EFI_HANDLE        ImageHandle
-  )
-{
-  return EFI_SUCCESS;
-}
+// EFI_STATUS
+// EFIAPI
+// ProcessModuleUnloadList (
+//   IN EFI_HANDLE        ImageHandle
+//   )
+// {
+//   return EFI_SUCCESS;
+// }
+
+// Stuff added in effort to get Secure Boot working....
+
+#define _PCD_TOKEN_PcdDebugPropertyMask  11U
+#define _PCD_VALUE_PcdDebugPropertyMask  0x0fU
+GLOBAL_REMOVE_IF_UNREFERENCED const UINT8 _gPcd_FixedAtBuild_PcdDebugPropertyMask = _PCD_VALUE_PcdDebugPropertyMask;
+extern const  UINT8  _gPcd_FixedAtBuild_PcdDebugPropertyMask;
+#define _PCD_GET_MODE_8_PcdDebugPropertyMask  _gPcd_FixedAtBuild_PcdDebugPropertyMask
+//#define _PCD_SET_MODE_8_PcdDebugPropertyMask  ASSERT(FALSE)  // It is not allowed to set value for a FIXED_AT_BUILD PCD
+
+#define _PCD_TOKEN_PcdDebugClearMemoryValue  10U
+#define _PCD_VALUE_PcdDebugClearMemoryValue  0xAFU
+GLOBAL_REMOVE_IF_UNREFERENCED const UINT8 _gPcd_FixedAtBuild_PcdDebugClearMemoryValue = _PCD_VALUE_PcdDebugClearMemoryValue;
+extern const  UINT8  _gPcd_FixedAtBuild_PcdDebugClearMemoryValue;
+#define _PCD_GET_MODE_8_PcdDebugClearMemoryValue  _gPcd_FixedAtBuild_PcdDebugClearMemoryValue
+//#define _PCD_SET_MODE_8_PcdDebugClearMemoryValue  ASSERT(FALSE)  // It is not allowed to set value for a FIXED_AT_BUILD PCD
+
+#define _PCD_TOKEN_PcdDebugPrintErrorLevel  5U
+#define _PCD_VALUE_PcdDebugPrintErrorLevel  0x80000000U
+GLOBAL_REMOVE_IF_UNREFERENCED const UINT32 _gPcd_FixedAtBuild_PcdDebugPrintErrorLevel = _PCD_VALUE_PcdDebugPrintErrorLevel;
+extern const  UINT32  _gPcd_FixedAtBuild_PcdDebugPrintErrorLevel;
+#define _PCD_GET_MODE_32_PcdDebugPrintErrorLevel  _gPcd_FixedAtBuild_PcdDebugPrintErrorLevel
+//#define _PCD_SET_MODE_32_PcdDebugPrintErrorLevel  ASSERT(FALSE)  // It is not allowed to set value for a FIXED_AT_BUILD PCD
+

@@ -26,7 +26,7 @@ LOCAL_CPPFLAGS  = -I$(SRCDIR) -I$(SRCDIR)/../include -I$(SRCDIR)/../libeg
 LOCAL_LDFLAGS   = -L$(SRCDIR)/../libeg/
 LOCAL_LIBS      = -leg
 
-OBJS            = main.o config.o menu.o screen.o icns.o lib.o driver_support.o
+OBJS            = main.o config.o menu.o screen.o icns.o lib.o mok.o driver_support.o
 
 all: $(TARGET)
 

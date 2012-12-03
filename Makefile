@@ -2,7 +2,7 @@
 CC=gcc
 CXX=g++
 CXXFLAGS=-O2 -fpic -D_REENTRANT -D_GNU_SOURCE -Wall -g
-NAMES=prefit
+NAMES=refind
 SRCS=$(NAMES:=.c)
 OBJS=$(NAMES:=.o)
 HEADERS=$(NAMES:=.h)

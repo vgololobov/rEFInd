@@ -35,11 +35,11 @@
  */
 /*
  * Modifications copyright (c) 2012 Roderick W. Smith
- * 
+ *
  * Modifications distributed under the terms of the GNU General Public
  * License (GPL) version 3 (GPLv3), a copy of which must be distributed
  * with this source code or binaries made from it.
- * 
+ *
  */
 
 #include "global.h"
@@ -48,6 +48,7 @@
 #include "lib.h"
 #include "icns.h"
 #include "menu.h"
+#include "mok2.h"
 #include "../include/Handle.h"
 #include "../include/refit_call_wrapper.h"
 #include "driver_support.h"
@@ -60,7 +61,7 @@
 // 
 // variables
 
-#define MACOSX_LOADER_PATH      L"System\\Library\\CoreServices\\boot.efi"
+#define MACOSX_LOADER_PATH      L"\\System\\Library\\CoreServices\\boot.efi"
 #if defined (EFIX64)
 #define SHELL_NAMES             L"\\EFI\\tools\\shell.efi,\\shellx64.efi"
 #define DRIVER_DIRS             L"drivers,drivers_x64"
@@ -71,6 +72,8 @@
 #define SHELL_NAMES             L"\\EFI\\tools\\shell.efi"
 #define DRIVER_DIRS             L"drivers"
 #endif
+
+#define MOK_NAMES               L"\\EFI\\tools\\MokManager.efi,\\EFI\\redhat\\MokManager.efi"
 
 // Filename patterns that identify EFI boot loaders. Note that a single case (either L"*.efi" or
 // L"*.EFI") is fine for most systems; but Gigabyte's buggy Hybrid EFI does a case-sensitive
@@ -95,7 +98,7 @@ static REFIT_MENU_SCREEN AboutMenu      = { L"About", NULL, 0, NULL, 0, NULL, 0,
 
 REFIT_CONFIG GlobalConfig = { FALSE, FALSE, 0, 0, 20, 0, 0, GRAPHICS_FOR_OSX, LEGACY_TYPE_MAC, 0,
                               NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-                              {TAG_SHELL, TAG_ABOUT, TAG_APPLE_RECOVERY, TAG_SHUTDOWN, TAG_REBOOT, 0, 0, 0, 0, 0 }};
+                              {TAG_SHELL, TAG_APPLE_RECOVERY, TAG_MOK_TOOL, TAG_ABOUT, TAG_SHUTDOWN, TAG_REBOOT, 0, 0, 0, 0, 0 }};
 
 // Structure used to hold boot loader filenames and time stamps in
 // a linked list; used to sort entries within a directory.
@@ -115,7 +118,7 @@ static VOID AboutrEFInd(VOID)
 
     if (AboutMenu.EntryCount == 0) {
         AboutMenu.TitleImage = BuiltinIcon(BUILTIN_ICON_FUNC_ABOUT);
-        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.4.7.3");
+        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.4.7.7");
         AddMenuInfoLine(&AboutMenu, L"");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2006-2010 Christoph Pfisterer");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2012 Roderick W. Smith");
@@ -163,40 +166,22 @@ static EFI_STATUS StartEFIImageList(IN EFI_DEVICE_PATH **DevicePaths,
 {
     EFI_STATUS              Status, ReturnStatus;
     EFI_HANDLE              ChildImageHandle;
-    EFI_LOADED_IMAGE        *ChildLoadedImage;
+    EFI_LOADED_IMAGE        *ChildLoadedImage = NULL;
+    REFIT_FILE              File;
+    VOID                    *ImageData = NULL;
+    UINTN                   ImageSize;
+    REFIT_VOLUME            *DeviceVolume = NULL;
     UINTN                   DevicePathIndex;
     CHAR16                  ErrorInfo[256];
     CHAR16                  *FullLoadOptions = NULL;
+    CHAR16                  *loader = NULL;
+    BOOLEAN                 UseMok = FALSE;
 
-    if (Verbose)
-        Print(L"Starting %s\n", ImageTitle);
     if (ErrorInStep != NULL)
         *ErrorInStep = 0;
 
-    // load the image into memory
-    ReturnStatus = Status = EFI_NOT_FOUND;  // in case the list is empty
-    for (DevicePathIndex = 0; DevicePaths[DevicePathIndex] != NULL; DevicePathIndex++) {
-        ReturnStatus = Status = refit_call6_wrapper(BS->LoadImage, FALSE, SelfImageHandle, DevicePaths[DevicePathIndex], NULL, 0, &ChildImageHandle);
-        if (ReturnStatus != EFI_NOT_FOUND) {
-            break;
-        }
-    }
-    SPrint(ErrorInfo, 255, L"while loading %s", ImageTitle);
-    if (CheckError(Status, ErrorInfo)) {
-        if (ErrorInStep != NULL)
-            *ErrorInStep = 1;
-        goto bailout;
-    }
-
     // set load options
     if (LoadOptions != NULL) {
-        ReturnStatus = Status = refit_call3_wrapper(BS->HandleProtocol, ChildImageHandle, &LoadedImageProtocol, (VOID **) &ChildLoadedImage);
-        if (CheckError(Status, L"while getting a LoadedImageProtocol handle")) {
-            if (ErrorInStep != NULL)
-                *ErrorInStep = 2;
-            goto bailout_unload;
-        }
-
         if (LoadOptionsPrefix != NULL) {
             MergeStrings(&FullLoadOptions, LoadOptionsPrefix, 0);
             MergeStrings(&FullLoadOptions, LoadOptions, L' ');
@@ -209,31 +194,82 @@ static EFI_STATUS StartEFIImageList(IN EFI_DEVICE_PATH **DevicePaths,
             MergeStrings(&FullLoadOptions, LoadOptions, 0);
         } // if/else
         // NOTE: We also include the terminating null in the length for safety.
-        ChildLoadedImage->LoadOptions = (VOID *)FullLoadOptions;
-        ChildLoadedImage->LoadOptionsSize = ((UINT32)StrLen(FullLoadOptions) + 1) * sizeof(CHAR16);
-        if (Verbose)
-            Print(L"Using load options '%s'\n", FullLoadOptions);
+    } // if (LoadOptions != NULL)
+    if (Verbose)
+       Print(L"Starting %s\nUsing load options '%s'\n", ImageTitle, FullLoadOptions);
+
+    // load the image into memory (and execute it, in the case of a MOK image).
+    ReturnStatus = Status = EFI_NOT_FOUND;  // in case the list is empty
+    for (DevicePathIndex = 0; DevicePaths[DevicePathIndex] != NULL; DevicePathIndex++) {
+       ReturnStatus = Status = refit_call6_wrapper(BS->LoadImage, FALSE, SelfImageHandle, DevicePaths[DevicePathIndex],
+                                                   NULL, 0, &ChildImageHandle);
+       // ReturnStatus = Status = refit_call6_wrapper(BS->LoadImage, FALSE, SelfImageHandle, DevicePaths[DevicePathIndex],
+       //                                            ImageData, ImageSize, &ChildImageHandle);
+       // TODO: Commented-out version above is more efficient if the below FindVolumeAndFilename()
+       // and ReadFile() calls (and surrounding logic) are moved earlier; however, this causes
+       // some computers, including my 32-bit Mac Mini and 64-bit Intel machine, to fail when
+       // launching a Linux kernel, with a "Failed to handle fs_proto" error message from the
+       // kernel. Find out what's causing this and fix it.
+       if (ReturnStatus == EFI_ACCESS_DENIED) {
+          // TODO: I originally had the next few lines a
+          FindVolumeAndFilename(DevicePaths[DevicePathIndex], &DeviceVolume, &loader);
+          if (DeviceVolume != NULL) {
+             Status = ReadFile(DeviceVolume->RootDir, loader, &File, &ImageSize);
+             ImageData = File.Buffer;
+          } else {
+             Status = EFI_NOT_FOUND;
+             Print(L"Error: device volume not found!\n");
+          } // if/else
+          ReturnStatus = Status = start_image(SelfImageHandle, loader, ImageData, ImageSize, FullLoadOptions, DeviceVolume);
+          if (ReturnStatus == EFI_SUCCESS) {
+             UseMok = TRUE;
+          } // if
+       }
+       if (ReturnStatus != EFI_NOT_FOUND) {
+          break;
+       }
     }
-
-    // close open file handles
-    UninitRefitLib();
-
-    // turn control over to the image
-    // TODO: (optionally) re-enable the EFI watchdog timer!
-    ReturnStatus = Status = refit_call3_wrapper(BS->StartImage, ChildImageHandle, NULL, NULL);
-    // control returns here when the child image calls Exit()
-    SPrint(ErrorInfo, 255, L"returned from %s", ImageTitle);
+    SPrint(ErrorInfo, 255, L"while loading %s", ImageTitle);
     if (CheckError(Status, ErrorInfo)) {
         if (ErrorInStep != NULL)
-            *ErrorInStep = 3;
+            *ErrorInStep = 1;
+        goto bailout;
     }
 
-    // re-open file handles
-    ReinitRefitLib();
+     if (!UseMok) {
+        ReturnStatus = Status = refit_call3_wrapper(BS->HandleProtocol, ChildImageHandle, &LoadedImageProtocol,
+                                                       (VOID **) &ChildLoadedImage);
+        if (CheckError(Status, L"while getting a LoadedImageProtocol handle")) {
+           if (ErrorInStep != NULL)
+              *ErrorInStep = 2;
+           goto bailout_unload;
+        }
+     }
+
+     if (!UseMok) {
+        ChildLoadedImage->LoadOptions = (VOID *)FullLoadOptions;
+        ChildLoadedImage->LoadOptionsSize = ((UINT32)StrLen(FullLoadOptions) + 1) * sizeof(CHAR16);
+        // turn control over to the image
+        // TODO: (optionally) re-enable the EFI watchdog timer!
+
+        // close open file handles
+        UninitRefitLib();
+        ReturnStatus = Status = refit_call3_wrapper(BS->StartImage, ChildImageHandle, NULL, NULL);
+        // control returns here when the child image calls Exit()
+        SPrint(ErrorInfo, 255, L"returned from %s", ImageTitle);
+        if (CheckError(Status, ErrorInfo)) {
+            if (ErrorInStep != NULL)
+                *ErrorInStep = 3;
+        }
+
+        // re-open file handles
+        ReinitRefitLib();
+    } // if
 
 bailout_unload:
     // unload the image, we don't care if it works or not...
-    Status = refit_call1_wrapper(BS->UnloadImage, ChildImageHandle);
+    if (!UseMok)
+       Status = refit_call1_wrapper(BS->UnloadImage, ChildImageHandle);
 bailout:
     MyFreePool(FullLoadOptions);
     return ReturnStatus;
@@ -885,22 +921,22 @@ static VOID ScanEfiFiles(REFIT_VOLUME *Volume) {
 
    if ((Volume->RootDir != NULL) && (Volume->VolName != NULL)) {
       // check for Mac OS X boot loader
-      if (!IsIn(L"System\\Library\\CoreServices", GlobalConfig.DontScan)) {
+      if (!IsIn(L"\\System\\Library\\CoreServices", GlobalConfig.DontScan)) {
          StrCpy(FileName, MACOSX_LOADER_PATH);
          if (FileExists(Volume->RootDir, FileName)) {
             AddLoaderEntry(FileName, L"Mac OS X", Volume);
          }
 
          // check for XOM
-         StrCpy(FileName, L"System\\Library\\CoreServices\\xom.efi");
+         StrCpy(FileName, L"\\System\\Library\\CoreServices\\xom.efi");
          if (FileExists(Volume->RootDir, FileName)) {
             AddLoaderEntry(FileName, L"Windows XP (XoM)", Volume);
          }
       } // if Mac directory not in GlobalConfig.DontScan list
 
       // check for Microsoft boot loader/menu
-      StrCpy(FileName, L"EFI\\Microsoft\\Boot\\Bootmgfw.efi");
-      if (FileExists(Volume->RootDir, FileName) && !IsIn(L"EFI\\Microsoft\\Boot", GlobalConfig.DontScan)) {
+      StrCpy(FileName, L"\\EFI\\Microsoft\\Boot\\Bootmgfw.efi");
+      if (FileExists(Volume->RootDir, FileName) && !IsIn(L"\\EFI\\Microsoft\\Boot", GlobalConfig.DontScan)) {
          AddLoaderEntry(FileName, L"Microsoft EFI boot", Volume);
       }
 
@@ -912,7 +948,7 @@ static VOID ScanEfiFiles(REFIT_VOLUME *Volume) {
       while (DirIterNext(&EfiDirIter, 1, NULL, &EfiDirEntry)) {
          if (StriCmp(EfiDirEntry->FileName, L"tools") == 0 || EfiDirEntry->FileName[0] == '.')
             continue;   // skip this, doesn't contain boot loaders
-         SPrint(FileName, 255, L"EFI\\%s", EfiDirEntry->FileName);
+         SPrint(FileName, 255, L"\\EFI\\%s", EfiDirEntry->FileName);
          ScanLoaderDir(Volume, FileName, MatchPatterns);
       } // while()
       Status = DirIterClose(&EfiDirIter);
@@ -1468,7 +1504,6 @@ static LOADER_ENTRY * AddToolEntry(EFI_HANDLE DeviceHandle, IN CHAR16 *LoaderPat
     Entry->me.ShortcutLetter = ShortcutLetter;
     Entry->me.Image = Image;
     Entry->LoaderPath = (LoaderPath) ? StrDuplicate(LoaderPath) : NULL;
-//    Entry->DevicePath = FileDevicePath(SelfLoadedImage->DeviceHandle, Entry->LoaderPath);
     Entry->DevicePath = FileDevicePath(DeviceHandle, Entry->LoaderPath);
     Entry->UseGraphicsMode = UseGraphicsMode;
 
@@ -1607,8 +1642,9 @@ static VOID LoadDrivers(VOID)
     while ((Directory = FindCommaDelimited(GlobalConfig.DriverDirs, i++)) != NULL) {
        CleanUpPathNameSlashes(Directory);
        Length = StrLen(Directory);
-       if (Length > 0)
+       if (Length > 0) {
           NumFound += ScanDriverDir(Directory);
+       } // if
        MyFreePool(Directory);
     } // while
 
@@ -1744,9 +1780,11 @@ static VOID ScanForTools(VOID) {
             break;
          case TAG_SHELL:
             j = 0;
+            MyFreePool(FileName);
             while ((FileName = FindCommaDelimited(SHELL_NAMES, j++)) != NULL) {
                if (FileExists(SelfRootDir, FileName)) {
-                  AddToolEntry(SelfLoadedImage->DeviceHandle, FileName, L"EFI Shell", BuiltinIcon(BUILTIN_ICON_TOOL_SHELL), 'S', FALSE);
+                  AddToolEntry(SelfLoadedImage->DeviceHandle, FileName, L"EFI Shell", BuiltinIcon(BUILTIN_ICON_TOOL_SHELL),
+                               'S', FALSE);
                }
             } // while
             break;
@@ -1770,6 +1808,25 @@ static VOID ScanForTools(VOID) {
                }
             } // for
             break;
+         case TAG_MOK_TOOL:
+            j = 0;
+            MyFreePool(FileName);
+            while ((FileName = FindCommaDelimited(MOK_NAMES, j++)) != NULL) {
+               if (FileExists(SelfRootDir, FileName)) {
+                  SPrint(Description, 255, L"MOK Key Manager at %s", FileName);
+                  AddToolEntry(SelfLoadedImage->DeviceHandle, FileName, Description,
+                               BuiltinIcon(BUILTIN_ICON_TOOL_MOK_TOOL), 'S', FALSE);
+               }
+            } // while
+            if (FileExists(SelfDir, L"MokManager.efi")) {
+               MyFreePool(FileName);
+               FileName = StrDuplicate(SelfDirPath);
+               MergeStrings(&FileName, L"\\MokManager.efi", 0);
+               SPrint(Description, 255, L"MOK Key Manager at %s", FileName);
+               AddToolEntry(SelfLoadedImage->DeviceHandle, FileName, Description,
+                            BuiltinIcon(BUILTIN_ICON_TOOL_MOK_TOOL), 'S', FALSE);
+            }
+            break;
       } // switch()
       MyFreePool(FileName);
       FileName = NULL;
@@ -1790,6 +1847,7 @@ VOID RescanAll(VOID) {
    MainMenu.EntryCount = 0;
    ReadConfig();
    ConnectAllDriversToAllControllers();
+   ScanVolumes();
    ScanForBootloaders();
    ScanForTools();
    SetupScreen();
@@ -1846,6 +1904,7 @@ efi_main (IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable)
 
     // further bootstrap (now with config available)
     SetupScreen();
+    ScanVolumes();
     LoadDrivers();
     ScanForBootloaders();
     ScanForTools();

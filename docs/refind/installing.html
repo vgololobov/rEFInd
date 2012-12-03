@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 3/14/2012; last Web page update:
-11/7/2012, referencing rEFInd 0.4.7</p>
+11/15/2012, referencing rEFInd 0.4.7</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -257,10 +257,10 @@ Filesystem     1K-blocks  Used Available Use% Mounted on
 
 <li>Rename the configuration file by typing <tt><b>mv refind.conf-sample refind.conf</b></tt>. Consult the <a href="configfile.html">Editing the rEFInd Configuration File</a> page for information on how to adjust your options.</li>
 
-<p class="sidebar"><b>Weird:</b> I've received one report about a Lenovo computer that works only if rEFInd is installed using the name (<tt>-L</tt> parameter) <tt>Windows Boot Manager</tt> and the existing Windows boot loader, if present, is renamed.</p>
+<p class="sidebar"><b>Weird:</b> A <a href="http://mjg59.dreamwidth.org/20187.html">bug exists</a> in some Lenovo computers (and perhaps in some others, too) that causes the firmware's boot manager to refuse to boot any boot loader that doesn't have the name <tt>Windows Boot Manager</tt> or <tt>Red Hat Enterprise Linux</tt>. If you have such a system, you must pass one of those names (in quotes) rather than <tt>rEFInd</tt> to <tt>efibootmgr</tt> via its <tt>-L</tt> option. This bug was reported to Lenovo in mid-November 2012, so with any luck updated firmware without this bug will be available later this year or early in 2013. I can make no promises about this, though.</p>
 
 <a name="efibootmgr">
-<li>On a UEFI-based system, type <tt><b>efibootmgr -c -l \\EFI\\refind\\refind_x64.efi -L rEFInd</b></tt> to add rEFInd to your EFI's list of available boot loaders, which it stores in NVRAM. (Adjust the path to the binary as required if you install somewhere else.) You may need to install this program on some systems; it's a standard part of most distributions' repositories.</li>
+<li>On a UEFI-based system, type <tt><b>efibootmgr -c -l \\EFI\\refind\\refind_x64.efi -L rEFInd</b></tt> to add rEFInd to your EFI's list of available boot loaders, which it stores in NVRAM. Adjust the path to the binary as required if you install somewhere else. You may also need to include additional options if your ESP isn't on <tt>/dev/sda1</tt> or if your configuration is otherwise unusual; consult the <tt>efibootmgr</tt> man page for details. You may need to install this program on some systems; it's a standard part of most distributions' repositories.</li>
 </a>
 
 <li>If other boot loaders are already installed, you can use <tt>efibootmgr</tt> to adjust their boot order. For instance, <b><tt>efibootmgr -o 3,7,2</tt></b> sets the firmware to try boot loader #3 first, followed by #7, followed by #2. (The program should have displayed a list of boot loaders when you added yours in the preceding step.) Place rEFInd's number first to set it as the default boot program.</li>
@@ -372,6 +372,8 @@ $ <b>ioreg -l -p IODeviceTree | grep firmware-abi</b>
 <h2>Installing rEFInd Manually Using Windows</h2>
 </a>
 
+<p class="sidebar"><b>Warning:</b> Windows 8 implements a fast shutdown feature that helps speed up shutdown and startup operations on a single-boot computer. Unfortunately, this feature can cause filesystem corruption if it's used on a multi-boot computer. You can disable the feature by launching an Administrator Command Prompt window and typing <tt class="userinput">powercfg /h off</tt> in it.</p>
+
 <p>To install rEFInd under Windows, you must first find a way to access the ESP, which Windows normally hides from view. One way to accomplish this goal, and to proceed forward once the ESP is accessible, is as follows:</p>
 
 <ol>
@@ -433,8 +435,6 @@ $ <b>ioreg -l -p IODeviceTree | grep firmware-abi</b>
 </ol>
 
 <p>When you reboot, rEFInd should come up. With any luck, it will detect your old boot loader as an option, if one was installed before.</p>
-
-<p>If your computer seems to insist on booting an EFI boot loader called <tt>EFI/Microsoft/BOOT/bootmgfw.efi</tt>, be aware that it might not actually be looking for that filename, but for a boot manager with the EFI description <tt>Microsoft Boot Manager</tt>. Changing the description of the "real" <tt>EFI/Microsoft/BOOT/bootmgfw.efi</tt> using <tt>efibootmgr</tt> and then giving rEFInd that description, even when rEFInd is installed in a more conventional location, may work. I've received a report that at least one Lenovo model has this peculiar affliction.</p>
 
 <a name="upgrading">
 <h2>Upgrading rEFInd</h2>
@@ -533,6 +533,47 @@ $ <b>ioreg -l -p IODeviceTree | grep firmware-abi</b>
 <li>Re-install rEFInd using the install script. It's unclear from the original post if this meant installing from Linux or from OS X.</li>
 
 </ol>
+
+<a name="uninstalling">
+<h2>Uninstalling rEFInd</h2>
+</a>
+
+<p>If you decide you don't want to keep rEFInd, you can uninstall it. Doing so is a matter of removing the rEFInd files from your ESP (or from your OS X boot partition, if you installed the program there). In Linux, a command like the following, typed as <tt>root</tt>, should do the trick:</p>
+
+<pre class="listing">
+# <tt class="userinput">rm -r /boot/efi/EFI/refind</tt>
+</pre>
+
+<p>This example assumes that your ESP is mounted at <tt>/boot/efi</tt> and that rEFInd is installed in <tt>EFI/refind</tt> on that partition. If you've mounted your ESP elsewhere, or installed rEFInd elsewhere, you should adjust the command appropriately.</p>
+
+<p>The same procedure works in OS X, with the caveat that the ESP isn't normally mounted in OS X and rEFInd is installed to the OS X boot partition by default. You'll also need to use <tt>sudo</tt> to acquire <tt>root</tt> privileges. Thus, you'd probably use a command like the following in OS X:</p>
+
+<pre class="listing">
+$ <tt class="userinput">sudo rm -r /EFI/refind</tt>
+</pre>
+
+<p>Many variants of both of these commands are possible on both OS X and Linux. For instance, you'd probably use <tt>sudo</tt> on Ubuntu; and if you installed rEFInd to your ESP on a Mac, you'd need to first mount the ESP and include its path in the <tt>rm</tt> command.</p>
+
+<p>From Windows, you must reverse the directions for <a href="#windows">installing in Windows</a>&mdash;type <tt class="userinput">mountvol S: /S</tt> to mount your ESP as <tt>S:</tt>, then navigate to the <tt>S:\EFI</tt> directory and delete the <tt>refind</tt> subdirectory.</p>
+
+<p>In any of these cases, when the computer boots and cannot find the rEFInd files, it should move on to the next boot loader in its list. In my experience, some EFI firmware implementations remove boot loaders they can't find from their NVRAM lists, so nothing else will be required, provided you have another working boot loader in your firmware's list. If your firmware doesn't automatically clean up its NVRAM entries, rEFInd's entry will do little harm; however, you can delete it with the <tt>efibootmgr</tt> utility in Linux:</p>
+
+<pre class="listing">
+# <tt class="userinput">efibootmgr --verbose</tt>
+Timeout: 10 seconds
+BootOrder: 0000,0007
+Boot0000* rEFInd	HD(2,1b8,64000,f1b7598e-baa8-16ea-4ef6-3ff3b606ac1e)File(\EFI\refind\refind.efi)
+Boot0007* CD/DVD Drive	BIOS(3,0,00)PATA: HP DVD Writer 1040r     .
+# <tt class="userinput">efibootmgr --delete-bootnum --bootnum 0000</tt>
+Timeout: 10 seconds
+BootOrder: 0007
+Boot0007* CD/DVD Drive</pre>
+
+<p class="sidebar"><b>Warning:</b> As noted earlier, <tt>efibootmgr</tt> has been linked to firmware corruption on some Macs, at least with pre-3.0 Linux kernels. Therefore, I don't recommend using <tt>efibootmgr</tt> on Macs.</p>
+
+<p>This example shows use of <tt>efibootmgr</tt>'s <tt>--verbose</tt> (<tt>-v</tt>) option to display boot loaders so as to identify which one is rEFInd, followed by <tt>--delete-bootnum</tt> (<tt>-B</tt>) to delete a boot program and <tt>--bootnum</tt> (<tt>-b</tt>) to identify which one to delete. Of course, in this example there's not much else left, so you'd presumably want to install another boot loader at this point! If you already have another one installed, you may want to check the <tt>BootOrder</tt> line to determine which one will take precedence when you reboot. If you don't like what it shows, you can adjust it with the <tt>--bootorder</tt> (<tt>-o</tt>) option; consult <tt>efibootmgr</tt>'s <tt>man</tt> page for details.</p>
+
+<p>If you're not using Linux, you may be able to find a utility that serves a similar function. The OS X <tt>bless</tt> utility (or its GUI equivalent, the Startup Disk item in System Preferences) should do the trick; but Macs pick up standard OS X boot loaders when they boot and find that a configured non-standard boot loader is missing, so this shouldn't be necessary on Macs. Under Windows, the <tt>bcdedit</tt> command, described in the <a href="#windows">section on installing rEFInd under Windows,</a> may work, although I've not attempted this.</p>
 
 <hr />
 
