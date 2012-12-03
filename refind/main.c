@@ -48,7 +48,7 @@
 #include "lib.h"
 #include "icns.h"
 #include "menu.h"
-#include "mok2.h"
+#include "mok.h"
 #include "../include/Handle.h"
 #include "../include/refit_call_wrapper.h"
 #include "driver_support.h"
