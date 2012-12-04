@@ -923,7 +923,6 @@ VOID MainMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, IN UINT
 static BOOLEAN EditOptions(LOADER_ENTRY *MenuEntry) {
    UINTN x_max, y_max;
    CHAR16 *EditedOptions;
-//   CHAR16 message[] = L"Use cursor keys to edit, Esc to exit, Enter to boot with edited options";
    EG_PIXEL DarkBackgroundPixel  = { 0x0, 0x0, 0x0, 0 };
    BOOLEAN retval = FALSE;
 
@@ -935,7 +934,6 @@ static BOOLEAN EditOptions(LOADER_ENTRY *MenuEntry) {
    egClearScreen(&DarkBackgroundPixel);
 
    refit_call3_wrapper(ST->ConOut->SetCursorPosition, ST->ConOut, 0, y_max - 1);
-//   refit_call2_wrapper(ST->ConOut->OutputString, ST->ConOut, message);
    refit_call2_wrapper(ST->ConOut->OutputString, ST->ConOut,
                        L"Use cursor keys to edit, Esc to exit, Enter to boot with edited options");
 

@@ -1,5 +1,8 @@
-0.4.8 (??/??/2012):
+0.5.0 (??/??/2012):
 -------------------
+
+- Fixed a bug that caused the options line editor to blank out lines that
+  were not actually edited.
 
 - Added support for using Matthew Garrett's Shim program and its Machine
   Owner Keys (MOKs) to extend Secure Boot capabilities. If rEFInd is
@@ -21,7 +24,7 @@
   entry if it's installed as EFI/Microsoft/boot/bootmgfw.efi.
 
 - Added support for launching MokManager.efi for managing the Machine Owner
-  Keys (MOKs) maintained by the Shim boot loader developed by Fedora and
+  Keys (MOKs) maintained by the shim boot loader developed by Fedora and
   SUSE. This program is scanned and presented as a second-row tool.
 
 - Added support for Apple's Recovery HD partition: If it's detected, a new

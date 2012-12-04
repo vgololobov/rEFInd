@@ -649,7 +649,7 @@ static LOADER_ENTRY * AddStanzaEntries(REFIT_FILE *File, REFIT_VOLUME *Volume, C
    return(Entry);
 } // static VOID AddStanzaEntries()
 
-// Read the user-configured loaders file, refind_loaders.conf, and add or delete
+// Read the user-configured menu entries from refind.conf and add or delete
 // entries based on the contents of that file....
 VOID ScanUserConfigured(VOID)
 {
@@ -660,6 +660,7 @@ VOID ScanUserConfigured(VOID)
    CHAR16            *Title = NULL;
    UINTN             TokenCount, size;
    LOADER_ENTRY      *Entry;
+//   REFIT_MENU_SCREEN  *SubScreen;
 
    if (FileExists(SelfDir, CONFIG_FILE_NAME)) {
       Status = ReadFile(SelfDir, CONFIG_FILE_NAME, &File, &size);

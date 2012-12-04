@@ -622,10 +622,8 @@ BOOLEAN line_edit(CHAR16 *line_in, CHAR16 **line_out, UINTN x_max, UINTN y_pos) 
       switch (key.UnicodeChar) {
       case CHAR_LINEFEED:
       case CHAR_CARRIAGE_RETURN:
-         if (StrCmp(line, line_in) != 0) {
-            *line_out = line;
-            line = NULL;
-         }
+         *line_out = line;
+         line = NULL;
          enter = TRUE;
          exit = TRUE;
          break;
