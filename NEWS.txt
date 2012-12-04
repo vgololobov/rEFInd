@@ -1,6 +1,11 @@
 0.5.0 (??/??/2012):
 -------------------
 
+- Modified the "resolution" token so that it affects text mode as well
+  as graphics mode. On my systems, though, the actual text area is still
+  restricted to an 80x25 area. (This seems to be a firmware limitation; my
+  EFI shells are also so limited.)
+
 - Fixed a bug that caused the options line editor to blank out lines that
   were not actually edited.
 

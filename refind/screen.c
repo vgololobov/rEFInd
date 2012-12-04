@@ -107,6 +107,12 @@ VOID InitScreen(VOID)
 
 VOID SetupScreen(VOID)
 {
+    if ((GlobalConfig.RequestedScreenWidth > 0) && (GlobalConfig.RequestedScreenHeight > 0) &&
+        egSetScreenSize(GlobalConfig.RequestedScreenWidth, GlobalConfig.RequestedScreenHeight)) {
+          UGAWidth = GlobalConfig.RequestedScreenWidth;
+          UGAHeight = GlobalConfig.RequestedScreenHeight;
+    } // if user requested a particular screen resolution
+
     if (GlobalConfig.TextOnly) {
         // switch to text mode if requested
         AllowGraphicsMode = FALSE;
@@ -115,11 +121,6 @@ VOID SetupScreen(VOID)
     } else if (AllowGraphicsMode) {
         // clear screen and show banner
         // (now we know we'll stay in graphics mode)
-        if ((GlobalConfig.RequestedScreenWidth > 0) && (GlobalConfig.RequestedScreenHeight > 0) &&
-            egSetScreenSize(GlobalConfig.RequestedScreenWidth, GlobalConfig.RequestedScreenHeight)) {
-              UGAWidth = GlobalConfig.RequestedScreenWidth;
-              UGAHeight = GlobalConfig.RequestedScreenHeight;
-        } // if user requested a particular screen resolution
         SwitchToGraphics();
         BltClearScreen(TRUE);
     }
@@ -129,6 +130,12 @@ VOID SwitchToText(IN BOOLEAN CursorEnabled)
 {
     egSetGraphicsModeEnabled(FALSE);
     refit_call2_wrapper(ST->ConOut->EnableCursor, ST->ConOut, CursorEnabled);
+    // get size of text console
+    if (refit_call4_wrapper(ST->ConOut->QueryMode, ST->ConOut, ST->ConOut->Mode->Mode, &ConWidth, &ConHeight) != EFI_SUCCESS) {
+        // use default values on error
+        ConWidth = 80;
+        ConHeight = 25;
+    }
 }
 
 VOID SwitchToGraphics(VOID)
