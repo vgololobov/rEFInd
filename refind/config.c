@@ -322,7 +322,10 @@ VOID ReadConfig(VOID)
     if (EFI_ERROR(Status))
         return;
 
-    GlobalConfig.DontScan = StrDuplicate(SelfDirPath);
+    MyFreePool(GlobalConfig.DontScanDirs);
+    GlobalConfig.DontScanDirs = StrDuplicate(SelfDirPath);
+    MyFreePool(GlobalConfig.DontScanFiles);
+    GlobalConfig.DontScanFiles = DONT_SCAN_FILES;
 
     for (;;) {
         TokenCount = ReadTokenLine(&File, &TokenList);
@@ -370,7 +373,10 @@ VOID ReadConfig(VOID)
             HandleStrings(TokenList, TokenCount, &(GlobalConfig.AlsoScan));
 
         } else if ((StriCmp(TokenList[0], L"don't_scan_dirs") == 0) || (StriCmp(TokenList[0], L"dont_scan_dirs") == 0)) {
-            HandleStrings(TokenList, TokenCount, &(GlobalConfig.DontScan));
+            HandleStrings(TokenList, TokenCount, &(GlobalConfig.DontScanDirs));
+
+        } else if ((StriCmp(TokenList[0], L"don't_scan_files") == 0) || (StriCmp(TokenList[0], L"dont_scan_files") == 0)) {
+           HandleStrings(TokenList, TokenCount, &(GlobalConfig.DontScanFiles));
 
         } else if (StriCmp(TokenList[0], L"scan_driver_dirs") == 0) {
             HandleStrings(TokenList, TokenCount, &(GlobalConfig.DriverDirs));

@@ -214,6 +214,11 @@ timeout 20
    <td>Adds the specified directory or directories to a directory "blacklist"&mdash;these directories are <i>not</i> scanned for boot loaders, on <i>any</i> partition. This may be useful to keep duplicate boot loaders out of the menu (say, if <tt>EFI/Boot/bootx64.efi</tt> is a duplicate of another boot loader); or to keep drivers or utilities out of the boot menu, if you've stored them in a subdirectory of <tt>EFI</tt>. This option takes precedence over <tt>also_scan_dirs</tt>; if a directory appears in both lists, it will <i>not</i> be scanned.</td>
 </tr>
 <tr>
+   <td><tt>dont_scan_files</tt> or <tt>don't_scan_files</tt></td>
+   <td>Filename(s)</td>
+   <td>Adds the specified filename or filenames to a filename "blacklist"&mdash;these files are <i>not</i> included as boot loader options even if they're found on the disk. This is useful to exclude support programs (such as <tt>shim.efi</tt> and <tt>MokManager.efi</tt>) and drivers from your OS list. The default value is <tt>shim.efi, MokManager.efi, TextMode.efi, ebounce.efi, GraphicsConsole.efi</tt>.</td>
+</tr>
+<tr>
    <td><tt>scan_all_linux_kernels</tt></td>
    <td>None</td>
    <td>When set, causes rEFInd to add Linux kernels (files with names that begin with <tt>vmlinuz</tt> or <tt>bzImage</tt>) to the list of EFI boot loaders, even if they lack <tt>.efi</tt> filename extensions. The hope is that this will simplify use of rEFInd on distributions that provide kernels with EFI stub loader support but that don't give those kernels names that end in <tt>.efi</tt>. Of course, the kernels must still be stored on a filesystem that rEFInd can read, and in a directory that it scans. (<a href="drivers.html">Drivers</a> and the <tt>also_scan_dirs</tt> options can help with those issues.) Note that this option can cause unwanted files to be improperly detected and given loader tags, such as older kernels without EFI stub loader support. For this reason, it's disabled by default, but that may change in the future.</td>

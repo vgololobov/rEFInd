@@ -774,5 +774,3 @@ typedef struct {
 #define WIN_CERT_TYPE_PKCS_SIGNED_DATA 0x0002
 
 #endif
-
-#include "PeImage2.h"

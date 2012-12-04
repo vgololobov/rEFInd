@@ -215,7 +215,8 @@ typedef struct {
    CHAR16      *SelectionBigFileName;
    CHAR16      *DefaultSelection;
    CHAR16      *AlsoScan;
-   CHAR16      *DontScan;
+   CHAR16      *DontScanDirs;
+   CHAR16      *DontScanFiles;
    CHAR16      *DriverDirs;
    CHAR16      *IconsDir;
    UINTN       ShowTools[NUM_TOOLS];

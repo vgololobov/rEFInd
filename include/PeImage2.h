@@ -44,25 +44,4 @@ typedef struct _GNUEFI_PE_COFF_LOADER_IMAGE_CONTEXT {
 } GNUEFI_PE_COFF_LOADER_IMAGE_CONTEXT;
 
 
-
-//
-// Return status codes from the PE/COFF Loader services
-//
-#define IMAGE_ERROR_SUCCESS                      0
-#define IMAGE_ERROR_IMAGE_READ                   1
-#define IMAGE_ERROR_INVALID_PE_HEADER_SIGNATURE  2
-#define IMAGE_ERROR_INVALID_MACHINE_TYPE         3
-#define IMAGE_ERROR_INVALID_SUBSYSTEM            4
-#define IMAGE_ERROR_INVALID_IMAGE_ADDRESS        5
-#define IMAGE_ERROR_INVALID_IMAGE_SIZE           6
-#define IMAGE_ERROR_INVALID_SECTION_ALIGNMENT    7
-#define IMAGE_ERROR_SECTION_NOT_LOADED           8
-#define IMAGE_ERROR_FAILED_RELOCATION            9
-#define IMAGE_ERROR_FAILED_ICACHE_FLUSH          10
-
-#ifdef __MAKEWITH_GNUEFI
-#define RETURN_STATUS EFI_STATUS
-typedef UINT64 PHYSICAL_ADDRESS;
-#endif
-
 #endif

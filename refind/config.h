@@ -74,6 +74,8 @@ typedef struct {
 #define HIDEUI_FLAG_ARROWS     (0x0010)
 #define HIDEUI_ALL             ((0xffff))
 
+#define DONT_SCAN_FILES L"shim.efi,MokManager.efi,TextMode.efi,ebounce.efi,GraphicsConsole.efi"
+
 EFI_STATUS ReadFile(IN EFI_FILE_HANDLE BaseDir, CHAR16 *FileName, REFIT_FILE *File, UINTN *size);
 VOID ReadConfig(VOID);
 VOID ScanUserConfigured(VOID);

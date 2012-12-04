@@ -73,7 +73,7 @@
 #define DRIVER_DIRS             L"drivers"
 #endif
 
-#define MOK_NAMES               L"\\EFI\\tools\\MokManager.efi,\\EFI\\redhat\\MokManager.efi"
+#define MOK_NAMES               L"\\EFI\\tools\\MokManager.efi,\\EFI\\redhat\\MokManager.efi,\\EFI\\ubuntu\\MokManager.efi,\\EFI\\suse\\MokManager"
 
 // Filename patterns that identify EFI boot loaders. Note that a single case (either L"*.efi" or
 // L"*.EFI") is fine for most systems; but Gigabyte's buggy Hybrid EFI does a case-sensitive
@@ -97,7 +97,7 @@ static REFIT_MENU_SCREEN MainMenu       = { L"Main Menu", NULL, 0, NULL, 0, NULL
 static REFIT_MENU_SCREEN AboutMenu      = { L"About", NULL, 0, NULL, 0, NULL, 0, NULL };
 
 REFIT_CONFIG GlobalConfig = { FALSE, FALSE, 0, 0, 20, 0, 0, GRAPHICS_FOR_OSX, LEGACY_TYPE_MAC, 0,
-                              NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                              NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
                               {TAG_SHELL, TAG_APPLE_RECOVERY, TAG_MOK_TOOL, TAG_ABOUT, TAG_SHUTDOWN, TAG_REBOOT, 0, 0, 0, 0, 0 }};
 
 // Structure used to hold boot loader filenames and time stamps in
@@ -865,17 +865,15 @@ static VOID ScanLoaderDir(IN REFIT_VOLUME *Volume, IN CHAR16 *Path, IN CHAR16 *P
     struct LOADER_LIST      *LoaderList = NULL, *NewLoader;
 
     if ((!SelfDirPath || !Path || ((StriCmp(Path, SelfDirPath) == 0) && Volume->DeviceHandle != SelfVolume->DeviceHandle) ||
-        (StriCmp(Path, SelfDirPath) != 0)) && (!IsIn(Path, GlobalConfig.DontScan))) {
+        (StriCmp(Path, SelfDirPath) != 0)) && (!IsIn(Path, GlobalConfig.DontScanDirs))) {
        // look through contents of the directory
        DirIterOpen(Volume->RootDir, Path, &DirIter);
        while (DirIterNext(&DirIter, 2, Pattern, &DirEntry)) {
           Extension = FindExtension(DirEntry->FileName);
           if (DirEntry->FileName[0] == '.' ||
-              StriCmp(DirEntry->FileName, L"TextMode.efi") == 0 ||
-              StriCmp(DirEntry->FileName, L"ebounce.efi") == 0 ||
-              StriCmp(DirEntry->FileName, L"GraphicsConsole.efi") == 0 ||
               StriCmp(Extension, L".icns") == 0 ||
-              StriSubCmp(L"shell", DirEntry->FileName))
+              StriSubCmp(L"shell", DirEntry->FileName) ||
+              IsIn(DirEntry->FileName, GlobalConfig.DontScanFiles))
                 continue;   // skip this
 
           if (Path)
@@ -921,22 +919,23 @@ static VOID ScanEfiFiles(REFIT_VOLUME *Volume) {
 
    if ((Volume->RootDir != NULL) && (Volume->VolName != NULL)) {
       // check for Mac OS X boot loader
-      if (!IsIn(L"\\System\\Library\\CoreServices", GlobalConfig.DontScan)) {
+      if (!IsIn(L"\\System\\Library\\CoreServices", GlobalConfig.DontScanDirs)) {
          StrCpy(FileName, MACOSX_LOADER_PATH);
-         if (FileExists(Volume->RootDir, FileName)) {
+         if (FileExists(Volume->RootDir, FileName) && !IsIn(L"boot.efi", GlobalConfig.DontScanFiles)) {
             AddLoaderEntry(FileName, L"Mac OS X", Volume);
          }
 
          // check for XOM
          StrCpy(FileName, L"\\System\\Library\\CoreServices\\xom.efi");
-         if (FileExists(Volume->RootDir, FileName)) {
+         if (FileExists(Volume->RootDir, FileName) && !IsIn(L"boot.efi", GlobalConfig.DontScanFiles)) {
             AddLoaderEntry(FileName, L"Windows XP (XoM)", Volume);
          }
-      } // if Mac directory not in GlobalConfig.DontScan list
+      } // if Mac directory not in GlobalConfig.DontScanDirs list
 
       // check for Microsoft boot loader/menu
       StrCpy(FileName, L"\\EFI\\Microsoft\\Boot\\Bootmgfw.efi");
-      if (FileExists(Volume->RootDir, FileName) && !IsIn(L"\\EFI\\Microsoft\\Boot", GlobalConfig.DontScan)) {
+      if (FileExists(Volume->RootDir, FileName) && !IsIn(L"\\EFI\\Microsoft\\Boot", GlobalConfig.DontScanDirs) &&
+          !IsIn(L"bootmgfw.efi", GlobalConfig.DontScanFiles)) {
          AddLoaderEntry(FileName, L"Microsoft EFI boot", Volume);
       }
 

@@ -1,13 +1,28 @@
 0.4.8 (??/??/2012):
 -------------------
 
+- Added support for using Matthew Garrett's Shim program and its Machine
+  Owner Keys (MOKs) to extend Secure Boot capabilities. If rEFInd is
+  launched from Shim on a computer with Secure Boot active, rEFInd will
+  launch programs signed with either a standard UEFI Secure Boot key or a
+  MOK. For the moment, this feature works only on x86-64 systems.
+
+- Added new "dont_scan_files" (aka "don't_scan_files") token for
+  refind.conf. The effect is similar to dont_scan_dirs, but it creates a
+  blacklist of filenames within directories rather than directory names.
+  I'm initially using it to place shim.efi and MokManager.efi in the
+  blacklist to keep these programs out of the OS list. (MokManager.efi is
+  scanned separately as a tool; see below.) I've moved checks for
+  ebounce.efi, GraphicsConsole.efi, and TextMode.efi to this list. (These
+  three had previously been blacklisted by hard-coding in ScanLoaderDir().)
+
 - Added the directory from which rEFInd launched to dont_scan_dirs. This
   works around a bug in which rEFInd would show itself as a bogus Windows
   entry if it's installed as EFI/Microsoft/boot/bootmgfw.efi.
 
 - Added support for launching MokManager.efi for managing the Machine Owner
   Keys (MOKs) maintained by the Shim boot loader developed by Fedora and
-  SUSE.
+  SUSE. This program is scanned and presented as a second-row tool.
 
 - Added support for Apple's Recovery HD partition: If it's detected, a new
   icon appears on the second row. This icon can be removed by explicitly

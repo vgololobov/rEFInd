@@ -134,6 +134,7 @@ timeout 20
 # This can help some users who find that some of their disks
 # (usually external or optical discs) aren't detected initially,
 # but are detected after pressing Esc.
+# The default is 0.
 #
 #scan_delay 5
 
@@ -161,6 +162,19 @@ timeout 20
 # filesystems that rEFInd scans, not just the ESP.
 #
 #dont_scan_dirs EFI/boot,EFI/Dell
+
+# Files that should NOT be included as EFI boot loaders (on the
+# first line of the display). If you're using a boot loader that
+# relies on support programs or drivers that are installed alongside
+# the main binary or if you want to "blacklist" certain loaders by
+# name rather than location, use this option. Note that this will
+# NOT prevent certain binaries from showing up in the second-row
+# set of tools. Most notably, MokManager.efi is in this blacklist,
+# but will show up as a tool if present in certain directories. You
+# can control the tools row with the showtools token.
+# The default is shim.efi,MokManager.efi,TextMode.efi,ebounce.efi,GraphicsConsole.efi
+#
+#dont_scan_files shim.efi,MokManager.efi
 
 # Scan for Linux kernels that lack a ".efi" filename extension. This is
 # useful for better integration with Linux distributions that provide
