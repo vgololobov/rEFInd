@@ -1,5 +1,12 @@
-0.5.0 (12/5/2012):
+0.5.0 (12/?/2012):
 ------------------
+
+- Added the ability to include quote marks ('"') in refind.conf and
+  refind_linux.conf tokens by doubling them up, as in:
+  "ro root=/dev/sda4 some_value=""this is it"""
+  This example results in the following string being passed as an
+  option:
+  ro root=/dev/sda4 some_value="this is it"
 
 - Changed refind.conf-sample to uncomment the scan_all_linux_kernels
   option by default. If this option is deleted or commented out, the

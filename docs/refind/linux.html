@@ -186,7 +186,7 @@ total 17943
 # "Boot alternate install"   "root=/dev/sdb9 ro quiet splash vt.handoff=7"
 </pre>
 
-<p>Ordinarily, both fields in this file must be enclosed in quotes. You can include as much white space as you like between options. You can also place comments in the file, or remove an option by commenting it out with a leading hash mark (<tt>#</tt>), as in the fourth line in this example.</p>
+<p>Ordinarily, both fields in this file must be enclosed in quotes. If you have to pass an option that includes quotes, you can do so by doubling up on them, as in <tt>"root=/dev/sdb9 my_opt=""this is it"""</tt>, which passes <tt>root=/dev/sdb9 my_opt="this is it"</tt> to the shell. You can include as much white space as you like between options. You can also place comments in the file, or remove an option by commenting it out with a leading hash mark (<tt>#</tt>), as in the fourth line in this example.</p>
 
 <p>In the preceding example, the first line sets the options that rEFInd passes to the kernel by default (along with the name of the <tt>initrd.img-3.3.0</tt> file, since its version string matches that of the kernel). The next two lines set options that you can obtain by pressing Insert, F2, or + on the main menu, as shown here:</p>
 

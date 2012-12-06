@@ -305,7 +305,7 @@ default_selection elilo
 <tr>
    <td><tt>options</tt></td>
    <td>options passed to the boot loader</td>
-   <td>Pass arbitrary options to your boot loader with this line. Note that if the option string should contain spaces (as it often should) or characters that should not be modified by rEFInd's option parser (such as slashes or commas), it <i>must</i> be enclosed in quotes.</td>
+   <td>Pass arbitrary options to your boot loader with this line. Note that if the option string should contain spaces (as it often should) or characters that should not be modified by rEFInd's option parser (such as slashes or commas), it <i>must</i> be enclosed in quotes. If you must include quotes in an option, you can double them up, as in <tt>my_opt=""with quotes""</tt>, which passes <tt>my_opt="with quotes"</tt> as an option.</td>
 </tr>
 <tr>
    <td><tt>disabled</tt></td>

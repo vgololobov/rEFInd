@@ -215,14 +215,47 @@ static CHAR16 *ReadLine(REFIT_FILE *File)
     return Line;
 }
 
+// Returns FALSE if *p points to the end of a token, TRUE otherwise.
+// Also modifies *p **IF** the first and second characters are both
+// quotes ('"'); it deletes one of them.
+static BOOLEAN KeepReading(IN OUT CHAR16 *p, IN OUT BOOLEAN *IsQuoted) {
+   BOOLEAN MoreToRead = FALSE;
+   CHAR16  *Temp = NULL;
+//            while (*p && *p != '"' && ((*p != ' ' && *p != '\t' && *p != '=' && *p != '#' && *p != ',') || IsQuoted)) {
+
+   if ((p == NULL) || (IsQuoted == NULL))
+      return FALSE;
+
+   if (*p == L'\0')
+      return FALSE;
+
+   if ((*p != ' ' && *p != '\t' && *p != '=' && *p != '#' && *p != ',') || *IsQuoted) {
+      MoreToRead = TRUE;
+   }
+   if (*p == L'"') {
+      if (p[1] == L'"') {
+         Temp = StrDuplicate(&p[1]);
+         if (Temp != NULL) {
+            StrCpy(p, Temp);
+            FreePool(Temp);
+         }
+         MoreToRead = TRUE;
+      } else {
+         *IsQuoted = !(*IsQuoted);
+         MoreToRead = FALSE;
+      } // if/else second character is a quote
+   } // if first character is a quote
+
+   return MoreToRead;
+} // BOOLEAN KeepReading()
+
 //
 // get a line of tokens from a file
 //
-
 UINTN ReadTokenLine(IN REFIT_FILE *File, OUT CHAR16 ***TokenList)
 {
     BOOLEAN         LineFinished, IsQuoted = FALSE;
-    CHAR16          *Line, *Token, *p, *Temp;
+    CHAR16          *Line, *Token, *p;
     UINTN           TokenCount = 0;
 
     *TokenList = NULL;
@@ -235,7 +268,7 @@ UINTN ReadTokenLine(IN REFIT_FILE *File, OUT CHAR16 ***TokenList)
         p = Line;
         LineFinished = FALSE;
         while (!LineFinished) {
-            // skip whitespace
+            // skip whitespace & find start of token
             while ((*p == ' ' || *p == '\t' || *p == '=' || *p == ',') && !IsQuoted)
                 p++;
             if (*p == 0 || *p == '#')
@@ -248,18 +281,12 @@ UINTN ReadTokenLine(IN REFIT_FILE *File, OUT CHAR16 ***TokenList)
             Token = p;
 
             // find end of token
-            while (*p && *p != '"' && ((*p != ' ' && *p != '\t' && *p != '=' && *p != '#' && *p != ',') || IsQuoted)) {
-               if ((*p == '/') && !IsQuoted) // Switch Unix-style to DOS-style directory separators
-                  *p = '\\';
-               if (*p == '|') {
-                  Temp = StrDuplicate(&p[1]);
-                  StrCpy(p, Temp);
-               }
+            while (KeepReading(p, &IsQuoted)) {
+               if ((*p == L'/') && !IsQuoted) // Switch Unix-style to DOS-style directory separators
+                  *p = L'\\';
                p++;
-            } // if
-            if (*p == '"')
-               IsQuoted = !IsQuoted;
-            if (*p == 0 || *p == '#')
+            } // while
+            if (*p == L'\0' || *p == L'#')
                 LineFinished = TRUE;
             *p++ = 0;
 
