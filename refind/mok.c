@@ -130,6 +130,15 @@ BOOLEAN secure_mode (VOID)
    return TRUE;
 } // secure_mode()
 
+// Returns TRUE if the shim program is available to verify binaries,
+// FALSE if not
+BOOLEAN ShimLoaded(void) {
+   SHIM_LOCK   *shim_lock;
+   EFI_GUID    ShimLockGuid = SHIM_LOCK_GUID;
+
+   return (BS->LocateProtocol(&ShimLockGuid, NULL, (VOID**) &shim_lock) == EFI_SUCCESS);
+} // ShimLoaded()
+
 /*
  * Currently, shim/MOK only works on x86-64 (X64) systems, and some of this code
  * generates warnings on x86 (IA32) builds, so don't bother compiling it at all
@@ -330,8 +339,8 @@ static EFI_STATUS read_header(void *data, unsigned int datasize,
 // Returns TRUE if the specified data is validated by Shim's MOK, FALSE otherwise
 static BOOLEAN ShimValidate (VOID *data, UINT32 size)
 {
-   EFI_GUID    ShimLockGuid = SHIM_LOCK_GUID;
    SHIM_LOCK   *shim_lock;
+   EFI_GUID    ShimLockGuid = SHIM_LOCK_GUID;
 
    if (BS->LocateProtocol(&ShimLockGuid, NULL, (VOID**) &shim_lock) == EFI_SUCCESS) {
       if (!shim_lock)

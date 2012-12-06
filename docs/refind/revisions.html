@@ -14,7 +14,7 @@
 <p class="subhead">by Roderick W. Smith, <a
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
-<p>Last Web page update: 11/6/2012</p>
+<p>Last Web page update: 12/5/2012</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -92,6 +92,8 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 <p>The following summarizes changes in rEFInd's public releases:</p>
 
 <ul>
+
+<li><b>0.5.0 (12/5/2012)</b>&mdash;I've focused on adding support for Matthew J. Garrett's shim program to this version of rEFInd; with this support, rEFInd is capable of launching Linux kernels and other programs signed with a suitable key while the computer is in Secure Boot mode. This initial release, however, requires significant manual configuration and has some known bugs and limitations. See the <a href="secureboot.html">Managing Secure Boot</a> page for details. Beyond this major new feature, this version includes several more minor improvements. These include a change to the <tt>resolution</tt> token so that it applies to text mode as well as to graphics mode; a bug fix that caused the line editor to blank out lines that were left unedited; a new <tt>dont_scan_files</tt> option to blacklist boot programs by filename; support for launching MokManager and Apple's Recovery HD partitions via tools (2nd-row) icons; new <tt>--usedefault</tt> and <tt>--drivers</tt> options to the <tt>install.sh</tt> script; and a change of the <tt>esp</tt> installation script option to <tt>--esp</tt>.</li>
 
 <li><b>0.4.7 (11/6/2012)</b>&mdash;The most important new feature in this version is a boot options editor. From rEFInd's main menu, press Insert or F2 to see the options menu. Select one of the options and press Insert or F2 again and the screen switches to a text-mode display in which you can edit the options that will be passed to the boot loader. A second new feature is a new icon for <a href="http://freedesktop.org/wiki/Software/gummiboot">gummiboot,</a> which is another EFI boot manager. This version also alters the behavior of the <tt>scan_delay</tt> option, since I've been told that the previous version didn't work; the new one does. Finally, this version omits the space that followed boot options when booting most OSes. This behavior was inherited from rEFIt; a comment in the source code indicates it's needed by OS X, but I've been told it causes boot failures when launching Linux on some Macs. Thus, rEFInd now adds this space only when booting Mac OS X.</li>
 

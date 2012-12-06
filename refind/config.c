@@ -222,7 +222,7 @@ static CHAR16 *ReadLine(REFIT_FILE *File)
 UINTN ReadTokenLine(IN REFIT_FILE *File, OUT CHAR16 ***TokenList)
 {
     BOOLEAN         LineFinished, IsQuoted = FALSE;
-    CHAR16          *Line, *Token, *p;
+    CHAR16          *Line, *Token, *p, *Temp;
     UINTN           TokenCount = 0;
 
     *TokenList = NULL;
@@ -251,6 +251,10 @@ UINTN ReadTokenLine(IN REFIT_FILE *File, OUT CHAR16 ***TokenList)
             while (*p && *p != '"' && ((*p != ' ' && *p != '\t' && *p != '=' && *p != '#' && *p != ',') || IsQuoted)) {
                if ((*p == '/') && !IsQuoted) // Switch Unix-style to DOS-style directory separators
                   *p = '\\';
+               if (*p == '|') {
+                  Temp = StrDuplicate(&p[1]);
+                  StrCpy(p, Temp);
+               }
                p++;
             } // if
             if (*p == '"')

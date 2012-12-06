@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 3/14/2012; last Web page update:
-11/6/2012, referencing rEFInd 0.4.7</p>
+12/5/2012, referencing rEFInd 0.5.0</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -133,6 +133,8 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 <p class="sidebar"><b>Note:</b> rEFInd defaults to scanning for EFI, but <i>not</i> for BIOS, boot loaders. If you want to launch BIOS-mode OSes from rEFInd, you must edit the <tt>scanfor</tt> line in <tt>refind.conf</tt>, as described on the <a href="configfile.html">Configuring the Boot Manager</a> page. This type of configuration is most likely to be necessary on Macs that dual-boot with Windows.</p>
 
 <p>Ordinarily, rEFInd displays tags for OSes it finds on internal hard disks, external hard disks (including USB flash drives, CF disks, and so on), and optical discs. Sometimes, though, the firmware hasn't had time to fully examine these devices by the time rEFInd starts; or you might only insert or plug in the media after rEFInd appears. In these cases, you can press the Esc key to have rEFInd re-read its configuration file and re-scan your media for boot loaders. This action can take a few seconds to complete, so be patient. You can also use this feature to detect OSes if you launch a shell and use it to load a driver or edit the <tt>refind.conf</tt> file. If you regularly need to press Esc, you might look into the <tt>scan_delay</tt> configuration file option, described on the <a href="configfile.html">Configuring the Boot Manager</a> page.</p>
+
+<p>If your computer supports Secure Boot, you may find that some of your OSes and tools won't work; they'll produce <tt>Access Denied</tt> error messages. You can overcome this problem by creating a signing key, signing your binaries with it, and adding the public version of that key to your machine owner key (MOK) list. This process is described on the <a href="secureboot.html">Managing Secure Boot</a> page.</p>
 
 <h2>Using Keyboard Shortcuts</h2>
 

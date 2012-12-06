@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 11/13/2012; last Web page update:
-11/13/2012, referencing rEFInd 0.5.0</p>
+12/5/2012, referencing rEFInd 0.5.0</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -92,7 +92,7 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p class="sidebar"><b>Note:</b> My <a href="http://www.rodsbooks.com/efi-bootloaders/">Managing EFI Boot Loaders for Linux</a> Web page includes a much more detailed description of Secure Boot in its <a href="http://www.rodsbooks.com/efi-bootloaders/secureboot.html">Dealing with Secure Boot</a> sub-page. You should consult this page if you want to disable Secure Boot, generate your own keys, or perform other such tasks.</p>
 
-<p>If you're using a computer that supports Secure Boot, you may run into extra complications. This feature is intended to make it difficult for malware to insert itself early into the computer's boot process. Unfortunately, it also complicates multi-boot configurations such as those that rEFInd is intended to manage. This page describes some <a href="#basic">secure boot basics</a> and two specific aspects of rEFInd and its interactions with Secure Boot: <a href="#installation">installation issues</a> and <a href="#mok">key management.</a></p>
+<p>If you're using a computer that supports Secure Boot, you may run into extra complications. This feature is intended to make it difficult for malware to insert itself early into the computer's boot process. Unfortunately, it also complicates multi-boot configurations such as those that rEFInd is intended to manage. This page describes some <a href="#basic">secure boot basics</a> and two specific aspects of rEFInd and its interactions with Secure Boot: <a href="#installation">installation issues</a> and <a href="#caveats">known bugs and limitations</a> in rEFInd's Secure Boot features.</p>
 
 <a name="basic">
 <h2>Basic Issues</h2>
@@ -118,6 +118,8 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Because shim and MOK are being supported by several of the major players in the Linux world, I've decided to do the same with rEFInd. Beginning with version 0.5.0, rEFInd can communicate with the shim system to authenticate boot loaders. If a boot loader has been signed by a valid UEFI Secure Boot key, a valid shim key, or a valid MOK key, rEFInd will launch it. rEFInd will also launch unsigned boot loaders or those with invalid signatures <i>if</i> Secure Boot is disabled in or unsupported by the firmware. (If that's your situation, you needn't bother reading this page.)</p>
 
+<p>Version 0.5.0 doesn't yet ship in a pre-signed form; you'll need to create your own keys, as described shortly, and use them to sign your binary of rEFInd. I'm forcing you to do this because it's necessary to sign your post-rEFInd binaries anyhow.</p>
+
 <a name="installation">
 <h2>Installation Issues</h2>
 </a>
@@ -128,15 +130,15 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <li><b>shim</b>&mdash;You can download a version of shim signed with Microsoft's Secure Boot key <a href="http://www.codon.org.uk/~mjg59/shim-signed/">here.</a> This version (created by shim's developer, Matthew J. Garrett) includes a shim key that's signed nothing but the <tt>MokManager.efi</tt> program that also ships with the program. Thus, to use this version of shim, you must use MOKs. Ubuntu 12.10 ships with its own shim, but that version doesn't support MOKs and so is useless for launching rEFInd. Future versions of Fedora, SUSE, and probably other distributions will come with their own variants of shim, most of which will no doubt support their own shim keys as well as MOKs. You should install shim just as you would install other EFI boot loaders, as described <a href="http://www.rodsbooks.com/efi-bootloaders/installation.html">here.</a>For use in launching rEFInd, it makes sense to install <tt>shim.efi</tt> in <tt>EFI/refind</tt> on your ESP, although of course this detail is up to you.</li>
 
-<li><b>MokManager</b>&mdash;This program is included with shim 0.2 and later. It presents a crude user interface for managing MOKs, and it's launched by shim if shim can't find its default boot loader (generally <tt>grub.efi</tt>) or if that program isn't properly signed. In principle, this program could be signed with a MOK, but the binary in Garrett's shim 0.2 is signed with a shim key, and I expect that versions distributed with most Linux distributions will also be signed by their respective shim keys. This program should reside in the same directory as <tt>shim.efi</tt>, under the name <tt>MokManager.efi</tt>. Although you could theoretically do without MokManager, in practice you'll need it at least temporarily to install the MOK with which rEFInd is signed.</li>
+<li><b>MokManager</b>&mdash;This program is included with shim 0.2 and later. It presents a crude user interface for managing MOKs, and it's launched by shim if shim can't find its default boot loader (generally <tt>grubx64.efi</tt>) or if that program isn't properly signed. In principle, this program could be signed with a MOK, but the binary in Garrett's shim 0.2 is signed with a shim key, and I expect that versions distributed with most Linux distributions will also be signed by their respective shim keys. This program should reside in the same directory as <tt>shim.efi</tt>, under the name <tt>MokManager.efi</tt>. Although you could theoretically do without MokManager, in practice you'll need it at least temporarily to install the MOK with which rEFInd is signed.</li>
 
-<li><b>rEFInd</b>&mdash;Naturally, you need rEFInd. Because shim is hard-coded to launch a program called <tt>grub.efi</tt>, you must install rEFInd using that name and to the same directory in which <tt>shim.efi</tt> resides. In theory, rEFInd could be signed with a Secure Boot key, a shim key, or a MOK; however, because Microsoft won't sign binaries distributed under the GPLv3, I can't distribute a version of rEFInd signed with Microsoft's Secure Boot key; and as I don't have access to the private shim keys used by any distribution, I can't distribute a rEFInd binary signed by them. Thus, rEFInd will normally be signed by a MOK. Beginning with rEFInd 0.5.0, I've signed my rEFInd binaries with a MOK I created, and I distribute the public key with rEFInd as <tt>refind.der</tt>. You can therefore add this key to your system by using MokManager. Alternatively, you can re-sign your rEFInd binary with your own MOK. If you plan to launch boot loaders and kernels that are signed with built-in shim keys, enrolling <tt>refind.der</tt> is the easiest way to go; however, if you plan to sign your own kernels or other boot loaders, you'll need to generate your own MOKs and you might prefer to sign rEFInd with it so as to reduce the number of MOKs on your system and to ensure that you won't run malware should my own private key fall into the wrong hands.</li>
+<li><b>rEFInd</b>&mdash;Naturally, you need rEFInd. Because shim is hard-coded to launch a program called <tt>grubx64.efi</tt>, you must install rEFInd using that name and to the same directory in which <tt>shim.efi</tt> resides. In theory, rEFInd could be signed with a Secure Boot key, a shim key, or a MOK; however, because Microsoft won't sign binaries distributed under the GPLv3, I can't distribute a version of rEFInd signed with Microsoft's Secure Boot key; and as I don't have access to the private shim keys used by any distribution, I can't distribute a rEFInd binary signed by them. Thus, rEFInd will normally be signed by a MOK. As of version 0.5.0, you must sign your rEFInd binary with your own MOK.</li>
 
 <li><b>Your boot loaders and kernels</b>&mdash;Your OS boot loaders, and perhaps your Linux kernels, must be signed. They can be signed with any of the three key types. Indeed, your system may have a mix of all three types&mdash;a Windows 8 boot loader will most likely be signed with Microsoft's Secure Boot key, GRUB and kernels provided by most distributions will be signed with their own shim keys, and if you use your own locally-compiled kernel or a boot loader from an unusual source you may need to sign it with a MOK. Aside from signing, these files can be installed in exactly the same way as if your computer were not using Secure Boot.</li>
 
 </ul>
 
-<p>Because of variables such as which version of shim you're using and whether you intend to rely exclusively on shim keys or make use of MOKs, I can't provide an absolutely complete procedure for installing rEFInd to work with Secure Boot. Broadly speaking, though, the procedure should be something like this:</p>
+<p>Because of variables such as which version of shim you're using, I can't provide an absolutely complete procedure for installing rEFInd to work with Secure Boot. Broadly speaking, though, the procedure should be something like this:</p>
 
 <ol>
 
@@ -146,9 +148,27 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <li>Copy the <tt>shim.efi</tt> and <tt>MokManager.efi</tt> binaries to the directory you intend to use for rEFInd&mdash;for instance, <tt>EFI/refind</tt> on the ESP.</li>
 
-<li>Follow the manual installation instructions for rEFInd on the <a href="installing.html">Installing rEFInd</a> page; however, give it the filename <tt>grub.efi</tt> and register <tt>shim.efi</tt> with the EFI by using <tt>efibootmgr</tt> in Linux or <tt>bcdedit</tt> in Windows.</li>
+<li>If it's not already installed, install OpenSSL on your computer. (It normally comes in a package called <tt>openssl</tt>.</li>
 
-<li>Copy the <tt>refind.der</tt> file to the ESP, preferably in a directory with few other files. (MokManager's display has problems in directories that have too many files.)</li>
+<li>Type the following two commands to generate your public and private keys:
+
+<pre class="listing">
+$ <tt class="userinput">openssl req -new -x509 -newkey rsa:2048 -keyout MOK.key -out MOK.crt \
+  -days 3650 -subj "/CN=Your Name/"</tt>
+$ <tt class="userinput">openssl x509 -in MOK.crt -out MOK.cer -outform DER</tt>
+</pre>
+
+Change <tt>Your Name</tt> to your own name or other identifying characteristics, and adjust the certificate's time span (set via <tt>-days</tt> as you see fit. After you type the first command, it will prompt you for a passphrase. Remember this, since you'll need it to sign your binaries. The result is a private key file (<tt>MOK.key</tt>), which is highly sensitive since it's required to sign binaries, and two public keys (<tt>MOK.crt</tt> and <tt>MOK.cer</tt>), which can be used to verify signed binaries' authenticity.</li>
+
+<li>Copy the three key files to a secure location and adjust permissions such that only you can read <tt>MOK.key</tt>. You'll need these keys to sign future binaries, so don't discard them.</li>
+
+<li>Copy the <tt>MOK.cer</tt> file to your ESP, ideally to a location with few other files.</li>
+
+<li>Download and install the <tt>sbsigntool</tt> package. Binary links for various distributions are available from the <a href="https://build.opensuse.org/package/show?package=sbsigntools&project=home%3Ajejb1%3AUEFI">OpenSUSE Build Service</a>, or you can obtain the source code by typing <tt class="userinput">git clone git://kernel.ubuntu.com/jk/sbsigntool</tt>.</li>
+
+<li>Sign the rEFInd binary by typing <tt class="userinput">sbsign --key MOK.key --cert MOK.crt --output grubx64.efi refind_x64.efi</tt>, adjusting the paths as necessary to the keys and the rEFInd binary. Note that you're giving the signed rEFInd binary the filename <tt>grubx64.efi</tt>. This is necessary to launch rEFInd from shim.</li>
+
+<li>Follow the manual installation instructions for rEFInd on the <a href="installing.html">Installing rEFInd</a> page; however, give rEFInd the filename <tt>grubx64.efi</tt> and register <tt>shim.efi</tt> with the EFI by using <tt>efibootmgr</tt> in Linux or <tt>bcdedit</tt> in Windows.</li>
 
 <li>Reboot. With any luck, you'll see a simple text-mode user interface with a label of <tt>Shim UEFI key management</tt>. This is the MokManager program, which shim launched when rEFInd failed verification because its key is not yet enrolled.</li>
 
@@ -158,9 +178,9 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
     HEIGHT="186" ALT="MokManager's user interface is crude but effective."
     BORDER=2> <br />
 
-<li>Each of the lines with a long awkward string represents a disk partition. Select one and you'll see a list of files. Continue selecting subdirectories until you find the <tt>refind.der</tt> file you copied to the ESP earlier.</li>
+<li>Each of the lines with a long awkward string represents a disk partition. Select one and you'll see a list of files. Continue selecting subdirectories until you find the <tt>MOK.cer</tt> file you copied to the ESP earlier.</li>
 
-<li>Select <tt>refind.der</tt>. MokManager will ask for verification that you want to enroll the key. Provide it.</li>
+<li>Select <tt>MOK.cer</tt>. You can type <tt class="userinput">1</tt> to view your certificate's details if you like, or skip that and type <tt class="userinput">0</tt> to enroll the key.</li>
 
 <li>Back out of any directories you entered and return to the MokManager main menu.</li>
 
@@ -170,25 +190,43 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>At this point the computer may boot into its default OS, reboot, or perhaps even hang. When you reboot it, though, rEFInd should start up in Secure Boot mode. It should now be able to launch any boot loader signed with a key recognized by the firmware or by shim (including any MOKs you've enrolled). If you want to manage keys in the future, rEFInd displays a new icon in the second (tools) row you can use to launch MokManager. (This icon appears by default, but if you edit <tt>showtools</tt> in <tt>refind.conf</tt>, you must be sure to include <tt>mok_tool</tt> as an option in order to gain access to it.)</p>
 
-<p>Several variants on this procedure are possible. For instance, you can generate your own MOK, sign rEFInd with it, and enroll that MOK rather than the <tt>refind.der</tt> MOK. If you're using Ubuntu 12.10, you can't use its version of shim, but you can replace it with Garrett's shim. The problem is that Ubuntu's GRUB and kernel will then be signed by an unknown key. Unfortunately, I haven't found a suitable public key file on Ubuntu's distribution medium, so you may need to sign GRUB and/or your kernels with your own MOK. In principle, you should be able to use shim 0.2 or later from future distributions that include it; but you must be sure that whatever you use supports MokManager.</p>
+<p>If you're using Ubuntu 12.10, you can't use its version of shim, but you can replace it with Garrett's shim. The problem is that Ubuntu's GRUB and kernel will then be signed by an unknown key. Unfortunately, I haven't found a suitable public key file on Ubuntu's distribution medium, so you may need to sign GRUB and/or your kernels with your own MOK. In principle, you should be able to use shim 0.2 or later from future distributions that include it; but you must be sure that whatever you use supports MokManager.</p>
 
-<a name="mok">
-<h2>Managing MOKs</h2>
+<a name="caveats">
+<h2>Secure Boot Caveats</h2>
 </a>
 
-<p>The idea behind MOKs is that you should be able to control the signing of your boot loader binaries. Broadly speaking, you can add recognized signing keys in either of two ways:</p>
+<p>rEFInd's Secure Boot support is brand-new with version 0.5.0 of the program. Unfortunately, rEFInd, like shim, must essentially bypass UEFI security features, and must simultaneously not create security problems, in order to work. Unfortunately, the procedures that rEFInd uses to do this (which were lifted straight from shim) play "fast and loose" with the UEFI rules. This fact creates a number of limitations, which include (but are almost certainly not limited to) the following:</p>
 
 <ul>
 
-<li><b>From the OS</b>&mdash;You can add a key by modifying the EFI NVRAM variables located in <tt>/sys/firmware/efi/vars</tt>. When the computer reboots, shim will detect the change and ask for verification about enrollment of the new key.</li>
+<li>rEFInd can launch <i>one</i> shim/MOK-signed driver, no more. If you
+    try to launch two drivers, rEFInd throws up an <tt>Access Denied</tt>
+    error for the second driver.</li>
 
-<li><b>From EFI</b>&mdash;You can manually run MokManager to manage your MOKs. Since version 0.5.0, rEFInd has included support for this application by providing a second-row tag that launches the program.</li>
+<li>ELILO can't find its configuration file when launched from rEFInd in
+    Secure Boot mode. The same may be true of GRUB or other boot loaders,
+    but I haven't tested them.</li>
+
+<li>Under certain circumstances, the time required to launch a boot loader
+    can increase. This is unlikely to be noticeable for the average small
+    boot loader, but could be significant for larger boot loaders on slow
+    filesystems, such as Linux kernels on ext2fs, ext3fs, or ReiserFS
+    partitions.</li>
+
+<li>I haven't tested launching Windows from rEFInd in Secure Boot mode.
+    This is admittedly a huge omission; but I don't have a suitable
+    installation for testing.</li>
+
+<li>Secure Boot mode doesn't work on <i>x</i>86 (IA32) or ARM systems, just
+    on <i>x</i>86-64 (AMD64) computers. This is largely because shim has
+    the same limitations.</li>
 
 </ul>
 
-<p>As I write, the methods for adding MOKs from the OS remain unclear to me, so I don't address them here. MOK management using MokManager, though, is fairly straightforward, as described earlier, near the end of <a href="#installation">Installation Issues.</a> The main caveat is that the MokManager user interface is extremely crude. A directory that contains too many entries tends to produce drawing errors that can interfere with selecting the correct file. Thus, I recommend keeping your ESP's root directory uncluttered and place any <tt>.der</tt> files you need in an equally uncluttered directory off of the root directory.</p>
+<p>My focus in testing rEFInd's Secure Boot capabilities has been on getting Linux kernels with EFI stub loaders to launch correctly.</p>
 
-<p>The biggest challenge to managing MOKs comes if you need to sign binaries using your own keys. This task requires using cryptographic software based on OpenSSL. The tools involved are crude and poorly documented. I describe a procedure for creating keys and signing binaries <a href="http://www.rodsbooks.com//efi-bootloaders/secureboot.html#shim">here,</a> so check that page if you need detailed instructions.</p>
+<p>At the moment, I consider rEFInd's shim/MOK support to be of alpha quality. I'm releasing it in this state in the hope of getting feedback from adventurous early adopters. I expect the improve the installation procedure, and with any luck fix some of the known bugs, in the next couple of versions. Some of the usability improvements are dependent upon MOK-capable versions of shim being released with major distributions; such versions of shim, with kernels signed with the key that matches the one built into shim, will greatly reduce the need for users to sign boot loaders.</p>
 
 <hr />
 

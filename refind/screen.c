@@ -162,8 +162,8 @@ VOID BeginTextScreen(IN CHAR16 *Title)
 VOID FinishTextScreen(IN BOOLEAN WaitAlways)
 {
     if (haveError || WaitAlways) {
-        SwitchToText(FALSE);
-        PauseForKey();
+       PauseForKey();
+       SwitchToText(FALSE);
     }
 
     // reset error flag

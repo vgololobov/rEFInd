@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 3/14/2012; last Web page update:
-11/15/2012, referencing rEFInd 0.4.7</p>
+12/5/2012, referencing rEFInd 0.5.0</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -216,9 +216,9 @@ Installation has completed successfully.</pre>
     changes to the computer's NVRAM. The idea is that you can easily create
     a bootable USB flash drive with this option: Create a proper
     FAT-formatted ESP on a disk (say, <tt>/dev/sdd1</tt>) and then type <tt
-    class="userinput">sh ./install --usedefault /dev/sdd1</tt> to turn the
-    disk into an emergency disk. This option can also be used to install
-    rEFInd to an ESP using the <a href="#naming">alternative naming
+    class="userinput">bash ./install --usedefault /dev/sdd1</tt> to turn
+    the disk into an emergency disk. This option can also be used to
+    install rEFInd to an ESP using the <a href="#naming">alternative naming
     options</a> described later. This latter usage will result in a
     bootable rEFInd only if no other OS has already created an NVRAM
     variable pointing to itself.</li>
@@ -472,6 +472,8 @@ $ <b>ioreg -l -p IODeviceTree | grep firmware-abi</b>
 
 <p>In all cases, if the new version includes new or altered configuration file options, you may need to manually update your configuration file. Alternatively, if you've used the default configuration file, you can replace your working <tt>refind.conf</tt> with <tt>refind.conf-sample</tt> from the rEFInd zip file. (When using <tt>install.sh</tt>, this file will be copied to rEFInd's installation directory under its original name, so you can rename it within that directory to replace the old file.</p>
 
+<p>If you're upgrading to rEFInd from rEFIt, you can simply run the <tt>install.sh</tt> script as described earlier or perform a manual installation. Once installed, rEFInd will take over boot manager duties. You'll still be able to launch rEFIt from rEFInd; a rEFIt icon will appear in rEFInd's menu. You can eliminate this option by removing the rEFIt files, which normally reside in <tt>/EFI/refit</tt>.</p>
+
 <a name="addons">
 <h2>Installing Additional Components</h2>
 </a>
@@ -481,7 +483,7 @@ $ <b>ioreg -l -p IODeviceTree | grep firmware-abi</b>
 <ul>
 
 <li><b><a
-    href="http://tianocore.git.sourceforge.net/git/gitweb.cgi?p=tianocore/edk2;a=blob_plain;f=EdkShellBinPkg/FullShell/X64/Shell_Full.efi;hb=HEAD">shell.efi</a></b>&mdash;This
+    href="http://tianocore.git.sourceforge.net/git/gitweb.cgi?p=tianocore/edk2;a=blob_plain;f=EdkShellBinPkg/FullShell/X64/Shell_Full.efi;hb=HEAD"><tt>shell.efi</tt></a></b>&mdash;This
     file, placed in the ESP's <tt>efi/tools</tt> directory, adds the
     ability to launch a text-mode EFI shell from rEFInd. Note that the
     download link is to a 64-bit binary that must be renamed before rEFInd
@@ -490,7 +492,7 @@ $ <b>ioreg -l -p IODeviceTree | grep firmware-abi</b>
     Linux wiki,</a> and on other sites; try a Web search if the shell you
     find doesn't work to your satisfaction.</li>
 
-<li><b>gptsync.efi</b>&mdash;This program creates a <a
+<li><b><tt>gptsync.efi</tt></b>&mdash;This program creates a <a
     href="http://www.rodsbooks.com/gdisk/hybrid.html">hybrid MBR</a> from
     your regular GPT disk. A hybrid MBR is a dangerous hack that enables
     Windows and OS X to coexist on a Macintosh disk. If you're using a
@@ -511,6 +513,12 @@ $ <b>ioreg -l -p IODeviceTree | grep firmware-abi</b>
     from other sources, although they're still on the scarce side. See the
     <a href="drivers.html">Using EFI Drivers</a> page for more on this
     topic.</li>
+
+<li><b>Secure Boot files</b>&mdash;If you're running on a system that
+    supports Secure Boot, chances are you'll need extra support files, such
+    as <tt>shim.efi</tt> and <tt>MokManager.efi</tt>. I describe these in
+    detail on the <a href="secureboot.html">Managing Secure Boot</a>
+    page.</li>
 
 </ul>
 

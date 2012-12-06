@@ -1,5 +1,5 @@
-0.5.0 (??/??/2012):
--------------------
+0.5.0 (12/5/2012):
+------------------
 
 - Changed refind.conf-sample to uncomment the scan_all_linux_kernels
   option by default. If this option is deleted or commented out, the

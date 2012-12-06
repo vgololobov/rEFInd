@@ -118,7 +118,7 @@ static VOID AboutrEFInd(VOID)
 
     if (AboutMenu.EntryCount == 0) {
         AboutMenu.TitleImage = BuiltinIcon(BUILTIN_ICON_FUNC_ABOUT);
-        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.4.7.10");
+        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.4.7.11");
         AddMenuInfoLine(&AboutMenu, L"");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2006-2010 Christoph Pfisterer");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2012 Roderick W. Smith");
@@ -178,7 +178,7 @@ static EFI_STATUS StartEFIImageList(IN EFI_DEVICE_PATH **DevicePaths,
     CHAR16                  ErrorInfo[256];
     CHAR16                  *FullLoadOptions = NULL;
     CHAR16                  *loader = NULL;
-    BOOLEAN                 UseMok = FALSE, SecureMode;
+    BOOLEAN                 UseMok = FALSE;
 
     if (ErrorInStep != NULL)
         *ErrorInStep = 0;
@@ -203,25 +203,17 @@ static EFI_STATUS StartEFIImageList(IN EFI_DEVICE_PATH **DevicePaths,
 
     // load the image into memory (and execute it, in the case of a shim/MOK image).
     ReturnStatus = Status = EFI_NOT_FOUND;  // in case the list is empty
-    SecureMode = secure_mode();
-//    SecureMode = TRUE;
     for (DevicePathIndex = 0; DevicePaths[DevicePathIndex] != NULL; DevicePathIndex++) {
-       // NOTE: Below commented-out line could simplify logic by loading the image once, but
-       // it doesn't work on my 32-bit Mac Mini or my 64-bit Intel box when launching a
-       // Linux kernel; the kernel returns a "Failed to handle fs_proto" error message.
+       // NOTE: Below commented-out line could be more efficient if the ReadFile() and
+       // FindVolumeAndFilename() calls were moved earlier, but it doesn't work on my
+       // 32-bit Mac Mini or my 64-bit Intel box when launching a Linux kernel; the
+       // kernel returns a "Failed to handle fs_proto" error message.
        // TODO: Track down the cause of this error and fix it, if possible.
        // ReturnStatus = Status = refit_call6_wrapper(BS->LoadImage, FALSE, SelfImageHandle, DevicePaths[DevicePathIndex],
        //                                            ImageData, ImageSize, &ChildImageHandle);
-       // In Secure Boot mode, try to use shim/MOK-style loading first, and if
-       // that fails, try the standard EFI system call (LoadImage()). This is
-       // done for efficiency, to prevent loading a binary twice, which can
-       // take several seconds to load a Linux kernel with EFI stub support on
-       // some systems. Linux kernels are likely to be shim/MOK signed, so
-       // this is quickest for them; and delays for most other boot loaders
-       // will be unnoticeably short. To prevent delays or failures in case
-       // of buggy shim/MOK code on non-SB systems, skip that attempt and
-       // call LoadImage() directly when not in SB mode.
-       if (SecureMode) {
+       ReturnStatus = Status = refit_call6_wrapper(BS->LoadImage, FALSE, SelfImageHandle, DevicePaths[DevicePathIndex],
+                                                   NULL, 0, &ChildImageHandle);
+       if ((Status == EFI_ACCESS_DENIED) && (ShimLoaded())) {
           FindVolumeAndFilename(DevicePaths[DevicePathIndex], &DeviceVolume, &loader);
           if (DeviceVolume != NULL) {
              Status = ReadFile(DeviceVolume->RootDir, loader, &File, &ImageSize);
@@ -232,21 +224,14 @@ static EFI_STATUS StartEFIImageList(IN EFI_DEVICE_PATH **DevicePaths,
           } // if/else
           if (Status != EFI_NOT_FOUND) {
              ReturnStatus = Status = start_image(SelfImageHandle, loader, ImageData, ImageSize, FullLoadOptions,
-                                                 DeviceVolume, DevicePaths[DevicePathIndex]);
+                                                 DeviceVolume, FileDevicePath(DeviceVolume->DeviceHandle, loader));
+//             ReturnStatus = Status = start_image(SelfImageHandle, loader, ImageData, ImageSize, FullLoadOptions,
+//                                                 DeviceVolume, DevicePaths[DevicePathIndex]);
           }
           if (ReturnStatus == EFI_SUCCESS) {
              UseMok = TRUE;
           } // if
-          // If shim/MOK load fails, try regular EFI load, in case it's an unsupported
-          // binary type....
-          if (!UseMok) {
-             ReturnStatus = Status = refit_call6_wrapper(BS->LoadImage, FALSE, SelfImageHandle, DevicePaths[DevicePathIndex],
-                                                         NULL, 0, &ChildImageHandle);
-          } // if (!UseMok)
-       } else { // Secure Boot inactive; only do standard call....
-          ReturnStatus = Status = refit_call6_wrapper(BS->LoadImage, FALSE, SelfImageHandle, DevicePaths[DevicePathIndex],
-                                                      NULL, 0, &ChildImageHandle);
-       } // if/else (SecureMode)
+       } // if (UEFI SB failed; use shim)
        if (ReturnStatus != EFI_NOT_FOUND) {
           break;
        }
