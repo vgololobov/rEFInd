@@ -1,6 +1,13 @@
 0.5.0 (??/??/2012):
 -------------------
 
+- Changed refind.conf-sample to uncomment the scan_all_linux_kernels
+  option by default. If this option is deleted or commented out, the
+  program default remains to not scan all Linux kernels; but with
+  increasing numbers of distributions shipping with kernels that include
+  EFI stub loader support, setting the configuration file default to scan
+  for them makes sense.
+
 - Modified the "resolution" token so that it affects text mode as well
   as graphics mode. On my systems, though, the actual text area is still
   restricted to an 80x25 area. (This seems to be a firmware limitation; my

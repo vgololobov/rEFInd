@@ -57,12 +57,12 @@
 
 static EFI_STATUS (EFIAPI *entry_point) (EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table);
 
-/*
- * The vendor certificate used for validating the second stage loader
- */
-extern UINT8 vendor_cert[];
-extern UINT32 vendor_cert_size;
-extern UINT32 vendor_dbx_size;
+// /*
+//  * The vendor certificate used for validating the second stage loader
+//  */
+// extern UINT8 vendor_cert[];
+// extern UINT32 vendor_cert_size;
+// extern UINT32 vendor_dbx_size;
 
 #define EFI_IMAGE_SECURITY_DATABASE_GUID { 0xd719b2cb, 0x3d3a, 0x4596, { 0xa3, 0xbc, 0xda, 0xd0, 0x0e, 0x67, 0x65, 0x6f }}
 
@@ -79,6 +79,66 @@ typedef struct {
    UINT8 *Mok;
 } MokListNode;
 
+
+static EFI_STATUS get_variable (CHAR16 *name, EFI_GUID guid, UINT32 *attributes, UINTN *size, VOID **buffer)
+{
+   EFI_STATUS efi_status;
+   char allocate = !(*size);
+
+   efi_status = uefi_call_wrapper(RT->GetVariable, 5, name, &guid, attributes, size, buffer);
+
+   if (efi_status != EFI_BUFFER_TOO_SMALL || !allocate) {
+      return efi_status;
+   }
+
+   *buffer = AllocatePool(*size);
+
+   if (!*buffer) {
+      Print(L"Unable to allocate variable buffer\n");
+      return EFI_OUT_OF_RESOURCES;
+   }
+
+   efi_status = uefi_call_wrapper(RT->GetVariable, 5, name, &guid, attributes, size, *buffer);
+
+   return efi_status;
+} // get_variable()
+
+/*
+ * Check whether we're in Secure Boot and user mode
+ */
+BOOLEAN secure_mode (VOID)
+{
+   EFI_STATUS status;
+   EFI_GUID global_var = EFI_GLOBAL_VARIABLE;
+   UINTN charsize = sizeof(char);
+   UINT8 sb, setupmode;
+   UINT32 attributes;
+
+   status = get_variable(L"SecureBoot", global_var, &attributes, &charsize, (VOID *)&sb);
+
+   /* FIXME - more paranoia here? */
+   if (status != EFI_SUCCESS || sb != 1) {
+      return FALSE;
+   }
+
+   status = get_variable(L"SetupMode", global_var, &attributes, &charsize, (VOID *)&setupmode);
+
+   if (status == EFI_SUCCESS && setupmode == 1) {
+      return FALSE;
+   }
+
+   return TRUE;
+} // secure_mode()
+
+/*
+ * Currently, shim/MOK only works on x86-64 (X64) systems, and some of this code
+ * generates warnings on x86 (IA32) builds, so don't bother compiling it at all
+ * on such systems.
+ *
+ */
+
+#if defined(EFIX64)
+
 /*
  * Perform basic bounds checking of the intra-image pointers
  */
@@ -93,8 +153,7 @@ static void *ImageAddress (void *image, int size, unsigned int address)
 /*
  * Perform the actual relocation
  */
-static EFI_STATUS relocate_coff (GNUEFI_PE_COFF_LOADER_IMAGE_CONTEXT *context,
-             void *data)
+static EFI_STATUS relocate_coff (GNUEFI_PE_COFF_LOADER_IMAGE_CONTEXT *context, void *data)
 {
    EFI_IMAGE_BASE_RELOCATION *RelocBase, *RelocBaseEnd;
    UINT64 Adjust;
@@ -108,16 +167,16 @@ static EFI_STATUS relocate_coff (GNUEFI_PE_COFF_LOADER_IMAGE_CONTEXT *context,
 
    context->PEHdr->Pe32Plus.OptionalHeader.ImageBase = (UINT64)data;
 
-   if (context->NumberOfRvaAndSizes <= EFI_IMAGE_DIRECTORY_ENTRY_BASERELOC) {
-      Print(L"Image has no relocation entry\n");
-      return EFI_UNSUPPORTED;
-   }
-
    // Linux kernels with EFI stub support don't have relocation information, so
    // we can skip all this stuff....
    if (((context->RelocDir->VirtualAddress == 0) && (context->RelocDir->Size == 0)) ||
        ((context->PEHdr->Pe32.FileHeader.Characteristics & EFI_IMAGE_FILE_RELOCS_STRIPPED) != 0)) {
       return EFI_SUCCESS;
+   }
+
+   if (context->NumberOfRvaAndSizes <= EFI_IMAGE_DIRECTORY_ENTRY_BASERELOC) {
+      Print(L"Image has no relocation entry\n");
+      return EFI_UNSUPPORTED;
    }
 
    RelocBase = ImageAddress(data, size, context->RelocDir->VirtualAddress);
@@ -199,7 +258,7 @@ static EFI_STATUS relocate_coff (GNUEFI_PE_COFF_LOADER_IMAGE_CONTEXT *context,
    }
 
    return EFI_SUCCESS;
-}
+} /* relocate_coff() */
 
 /*
  * Read the binary header and grab appropriate information from it
@@ -288,8 +347,8 @@ static BOOLEAN ShimValidate (VOID *data, UINT32 size)
 /*
  * Once the image has been loaded it needs to be validated and relocated
  */
-static EFI_STATUS handle_image (void *data, unsigned int datasize,
-            EFI_LOADED_IMAGE *li, CHAR16 *Options, REFIT_VOLUME *DeviceVolume)
+static EFI_STATUS handle_image (void *data, unsigned int datasize, EFI_LOADED_IMAGE *li,
+                                CHAR16 *Options, REFIT_VOLUME *DeviceVolume, IN EFI_DEVICE_PATH *DevicePath)
 {
    EFI_STATUS efi_status;
    char *buffer;
@@ -366,12 +425,12 @@ static EFI_STATUS handle_image (void *data, unsigned int datasize,
     * grub needs to know its location and size in memory, its location on
     * disk, and its load options, so fix up the loaded image protocol values
     */
+   li->DeviceHandle = DeviceVolume->DeviceHandle;
+   li->FilePath = DevicePath;
+   li->LoadOptionsSize = ((UINT32)StrLen(Options) + 1) * sizeof(CHAR16);
+   li->LoadOptions = (VOID *)Options;
    li->ImageBase = buffer;
    li->ImageSize = context.ImageSize;
-   li->DeviceHandle = DeviceVolume->DeviceHandle;
-   li->FilePath = DeviceVolume->DevicePath;
-   li->LoadOptions = (VOID *)Options;
-   li->LoadOptionsSize = ((UINT32)StrLen(Options) + 1) * sizeof(CHAR16);
 
    if (!entry_point) {
       Print(L"Invalid entry point\n");
@@ -382,14 +441,22 @@ static EFI_STATUS handle_image (void *data, unsigned int datasize,
    return EFI_SUCCESS;
 }
 
+#endif /* defined(EFIX64) */
+
 /*
- * Load and run an EFI executable
+ * Load and run an EFI executable.
+ * Note that most of this function compiles only on x86-64 (X64) systems, since
+ * shim/MOK works only on those systems. I'm leaving just enough to get the
+ * function to return EFI_ACCESS_DENIED on x86 (IA32) systems, which should
+ * let the calling function work in case it somehow ends up calling this
+ * function inappropriately.
  */
 EFI_STATUS start_image(EFI_HANDLE image_handle, CHAR16 *ImagePath, VOID *data, UINTN datasize,
-                       CHAR16 *Options, REFIT_VOLUME *DeviceVolume)
+                       CHAR16 *Options, REFIT_VOLUME *DeviceVolume, IN EFI_DEVICE_PATH *DevicePath)
 {
+   EFI_STATUS efi_status = EFI_ACCESS_DENIED;
+#if defined(EFIX64)
    EFI_GUID loaded_image_protocol = LOADED_IMAGE_PROTOCOL;
-   EFI_STATUS efi_status;
    EFI_LOADED_IMAGE *li, li_bak;
    CHAR16 *PathName = NULL;
 
@@ -400,8 +467,7 @@ EFI_STATUS start_image(EFI_HANDLE image_handle, CHAR16 *ImagePath, VOID *data, U
     * We need to refer to the loaded image protocol on the running
     * binary in order to find our path
     */
-   efi_status = uefi_call_wrapper(BS->HandleProtocol, 3, image_handle,
-                   &loaded_image_protocol, (void **)&li);
+   efi_status = uefi_call_wrapper(BS->HandleProtocol, 3, image_handle, &loaded_image_protocol, (void **)&li);
 
    if (efi_status != EFI_SUCCESS) {
       Print(L"Unable to init protocol\n");
@@ -417,7 +483,7 @@ EFI_STATUS start_image(EFI_HANDLE image_handle, CHAR16 *ImagePath, VOID *data, U
    /*
     * Verify and, if appropriate, relocate and execute the executable
     */
-   efi_status = handle_image(data, datasize, li, Options, DeviceVolume);
+   efi_status = handle_image(data, datasize, li, Options, DeviceVolume, DevicePath);
 
    if (efi_status != EFI_SUCCESS) {
       Print(L"Failed to load image\n");
@@ -430,6 +496,8 @@ EFI_STATUS start_image(EFI_HANDLE image_handle, CHAR16 *ImagePath, VOID *data, U
     */
    efi_status = refit_call2_wrapper(entry_point, image_handle, ST);
 
+//   efi_status = refit_call1_wrapper(BS->UnloadImage, li);
+
    /*
     * Restore our original loaded image values
     */
@@ -441,5 +509,6 @@ done:
    if (data)
       FreePool(data);
 
+#endif
    return efi_status;
-}
+} // EFI_STATUS start_image()

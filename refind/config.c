@@ -325,7 +325,7 @@ VOID ReadConfig(VOID)
     MyFreePool(GlobalConfig.DontScanDirs);
     GlobalConfig.DontScanDirs = StrDuplicate(SelfDirPath);
     MyFreePool(GlobalConfig.DontScanFiles);
-    GlobalConfig.DontScanFiles = DONT_SCAN_FILES;
+    GlobalConfig.DontScanFiles = StrDuplicate(DONT_SCAN_FILES);
 
     for (;;) {
         TokenCount = ReadTokenLine(&File, &TokenList);

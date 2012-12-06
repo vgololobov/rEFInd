@@ -195,6 +195,20 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
     <ul>
 
+    <li>When in Secure Boot mode, rEFInd can launch just one driver that's
+	signed with a shim key or MOK. The second and later drivers
+	generate "access denied" errors. <!-- I think this is because of
+	the fast-and-loose sample code I borrowed from shim, which re-uses
+	rEFInd's own image handle (the <tt>image_handle</tt> variable in
+	<tt>start_image()</tt>) for launching shim/MOK-signed binaries. The
+	result is that when the second driver is loaded, it can't register
+	itself with the firmware because the firmware believes it's already
+	been registered. The solution is likely to involve creating a child
+	image handle rather than re-using rEFInd's own image handle, but
+	this is likely to be tedious to do&mdash;see
+	<tt>/usr/local/UDK2010/MyWorkSpace/MdeModulePkg/Core/Dxe/Image/Image.c</tt>
+	for the reference UEFI implementation. --> </li>
+
     <li>The <a href="http://www.rodsbooks.com/gb-hybrid-efi/">Gigabyte
 	Hybrid EFI</a> has a bug that causes the allegedly case-insensitive
 	<tt>StriCmp()</tt> function to perform a case-sensitive comparison.

@@ -101,7 +101,7 @@ timeout 20
 #  reboot          - a tag to reboot the computer
 # Default is shell,apple_recovery,mok_tool,about,shutdown,reboot
 #
-#showtools shell, about, reboot
+#showtools shell, mok_tool, about, reboot, exit
 
 # Directories in which to search for EFI drivers. These drivers can
 # provide filesystem support, give access to hard disks on plug-in
@@ -190,7 +190,7 @@ timeout 20
 # option will cause the icon file to show up as a non-functional loader tag.
 # Default is to NOT scan for kernels without ".efi" extensions.
 #
-#scan_all_linux_kernels
+scan_all_linux_kernels
 
 # Set the maximum number of tags that can be displayed on the screen at
 # any time. If more loaders are discovered than this value, rEFInd shows

@@ -134,10 +134,40 @@ VOID CleanUpPathNameSlashes(IN OUT CHAR16 *PathName) {
    } // if allocation OK
 } // CleanUpPathNameSlashes()
 
+// Splits an EFI device path into device and filename components. For instance, if InString is
+// PciRoot(0x0)/Pci(0x1f,0x2)/Ata(Secondary,Master,0x0)/HD(2,GPT,8314ae90-ada3-48e9-9c3b-09a88f80d921,0x96028,0xfa000)/\bzImage-3.5.1.efi,
+// this function will truncate that input to
+// PciRoot(0x0)/Pci(0x1f,0x2)/Ata(Secondary,Master,0x0)/HD(2,GPT,8314ae90-ada3-48e9-9c3b-09a88f80d921,0x96028,0xfa000)
+// and return bzImage-3.5.1.efi as its return value.
+// It does this by searching for the last ")" character in InString, copying everything
+// after that string (after some cleanup) as the return value, and truncating the original
+// input value.
+// If InString contains no ")" character, this function leaves the original input string
+// unmodified and also returns that string.
+static CHAR16* SplitDeviceString(IN OUT CHAR16 *InString) {
+   INTN i;
+   CHAR16 *FileName = NULL;
+   BOOLEAN Found = FALSE;
+
+   i = StrLen(InString) - 1;
+   while ((i >= 0) && (!Found)) {
+      if (InString[i] == L')') {
+         Found = TRUE;
+         FileName = StrDuplicate(&InString[i + 1]);
+         CleanUpPathNameSlashes(FileName);
+         InString[i + 1] = '\0';
+      } // if
+      i--;
+   } // while
+   if (FileName == NULL)
+      FileName = StrDuplicate(InString);
+   return FileName;
+} // static CHAR16* SplitDeviceString()
+
 EFI_STATUS InitRefitLib(IN EFI_HANDLE ImageHandle)
 {
     EFI_STATUS  Status;
-    CHAR16      *DevicePathAsString;
+    CHAR16      *DevicePathAsString, *Temp;
 
     SelfImageHandle = ImageHandle;
     Status = refit_call3_wrapper(BS->HandleProtocol, SelfImageHandle, &LoadedImageProtocol, (VOID **) &SelfLoadedImage);
@@ -148,8 +178,10 @@ EFI_STATUS InitRefitLib(IN EFI_HANDLE ImageHandle)
     DevicePathAsString = DevicePathToStr(SelfLoadedImage->FilePath);
     CleanUpPathNameSlashes(DevicePathAsString);
     MyFreePool(SelfDirPath);
-    SelfDirPath = FindPath(DevicePathAsString);
+    Temp = FindPath(DevicePathAsString);
+    SelfDirPath = SplitDeviceString(Temp);
     MyFreePool(DevicePathAsString);
+    MyFreePool(Temp);
 
     return FinishInitRefitLib();
 }
@@ -581,9 +613,7 @@ VOID ScanVolume(IN OUT REFIT_VOLUME *Volume)
 
             // get the handle for that path
             RemainingDevicePath = DiskDevicePath;
-            //Print(L"  * looking at %s\n", DevicePathToStr(RemainingDevicePath));
             Status = refit_call3_wrapper(BS->LocateDevicePath, &BlockIoProtocol, &RemainingDevicePath, &WholeDiskHandle);
-            //Print(L"  * remaining: %s\n", DevicePathToStr(RemainingDevicePath));
             FreePool(DiskDevicePath);
 
             if (!EFI_ERROR(Status)) {
@@ -1288,34 +1318,6 @@ CHAR16 *FindPath(IN CHAR16* FullPath) {
    PathOnly[LastBackslash] = 0;
    return (PathOnly);
 }
-
-// Splits an EFI device path into device and filename components. For instance, if InString is
-// PciRoot(0x0)/Pci(0x1f,0x2)/Ata(Secondary,Master,0x0)/HD(2,GPT,8314ae90-ada3-48e9-9c3b-09a88f80d921,0x96028,0xfa000)/\bzImage-3.5.1.efi,
-// this function will truncate that input to
-// PciRoot(0x0)/Pci(0x1f,0x2)/Ata(Secondary,Master,0x0)/HD(2,GPT,8314ae90-ada3-48e9-9c3b-09a88f80d921,0x96028,0xfa000)
-// and return bzImage-3.5.1.efi as its return value.
-// It does this by searching for the last ")" character in InString, copying everything
-// after that string (after some cleanup) as the return value, and truncating the original
-// input value.
-// If InString contains no ")" character, this function leaves the original input string
-// unmodified and returns a NULL value.
-static CHAR16* SplitDeviceString(IN OUT CHAR16 *InString) {
-   INTN i;
-   CHAR16 *FileName = NULL;
-   BOOLEAN Found = FALSE;
-
-   i = StrLen(InString) - 1;
-   while ((i >= 0) && (!Found)) {
-      if (InString[i] == L')') {
-         Found = TRUE;
-         FileName = StrDuplicate(&InString[i + 1]);
-         CleanUpPathNameSlashes(FileName);
-         InString[i + 1] = '\0';
-      } // if
-      i--;
-   } // while
-   return FileName;
-} // static CHAR16* SplitDeviceString()
 
 // Takes an input loadpath, splits it into disk and filename components, finds a matching
 // DeviceVolume, and returns that and the filename (*loader).

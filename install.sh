@@ -4,7 +4,16 @@
 #
 # Usage:
 #
-# ./install.sh [esp]
+# ./install.sh [options]
+#
+# options include:
+#    "--esp" to install to the ESP rather than to the system's root
+#           filesystem. This is the default on Linux
+#    "--usedefault {devicefile}" to install as default
+#           (/EFI/BOOT/BOOTX64.EFI and similar) to the specified
+#           device (/dev/sdd1 or whatever) without registering with
+#           the NVRAM
+#    "--drivers" to install drivers along with regular files
 #
 # The "esp" option is valid only on Mac OS X; it causes
 # installation to the EFI System Partition (ESP) rather than

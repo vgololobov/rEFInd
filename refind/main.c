@@ -118,7 +118,7 @@ static VOID AboutrEFInd(VOID)
 
     if (AboutMenu.EntryCount == 0) {
         AboutMenu.TitleImage = BuiltinIcon(BUILTIN_ICON_FUNC_ABOUT);
-        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.4.7.9");
+        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.4.7.10");
         AddMenuInfoLine(&AboutMenu, L"");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2006-2010 Christoph Pfisterer");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2012 Roderick W. Smith");
@@ -132,7 +132,9 @@ static VOID AboutrEFInd(VOID)
 #if defined(EFI32)
         AddMenuInfoLine(&AboutMenu, L" Platform: x86 (32 bit)");
 #elif defined(EFIX64)
-        AddMenuInfoLine(&AboutMenu, L" Platform: x86_64 (64 bit)");
+        TempStr = AllocateZeroPool(256 * sizeof(CHAR16));
+        SPrint(TempStr, 255, L" Platform: x86_64 (64 bit); Secure Boot %s", secure_mode() ? L"active" : L"inactive");
+        AddMenuInfoLine(&AboutMenu, TempStr);
 #else
         AddMenuInfoLine(&AboutMenu, L" Platform: unknown");
 #endif
@@ -158,6 +160,7 @@ static VOID AboutrEFInd(VOID)
     RunMenu(&AboutMenu, NULL);
 } /* VOID AboutrEFInd() */
 
+// Launch an EFI binary.
 static EFI_STATUS StartEFIImageList(IN EFI_DEVICE_PATH **DevicePaths,
                                     IN CHAR16 *LoadOptions, IN CHAR16 *LoadOptionsPrefix,
                                     IN CHAR16 *ImageTitle, IN CHAR8 OSType,
@@ -175,7 +178,7 @@ static EFI_STATUS StartEFIImageList(IN EFI_DEVICE_PATH **DevicePaths,
     CHAR16                  ErrorInfo[256];
     CHAR16                  *FullLoadOptions = NULL;
     CHAR16                  *loader = NULL;
-    BOOLEAN                 UseMok = FALSE;
+    BOOLEAN                 UseMok = FALSE, SecureMode;
 
     if (ErrorInStep != NULL)
         *ErrorInStep = 0;
@@ -198,20 +201,27 @@ static EFI_STATUS StartEFIImageList(IN EFI_DEVICE_PATH **DevicePaths,
     if (Verbose)
        Print(L"Starting %s\nUsing load options '%s'\n", ImageTitle, FullLoadOptions);
 
-    // load the image into memory (and execute it, in the case of a MOK image).
+    // load the image into memory (and execute it, in the case of a shim/MOK image).
     ReturnStatus = Status = EFI_NOT_FOUND;  // in case the list is empty
+    SecureMode = secure_mode();
+//    SecureMode = TRUE;
     for (DevicePathIndex = 0; DevicePaths[DevicePathIndex] != NULL; DevicePathIndex++) {
-       ReturnStatus = Status = refit_call6_wrapper(BS->LoadImage, FALSE, SelfImageHandle, DevicePaths[DevicePathIndex],
-                                                   NULL, 0, &ChildImageHandle);
+       // NOTE: Below commented-out line could simplify logic by loading the image once, but
+       // it doesn't work on my 32-bit Mac Mini or my 64-bit Intel box when launching a
+       // Linux kernel; the kernel returns a "Failed to handle fs_proto" error message.
+       // TODO: Track down the cause of this error and fix it, if possible.
        // ReturnStatus = Status = refit_call6_wrapper(BS->LoadImage, FALSE, SelfImageHandle, DevicePaths[DevicePathIndex],
        //                                            ImageData, ImageSize, &ChildImageHandle);
-       // TODO: Commented-out version above is more efficient if the below FindVolumeAndFilename()
-       // and ReadFile() calls (and surrounding logic) are moved earlier; however, this causes
-       // some computers, including my 32-bit Mac Mini and 64-bit Intel machine, to fail when
-       // launching a Linux kernel, with a "Failed to handle fs_proto" error message from the
-       // kernel. Find out what's causing this and fix it.
-       if (ReturnStatus == EFI_ACCESS_DENIED) {
-          // TODO: I originally had the next few lines a
+       // In Secure Boot mode, try to use shim/MOK-style loading first, and if
+       // that fails, try the standard EFI system call (LoadImage()). This is
+       // done for efficiency, to prevent loading a binary twice, which can
+       // take several seconds to load a Linux kernel with EFI stub support on
+       // some systems. Linux kernels are likely to be shim/MOK signed, so
+       // this is quickest for them; and delays for most other boot loaders
+       // will be unnoticeably short. To prevent delays or failures in case
+       // of buggy shim/MOK code on non-SB systems, skip that attempt and
+       // call LoadImage() directly when not in SB mode.
+       if (SecureMode) {
           FindVolumeAndFilename(DevicePaths[DevicePathIndex], &DeviceVolume, &loader);
           if (DeviceVolume != NULL) {
              Status = ReadFile(DeviceVolume->RootDir, loader, &File, &ImageSize);
@@ -220,11 +230,23 @@ static EFI_STATUS StartEFIImageList(IN EFI_DEVICE_PATH **DevicePaths,
              Status = EFI_NOT_FOUND;
              Print(L"Error: device volume not found!\n");
           } // if/else
-          ReturnStatus = Status = start_image(SelfImageHandle, loader, ImageData, ImageSize, FullLoadOptions, DeviceVolume);
+          if (Status != EFI_NOT_FOUND) {
+             ReturnStatus = Status = start_image(SelfImageHandle, loader, ImageData, ImageSize, FullLoadOptions,
+                                                 DeviceVolume, DevicePaths[DevicePathIndex]);
+          }
           if (ReturnStatus == EFI_SUCCESS) {
              UseMok = TRUE;
           } // if
-       }
+          // If shim/MOK load fails, try regular EFI load, in case it's an unsupported
+          // binary type....
+          if (!UseMok) {
+             ReturnStatus = Status = refit_call6_wrapper(BS->LoadImage, FALSE, SelfImageHandle, DevicePaths[DevicePathIndex],
+                                                         NULL, 0, &ChildImageHandle);
+          } // if (!UseMok)
+       } else { // Secure Boot inactive; only do standard call....
+          ReturnStatus = Status = refit_call6_wrapper(BS->LoadImage, FALSE, SelfImageHandle, DevicePaths[DevicePathIndex],
+                                                      NULL, 0, &ChildImageHandle);
+       } // if/else (SecureMode)
        if (ReturnStatus != EFI_NOT_FOUND) {
           break;
        }
@@ -236,40 +258,38 @@ static EFI_STATUS StartEFIImageList(IN EFI_DEVICE_PATH **DevicePaths,
         goto bailout;
     }
 
-     if (!UseMok) {
-        ReturnStatus = Status = refit_call3_wrapper(BS->HandleProtocol, ChildImageHandle, &LoadedImageProtocol,
-                                                       (VOID **) &ChildLoadedImage);
-        if (CheckError(Status, L"while getting a LoadedImageProtocol handle")) {
+    if (!UseMok) {
+       ReturnStatus = Status = refit_call3_wrapper(BS->HandleProtocol, ChildImageHandle, &LoadedImageProtocol,
+                                                   (VOID **) &ChildLoadedImage);
+       if (CheckError(Status, L"while getting a LoadedImageProtocol handle")) {
+          if (ErrorInStep != NULL)
+             *ErrorInStep = 2;
+          goto bailout_unload;
+       }
+       ChildLoadedImage->LoadOptions = (VOID *)FullLoadOptions;
+       ChildLoadedImage->LoadOptionsSize = ((UINT32)StrLen(FullLoadOptions) + 1) * sizeof(CHAR16);
+       // turn control over to the image
+       // TODO: (optionally) re-enable the EFI watchdog timer!
+
+       // close open file handles
+       UninitRefitLib();
+       ReturnStatus = Status = refit_call3_wrapper(BS->StartImage, ChildImageHandle, NULL, NULL);
+       // control returns here when the child image calls Exit()
+       SPrint(ErrorInfo, 255, L"returned from %s", ImageTitle);
+       if (CheckError(Status, ErrorInfo)) {
            if (ErrorInStep != NULL)
-              *ErrorInStep = 2;
-           goto bailout_unload;
-        }
-     }
+               *ErrorInStep = 3;
+       }
 
-     if (!UseMok) {
-        ChildLoadedImage->LoadOptions = (VOID *)FullLoadOptions;
-        ChildLoadedImage->LoadOptionsSize = ((UINT32)StrLen(FullLoadOptions) + 1) * sizeof(CHAR16);
-        // turn control over to the image
-        // TODO: (optionally) re-enable the EFI watchdog timer!
-
-        // close open file handles
-        UninitRefitLib();
-        ReturnStatus = Status = refit_call3_wrapper(BS->StartImage, ChildImageHandle, NULL, NULL);
-        // control returns here when the child image calls Exit()
-        SPrint(ErrorInfo, 255, L"returned from %s", ImageTitle);
-        if (CheckError(Status, ErrorInfo)) {
-            if (ErrorInStep != NULL)
-                *ErrorInStep = 3;
-        }
-
-        // re-open file handles
-        ReinitRefitLib();
+       // re-open file handles
+       ReinitRefitLib();
     } // if
 
 bailout_unload:
     // unload the image, we don't care if it works or not...
     if (!UseMok)
        Status = refit_call1_wrapper(BS->UnloadImage, ChildImageHandle);
+
 bailout:
     MyFreePool(FullLoadOptions);
     return ReturnStatus;
