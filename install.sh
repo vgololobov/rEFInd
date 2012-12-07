@@ -26,7 +26,7 @@
 #
 # Revision history:
 #
-# 0.4.8   -- Added --usedefault & --drivers options & changed "esp" option to "--esp"
+# 0.5.0   -- Added --usedefault & --drivers options & changed "esp" option to "--esp"
 # 0.4.5   -- Fixed check for rEFItBlesser in OS X
 # 0.4.2   -- Added notice about BIOS-based OSes & made NVRAM changes in Linux smarter
 # 0.4.1   -- Added check for rEFItBlesser in OS X
@@ -38,6 +38,8 @@
 # with which they first appeared.
 
 TargetDir=/EFI/refind
+EtcKeysDir=/etc/refind.d/keys
+SBModeInstall=0
 
 #
 # Functions used by both OS X and Linux....
@@ -57,8 +59,8 @@ GetParams() {
          --drivers) InstallDrivers=1
               ;;
          * ) echo "Usage: $0 [--esp | --usedefault {device-file}] [--drivers]"
-	      echo "Aborting!"
-	      exit 1
+              echo "Aborting!"
+              exit 1
       esac
       shift
    done
@@ -117,6 +119,8 @@ CopyRefindFiles() {
          cp -r $RefindDir/drivers_* $InstallDir/$TargetDir/
       fi
       Refind=""
+      cp $ThisDir/refind.cer $InstallDir/$TargetDir
+      cp $ThisDir/refind.crt $InstallDir/$TargetDir
    elif [[ $Platform == 'EFI32' ]] ; then
       cp $RefindDir/refind_ia32.efi $InstallDir/$TargetDir
       if [[ $? != 0 ]] ; then
@@ -137,6 +141,14 @@ CopyRefindFiles() {
          cp -r $RefindDir/drivers_x64/*_x64.efi $InstallDir/$TargetDir/drivers_x64/
       fi
       Refind="refind_x64.efi"
+      cp $ThisDir/refind.cer $InstallDir/$TargetDir
+      cp $ThisDir/refind.crt $InstallDir/$TargetDir
+      if [[ $SBModeInstall == 1 ]] ; then
+         echo "Storing copies of rEFInd Secure Boot public keys in $EtcKeysDir"
+         mkdir -p $EtcKeysDir
+         cp $ThisDir/refind.cer $EtcKeysDir
+         cp $ThisDir/refind.crt $EtcKeysDir
+      fi
    else
       echo "Unknown platform! Aborting!"
       exit 1
@@ -246,7 +258,7 @@ InstallOnOSX() {
       read YesNo
       if [[ $YesNo == "Y" || $YesNo == "y" ]] ; then
          echo "Deleting /Library/StartupItems/rEFItBlesser..."
-	 rm -r /Library/StartupItems/rEFItBlesser
+         rm -r /Library/StartupItems/rEFItBlesser
       else
          echo "Not deleting rEFItBlesser."
       fi
@@ -262,6 +274,33 @@ InstallOnOSX() {
 #
 # Now a series of Linux support functions....
 #
+
+# Check for evidence that we're running in Secure Boot mode. If so, warn the
+# user and confirm installation.
+# TODO: Perform a reasonable Secure Boot installation.
+CheckSecureBoot() {
+   VarFile=`ls -ld /sys/firmware/efi/vars/SecureBoot* 2> /dev/null`
+   if [[ -n $VarFile  && $TargetDir != '/EFI/BOOT' ]] ; then
+      echo ""
+      echo "CAUTION: The computer seems to have been booted with Secure Boot active."
+      echo "Although rEFInd, when installed in conjunction with the shim boot loader, can"
+      echo "work on a Secure Boot computer, this installation script doesn't yet support"
+      echo "direct installation in a way that will work on such a computer. You may"
+      echo "proceed with installation with this script, but if you intend to boot with"
+      echo "Secure Boot active, you must then reconfigure your boot programs to add shim"
+      echo "to the process. Alternatively, you may terminate this script and do a manual"
+      echo "installation, as described at http://www.rodsbooks.com/refind/secureboot.html."
+      echo ""
+      echo -n "Do you want to proceed with installation (Y/N)? "
+      read ContYN
+      if [[ $ContYN == "Y" || $ContYN == "y" ]] ; then
+         echo "OK; continuing with the installation..."
+      else
+         exit 0
+      SBModeInstall=1
+      fi
+   fi
+}
 
 # Identifies the ESP's location (/boot or /boot/efi); aborts if
 # the ESP isn't mounted at either location.
@@ -359,6 +398,7 @@ InstallOnLinux() {
       echo "Unknown CPU type '$CpuType'; aborting!"
       exit 1
    fi
+   CheckSecureBoot
    CopyRefindFiles
    if [[ $TargetDir != "/EFI/BOOT" ]] ; then
       AddBootEntry
