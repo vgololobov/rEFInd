@@ -436,7 +436,7 @@ static EFI_STATUS handle_image (void *data, unsigned int datasize, EFI_LOADED_IM
     * disk, and its load options, so fix up the loaded image protocol values
     */
    DevicePath = FileDevicePath(NULL, FileName);
-   DevicePath = FileDevicePath(DeviceVolume->DeviceHandle, FileName);
+//   DevicePath = FileDevicePath(DeviceVolume->DeviceHandle, FileName);
    li->DeviceHandle = DeviceVolume->DeviceHandle;
    li->FilePath = DevicePath;
    li->LoadOptionsSize = ((UINT32)StrLen(Options) + 1) * sizeof(CHAR16);

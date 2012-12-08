@@ -1,12 +1,12 @@
 0.5.1 (??/??/201?):
 -------------------
 
-- Implemented a workaround to enable ELILO to launch with Secure Boot
-  active: Pass a "-C \path\to\elilo\elilo.conf" option to the program.
-  The user will need to explicitly provide the path to the Linux kernel and
-  initrd, not rely on the program to be able to read the files from the
-  current directory. In elilo.conf, the path should be specified with
-  forward slashes or doubled-up backslashes.
+- Fixed bug that caused some programs (EFI shells, in particular) to hang
+  when launching on some systems (DUET, in particular).
+
+- Implemented a fix to enable ELILO to launch with Secure Boot active.
+  This fix might help with some other boot loaders in Secure Boot mode,
+  too, but I don't know of any specifics.
 
 0.5.0 (12/6/2012):
 ------------------

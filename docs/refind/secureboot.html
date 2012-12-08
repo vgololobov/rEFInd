@@ -226,25 +226,12 @@ Change <tt>Your Name</tt> to your own name or other identifying characteristics,
     try to launch two drivers, rEFInd throws up an <tt>Access Denied</tt>
     error for the second driver.</li>
 
-<li>ELILO can't find the directory from which it was launched when launched
-    from rEFInd in Secure Boot mode. This means that you must pass the
-    <tt>-C <tt class="variable">/path/to/binary/</tt>elilo.conf</tt> option
-    to ELILO. rEFInd does this automatically for the default ELILO option,
-    but you should bear the need in mind if you edit that option or use the
-    secondary boot options. Because of the same problem, you must specify
-    the complete path to your kernel and initial RAM disk file in
-    <tt>elilo.conf</tt>. Be sure to specify these paths using either
-    forward slashes (<tt>/</tt>) or doubled-up backslashes (<tt>\\</tt>).
-    It's possible that some other boot loaders will suffer from the same
-    problem.</li>
-
-<li>Signing the Windows boot loader with a MOK won't work; it hangs,
-    probably for reasons similar to the ones that cause ELILO to fail to
-    find its home directory. Fortunately, the Windows 8 boot loader should
-    work because it should be verified and launched via EFI calls rather
-    than via the new shim-derived code. (I lack a Windows 8 installation
-    for testing, though.) This limitation could affect you if you want to
-    boot Windows 7 with Secure Boot active, though.</li>
+<li>Signing the Windows boot loader with a MOK won't work; it hangs.
+    Fortunately, the Windows 8 boot loader should work because it should be
+    verified and launched via EFI calls rather than via the new
+    shim-derived code. (I lack a Windows 8 installation for testing,
+    though.) This limitation could affect you if you want to boot Windows 7
+    with Secure Boot active.</li>
 
 <li>Under certain circumstances, the time required to launch a boot loader
     can increase. This is unlikely to be noticeable for the average small

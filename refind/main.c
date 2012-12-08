@@ -118,7 +118,7 @@ static VOID AboutrEFInd(VOID)
 
     if (AboutMenu.EntryCount == 0) {
         AboutMenu.TitleImage = BuiltinIcon(BUILTIN_ICON_FUNC_ABOUT);
-        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.5.0.1");
+        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.5.0.2");
         AddMenuInfoLine(&AboutMenu, L"");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2006-2010 Christoph Pfisterer");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2012 Roderick W. Smith");
@@ -196,8 +196,12 @@ static EFI_STATUS StartEFIImageList(IN EFI_DEVICE_PATH **DevicePaths,
         } else {
             MergeStrings(&FullLoadOptions, LoadOptions, 0);
         } // if/else
-        // NOTE: We also include the terminating null in the length for safety.
-    } // if (LoadOptions != NULL)
+    } else { // LoadOptions == NULL
+       // NOTE: We provide a non-null string when no options are specified for safety;
+       // some systems (at least DUET) can hang when launching some programs (such as
+       // an EFI shell) without this.
+       FullLoadOptions = StrDuplicate(L" ");
+    }
     if (Verbose)
        Print(L"Starting %s\nUsing load options '%s'\n", ImageTitle, FullLoadOptions);
 
@@ -211,8 +215,8 @@ static EFI_STATUS StartEFIImageList(IN EFI_DEVICE_PATH **DevicePaths,
        // TODO: Track down the cause of this error and fix it, if possible.
        // ReturnStatus = Status = refit_call6_wrapper(BS->LoadImage, FALSE, SelfImageHandle, DevicePaths[DevicePathIndex],
        //                                            ImageData, ImageSize, &ChildImageHandle);
-       ReturnStatus = Status = refit_call6_wrapper(BS->LoadImage, FALSE, SelfImageHandle, DevicePaths[DevicePathIndex],
-                                                   NULL, 0, &ChildImageHandle);
+        ReturnStatus = Status = refit_call6_wrapper(BS->LoadImage, FALSE, SelfImageHandle, DevicePaths[DevicePathIndex],
+                                                    NULL, 0, &ChildImageHandle);
        if ((Status == EFI_ACCESS_DENIED) && (ShimLoaded())) {
           FindVolumeAndFilename(DevicePaths[DevicePathIndex], &DeviceVolume, &loader);
           if (DeviceVolume != NULL) {
@@ -743,12 +747,12 @@ VOID SetLoaderDefaults(LOADER_ENTRY *Entry, CHAR16 *LoaderPath, IN REFIT_VOLUME 
    } else if (StriCmp(FileName, L"e.efi") == 0 || StriCmp(FileName, L"elilo.efi") == 0 || StriSubCmp(L"elilo", FileName)) {
       MergeStrings(&OSIconName, L"elilo,linux", L',');
       Entry->OSType = 'E';
-      if (secure_mode()) { // hack to enable ELILO to boot in secure mode
-         Temp = StrDuplicate(L"-C ");
-         MergeStrings(&Temp, PathOnly, 0);
-         MergeStrings(&Temp, L"elilo.conf", L'\\');
-         Entry->LoadOptions = Temp;
-      }
+//       if (secure_mode()) { // hack to enable ELILO to boot in secure mode
+//          Temp = StrDuplicate(L"-C ");
+//          MergeStrings(&Temp, PathOnly, 0);
+//          MergeStrings(&Temp, L"elilo.conf", L'\\');
+//          Entry->LoadOptions = Temp;
+//       }
       if (ShortcutLetter == 0)
          ShortcutLetter = 'L';
       Entry->UseGraphicsMode = GlobalConfig.GraphicsFor & GRAPHICS_FOR_ELILO;
