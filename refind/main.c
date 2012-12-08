@@ -118,7 +118,7 @@ static VOID AboutrEFInd(VOID)
 
     if (AboutMenu.EntryCount == 0) {
         AboutMenu.TitleImage = BuiltinIcon(BUILTIN_ICON_FUNC_ABOUT);
-        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.5.0");
+        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.5.0.1");
         AddMenuInfoLine(&AboutMenu, L"");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2006-2010 Christoph Pfisterer");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2012 Roderick W. Smith");
@@ -713,6 +713,7 @@ VOID SetLoaderDefaults(LOADER_ENTRY *Entry, CHAR16 *LoaderPath, IN REFIT_VOLUME 
    Temp = FindLastDirName(LoaderPath);
    MergeStrings(&OSIconName, Temp, L',');
    MyFreePool(Temp);
+   Temp = NULL;
    if (OSIconName != NULL) {
       ShortcutLetter = OSIconName[0];
    }
@@ -739,9 +740,15 @@ VOID SetLoaderDefaults(LOADER_ENTRY *Entry, CHAR16 *LoaderPath, IN REFIT_VOLUME 
       Entry->UseGraphicsMode = GlobalConfig.GraphicsFor & GRAPHICS_FOR_OSX;
    } else if (StriCmp(FileName, L"diags.efi") == 0) {
       MergeStrings(&OSIconName, L"hwtest", L',');
-   } else if (StriCmp(FileName, L"e.efi") == 0 || StriCmp(FileName, L"elilo.efi") == 0) {
+   } else if (StriCmp(FileName, L"e.efi") == 0 || StriCmp(FileName, L"elilo.efi") == 0 || StriSubCmp(L"elilo", FileName)) {
       MergeStrings(&OSIconName, L"elilo,linux", L',');
       Entry->OSType = 'E';
+      if (secure_mode()) { // hack to enable ELILO to boot in secure mode
+         Temp = StrDuplicate(L"-C ");
+         MergeStrings(&Temp, PathOnly, 0);
+         MergeStrings(&Temp, L"elilo.conf", L'\\');
+         Entry->LoadOptions = Temp;
+      }
       if (ShortcutLetter == 0)
          ShortcutLetter = 'L';
       Entry->UseGraphicsMode = GlobalConfig.GraphicsFor & GRAPHICS_FOR_ELILO;

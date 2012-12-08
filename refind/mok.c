@@ -357,7 +357,7 @@ static BOOLEAN ShimValidate (VOID *data, UINT32 size)
  * Once the image has been loaded it needs to be validated and relocated
  */
 static EFI_STATUS handle_image (void *data, unsigned int datasize, EFI_LOADED_IMAGE *li,
-                                CHAR16 *Options, REFIT_VOLUME *DeviceVolume, IN EFI_DEVICE_PATH *DevicePath)
+                                CHAR16 *Options, REFIT_VOLUME *DeviceVolume, IN CHAR16 *FileName)
 {
    EFI_STATUS efi_status;
    char *buffer;
@@ -365,6 +365,7 @@ static EFI_STATUS handle_image (void *data, unsigned int datasize, EFI_LOADED_IM
    EFI_IMAGE_SECTION_HEADER *Section;
    char *base, *end;
    GNUEFI_PE_COFF_LOADER_IMAGE_CONTEXT context;
+   EFI_DEVICE_PATH *DevicePath;
 
    /*
     * The binary header contains relevant context and section pointers
@@ -434,6 +435,8 @@ static EFI_STATUS handle_image (void *data, unsigned int datasize, EFI_LOADED_IM
     * grub needs to know its location and size in memory, its location on
     * disk, and its load options, so fix up the loaded image protocol values
     */
+   DevicePath = FileDevicePath(NULL, FileName);
+   DevicePath = FileDevicePath(DeviceVolume->DeviceHandle, FileName);
    li->DeviceHandle = DeviceVolume->DeviceHandle;
    li->FilePath = DevicePath;
    li->LoadOptionsSize = ((UINT32)StrLen(Options) + 1) * sizeof(CHAR16);
@@ -492,7 +495,7 @@ EFI_STATUS start_image(EFI_HANDLE image_handle, CHAR16 *ImagePath, VOID *data, U
    /*
     * Verify and, if appropriate, relocate and execute the executable
     */
-   efi_status = handle_image(data, datasize, li, Options, DeviceVolume, DevicePath);
+   efi_status = handle_image(data, datasize, li, Options, DeviceVolume, ImagePath);
 
    if (efi_status != EFI_SUCCESS) {
       Print(L"Failed to load image\n");
