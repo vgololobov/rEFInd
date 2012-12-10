@@ -54,7 +54,7 @@ cd refind-$1
 ARCH=ia32 make
 ARCH=ia32 make fs
 mkdir -p refind-bin-$1/refind/drivers_ia32
-cp --preserve=timestamps drivers/*_ia32.efi refind-bin-$1/refind/drivers_ia32/
+cp --preserve=timestamps drivers_ia32/*_ia32.efi refind-bin-$1/refind/drivers_ia32/
 cp --preserve=timestamps filesystems/LICENSE*txt refind-bin-$1/refind/drivers_ia32/
 cp refind/refind_ia32.efi refind-bin-$1/refind/refind_ia32.efi
 cp refind/refind_ia32.efi $StartDir/
@@ -63,12 +63,11 @@ cp refind/refind_ia32.efi $StartDir/
 make clean
 make
 make fs
-mkdir -p refind-bin-$1/refind/drivers
+mkdir -p refind-bin-$1/refind/drivers_x64
 cp -a icons refind-bin-$1/refind/
-for File in `ls drivers/*_x64.efi` ; do
+for File in `ls drivers_x64/*_x64.efi` ; do
    $SBSign --key $KeysDir/refind.key --cert $KeysDir/refind.crt --output refind-bin-$1/refind/$File $File
 done
-mv refind-bin-$1/refind/drivers refind-bin-$1/refind/drivers_x64
 cp --preserve=timestamps filesystems/LICENSE*txt refind-bin-$1/refind/drivers_x64/
 cp --preserve=timestamps refind.conf-sample refind-bin-$1/refind/
 $SBSign --key $KeysDir/refind.key --cert $KeysDir/refind.crt --output refind-bin-$1/refind/refind_x64.efi refind/refind_x64.efi

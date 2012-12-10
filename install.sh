@@ -10,10 +10,11 @@
 #    "--esp" to install to the ESP rather than to the system's root
 #           filesystem. This is the default on Linux
 #    "--usedefault {devicefile}" to install as default
-#           (/EFI/BOOT/BOOTX64.EFI and similar) to the specified
-#           device (/dev/sdd1 or whatever) without registering with
-#           the NVRAM
+#           (/EFI/BOOT/BOOTX64.EFI and similar) to the specified device
+#           (/dev/sdd1 or whatever) without registering with the NVRAM.
 #    "--drivers" to install drivers along with regular files
+#    "--shim {shimfile}" to install a shim.efi file for Secure Boot
+#    "--localkeys" to re-sign x86-64 binaries with a locally-generated key
 #
 # The "esp" option is valid only on Mac OS X; it causes
 # installation to the EFI System Partition (ESP) rather than
@@ -26,7 +27,7 @@
 #
 # Revision history:
 #
-# 0.5.1   -- Added --shim option
+# 0.5.1   -- Added --shim & --localkeys options
 # 0.5.0   -- Added --usedefault & --drivers options & changed "esp" option to "--esp"
 # 0.4.5   -- Fixed check for rEFItBlesser in OS X
 # 0.4.2   -- Added notice about BIOS-based OSes & made NVRAM changes in Linux smarter
@@ -173,7 +174,8 @@ CopyRefindFiles() {
          CopyShimFiles
       fi
       if [[ $InstallDrivers == 1 ]] ; then
-         cp -r $RefindDir/drivers_* $InstallDir/$TargetDir/
+         cp -r $RefindDir/drivers_* $InstallDir/$TargetDir/ 2> /dev/null
+         cp -r $ThisDir/drivers_* $InstallDir/$TargetDir/ 2> /dev/null
       fi
       Refind=""
       CopyKeys
@@ -184,7 +186,8 @@ CopyRefindFiles() {
       fi
       if [[ $InstallDrivers == 1 ]] ; then
          mkdir -p $InstallDir/$TargetDir/drivers_ia32
-         cp -r $RefindDir/drivers_ia32/*_ia32.efi $InstallDir/$TargetDir/drivers_ia32/
+         cp $RefindDir/drivers_ia32/*_ia32.efi $InstallDir/$TargetDir/drivers_ia32/ 2> /dev/null
+         cp $ThisDir/drivers_ia32/*_ia32.efi $InstallDir/$TargetDir/drivers_ia32/ 2> /dev/null
       fi
       Refind="refind_ia32.efi"
    elif [[ $Platform == 'EFI64' ]] ; then
@@ -194,7 +197,8 @@ CopyRefindFiles() {
       fi
       if [[ $InstallDrivers == 1 ]] ; then
          mkdir -p $InstallDir/$TargetDir/drivers_x64
-         cp -r $RefindDir/drivers_x64/*_x64.efi $InstallDir/$TargetDir/drivers_x64/
+         cp $RefindDir/drivers_x64/*_x64.efi $InstallDir/$TargetDir/drivers_x64/ 2> /dev/null
+         cp $ThisDir/drivers_x64/*_x64.efi $InstallDir/$TargetDir/drivers_x64/ 2> /dev/null
       fi
       Refind="refind_x64.efi"
       CopyKeys
@@ -448,14 +452,9 @@ GenerateKeys() {
 # appropriately.
 # Aborts script on error
 SignOneBinary() {
-   if [[ $UseSBSign == 1 ]] ; then
-      $SBSign --key $PrivateKey --cert $CertKey --output $2 $1
-      if [[ $? != 0 ]] ; then
-         echo "Problem signing the binary $1! Aborting!"
-         exit 1
-      fi
-   else
-      echo "PESign code not yet written; aborting!"
+   $SBSign --key $PrivateKey --cert $CertKey --output $2 $1
+   if [[ $? != 0 ]] ; then
+      echo "Problem signing the binary $1! Aborting!"
       exit 1
    fi
 }
@@ -465,19 +464,22 @@ SignOneBinary() {
 # not, try to generate new keys and store them in $EtcKeysDir.
 ReSignBinaries() {
    SBSign=`which sbsign 2> /dev/null`
+   echo "Found sbsign at $SBSign"
    TempDir="/tmp/refind_local"
    if [[ ! -x $SBSign ]] ; then
-      echo "Can't find either sbsign or pesign; one of these is required to sign rEFInd"
-      echo "with your own keys! Aborting!"
+      echo "Can't find sbsign, which is required to sign rEFInd with your own keys!"
+      echo "Aborting!"
       exit 1
    fi
    GenerateKeys
    mkdir -p $TempDir/drivers_x64
-   cp $RefindDir/refind.conf-sample $TempDir
+   cp $RefindDir/refind.conf-sample $TempDir 2> /dev/null
+   cp $ThisDir/refind.conf-sample $TempDir 2> /dev/null
    cp $RefindDir/refind_ia32.efi $TempDir
-   cp -a $RefindDir/drivers_ia32 $TempDir
-   SignOneBinary $RefindDir/refind_x64.efi $TempDir/refind_x64.efi
-   for Driver in `ls $RefindDir/drivers_x64/*.efi` ; do
+   cp -a $RefindDir/drivers_ia32 $TempDir 2> /dev/null
+   cp -a $ThisDir/drivers_ia32 $TempDir 2> /dev/null
+   SignOneBinary $RefindDir/refind_x64.efi $ThisDir/refind_x64.efi
+   for Driver in `ls $RefindDir/drivers_x64/*.efi $ThisDir/drivers_x64/*.efi 2> /dev/null` ; do
       TempName=`basename $Driver`
       SignOneBinary $Driver $TempDir/drivers_x64/$TempName
    done

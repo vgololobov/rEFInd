@@ -96,8 +96,8 @@ $(BUILDME): $(DLL_TARGET)
 	$(GENFW) -e UEFI_DRIVER -o $(BUILDME) $(DLL_TARGET)
 #	$(OBJCOPY) -j .text -j .sdata -j .data -j .dynamic -j .dynsym -j .rel \
 #		   -j .rela -j .reloc --rename-section .data=.hii --target=efi-bsdrv-$(ARCH) $< $@
-	mkdir -p ../drivers
-	cp $(BUILDME) ../drivers
+	mkdir -p ../drivers_$(FILENAME_CODE)
+	cp $(BUILDME) ../drivers_$(FILENAME_CODE)
 
 endif
 

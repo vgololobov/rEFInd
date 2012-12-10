@@ -98,23 +98,50 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 <h2>Basic Issues</h2>
 </a>
 
-<p class="sidebar"><b>Note:</b> You don't <i>have to</i> use Secure Boot. If you don't want it, you can <a href="http://www.rodsbooks.com/efi-bootloaders/secureboot.html#disable">disable it,</a> at least on <i>x</i>86-64 PCs. If an ARM-based computer ships with Windows 8, this isn't an option for it. Unfortunately, the shim software described on this page currently supports only x86-64, not x86 or ARM.</p>
+<p class="sidebar"><b>Note:</b> You don't <i>have to</i> use Secure Boot.
+If you don't want it, you can <a
+href="http://www.rodsbooks.com/efi-bootloaders/secureboot.html#disable">disable
+it,</a> at least on <i>x</i>86-64 PCs. If an ARM-based computer ships with
+Windows 8, this isn't an option for it. Unfortunately, the shim software
+described on this page currently supports only <i>x</i>86-64, not
+<i>x</i>86 or ARM.</p>
 
 <p>Through 2012, it became obvious that Secure Boot would be a feature that was controlled, to a large extent, by Microsoft. This is because Microsoft requires that non-server computers that display Windows 8 logos ship with Secure Boot enabled. As a practical matter, this also means that such computers ship with Microsoft's keys in their firmware. In the absence of an industry-standard body to manage the signing of Secure Boot keys, this means that Microsoft's key is the only one that's more-or-less guaranteed to be installed on the computer, thus blocking the ability to boot any OS that lacks a boot path through Microsoft's signing key.</p>
 
-<p>Fortunately, Microsoft will sign third-party binaries with their key. A payment of $99 to Verisign enables a software distributor to sign as many binaries as desired. Red Hat (Fedora), Novell (SUSE), and Canonical (Ubuntu) have all announced plans to take advantage of this system. Unfortunately, using a third-party signing service is an awkward solution for open source software. In fact, for this very reason Red Hat has developed a program that it calls <i>shim</i> that essentially shifts the Secure Boot "train" from Microsoft's proprietary "track" to one that's more friendly to open source authors. Shim is signed by Microsoft and redirects the boot process to another boot loader that can be signed with keys that the distribution maintains and that are built into shim. Fedora 18 is expected to use this system. SUSE has announced that it will use the same system, as does Ubuntu with version 12.10 and later. SUSE has contributed to the shim approach by providing expansions to shim that support a set of keys that users can maintain themselves. These keys are known as Machine Owner Keys (MOKs), and managing them is described later, in <a href="#mok">Managing MOKs.</a> To reiterate, then, there are potentially three ways to sign a binary that will get it launched on a system that uses shim:</p>
+<p>Fortunately, Microsoft will sign third-party binaries with their key. A payment of $99 to Verisign enables a software distributor to sign as many binaries as desired. Red Hat (Fedora), Novell (SUSE), and Canonical (Ubuntu) have all announced plans to take advantage of this system. Unfortunately, using a third-party signing service is an awkward solution for open source software. In fact, for this very reason Red Hat has developed a program that it calls <i>shim</i> that essentially shifts the Secure Boot "train" from Microsoft's proprietary "track" to one that's more friendly to open source authors. Shim is signed by Microsoft and redirects the boot process to another boot loader that can be signed with keys that the distribution maintains and that are built into shim. Fedora 18 is expected to use this system. SUSE has announced that it will use the same system, as does Ubuntu with version 12.10 and later. SUSE has contributed to the shim approach by providing expansions to shim that support a set of keys that users can maintain themselves. These keys are known as Machine Owner Keys (MOKs), and managing them is described later, in <a href="#mok">Managing MOKs.</a> To reiterate, then, there are potentially three ways to sign a binary that will get it launched on a computer that uses shim:</p>
 
 <ul>
 
-<li><b>Secure Boot keys</b>&mdash;These keys are managed by the EFI firmware. In a default configuration, Microsoft is the only party that's more-or-less guaranteed to be able to sign boot loaders with these keys; however, it's possible to <a href="http://www.rodsbooks.com/efi-bootloaders/secureboot.html#add_keys">replace Microsoft's keys with your own,</a> in order to take full control of Secure Boot on your computer. The trouble is that this process is tedious and varies in details from one computer to another.</li>
+<li><b>Secure Boot keys</b>&mdash;These keys are managed by the EFI
+    firmware. In a default configuration, Microsoft is the only party
+    that's more-or-less guaranteed to be able to sign boot loaders with
+    these keys; however, it's possible to <a
+    href="http://www.rodsbooks.com/efi-bootloaders/secureboot.html#add_keys">replace
+    Microsoft's keys with your own,</a> in order to take full control of
+    Secure Boot on your computer. The trouble is that this process is
+    tedious and varies in details from one computer to another.</li>
 
-<li><b>Shim's built-in keys</b>&mdash;It's possible, but not necessary, to compile shim with a built-in public key. Its private counterpart can then be used to sign binaries. In practice, this key type is limited in utility; it's likely to be used by distribution maintainers to sign their own version of GRUB and the Linux kernels that it launches, nothing more. On the plus side, shim's keys require little or no maintenance by users. One potential complication is that if you swap out one shim binary for another, its built-in key may change, which means that the replacement shim might no longer launch its follow-on boot loader.</li>
+<li><b>Shim's built-in keys</b>&mdash;It's possible, but not necessary, to
+    compile shim with a built-in public key. Its private counterpart can
+    then be used to sign binaries. In practice, this key type is limited in
+    utility; it's likely to be used by distribution maintainers to sign
+    their own version of GRUB and the Linux kernels that it launches,
+    nothing more. On the plus side, shim's keys require little or no
+    maintenance by users. One potential complication is that if you swap
+    out one shim binary for another, its built-in key may change, which
+    means that the replacement shim might no longer launch its follow-on
+    boot loader.</li>
 
-<li><b>MOKs</b>&mdash;Versions 0.2 and later of shim support MOKs, which give you the ability to add your own keys to the computer. If you want to install multiple Linux distributions in Secure Boot mode, MOKs are likely to be helpful. They're vital if you want to launch kernels you compile yourself or use boot managers or boot loaders other than those provided by your distribution.</li>
+<li><b>MOKs</b>&mdash;Versions 0.2 and later of shim support MOKs, which
+    give you the ability to add your own keys to the computer. If you want
+    to install multiple Linux distributions in Secure Boot mode, MOKs are
+    likely to be helpful. They're vital if you want to launch kernels you
+    compile yourself or use boot managers or boot loaders other than those
+    provided by your distribution.</li>
 
 </ul>
 
-<p>All three key types are the same in form&mdash;shim's built-in keys and MOKs are both generated using the same tools used to generate Secure Boot keys. Unfortunately, the tools used to generate these keys are still rather crude and are rarely installed on Linux systems, which is one of the reasons that rEFInd's installation script doesn't yet support setting up a Secure Boot configuration. Although it's theoretically possible to use rEFInd without signing your own binaries, this is not yet practical, because distributions don't yet provide their own signed binaries or the public MOK files you must have to enroll their keys. With any luck this will change in 2013. At the very least, many distributions will begin supporting Secure Boot in the near future, and with any luck they'll include their public MOKs for use with other distributions' versions of shim.</p>
+<p>All three key types are the same in form&mdash;shim's built-in keys and MOKs are both generated using the same tools used to generate Secure Boot keys. The keys can be generated with the common <tt>openssl</tt> program, but signing EFI binaries requires a rarer program called <tt>sbsign</tt> or <tt>pesign</tt>. Although it's theoretically possible to use rEFInd without signing your own binaries, this is not yet practical, because distributions don't yet provide their own signed binaries or the public MOK files you must have to enroll their keys. With any luck this will change in 2013. At the very least, many distributions will begin supporting Secure Boot in the near future, and with any luck they'll include their public MOKs for use with other distributions' versions of shim.</p>
 
 <p>Because shim and MOK are being supported by several of the major players in the Linux world, I've decided to do the same with rEFInd. Beginning with version 0.5.0, rEFInd can communicate with the shim system to authenticate boot loaders. If a boot loader has been signed by a valid UEFI Secure Boot key, a valid shim key, or a valid MOK key, rEFInd will launch it. rEFInd will also launch unsigned boot loaders or those with invalid signatures <i>if</i> Secure Boot is disabled in or unsupported by the firmware. (If that's your situation, you needn't bother reading this page.)</p>
 
@@ -132,7 +159,7 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <li><b>MokManager</b>&mdash;This program is included with shim 0.2 and later. It presents a crude user interface for managing MOKs, and it's launched by shim if shim can't find its default boot loader (generally <tt>grubx64.efi</tt>) or if that program isn't properly signed. In principle, this program could be signed with a Secure Boot key or a MOK, but the binary in Garrett's shim 0.2 is signed with a shim key, and I expect that versions distributed with most Linux distributions will also be signed by their respective shim keys. This program should reside in the same directory as <tt>shim.efi</tt>, under the name <tt>MokManager.efi</tt>. Although you could theoretically do without MokManager, in practice you'll need it at least temporarily to install the MOK with which rEFInd is signed.</li>
 
-<li><b>rEFInd</b>&mdash;Naturally, you need rEFInd. Because shim is hard-coded to launch a program called <tt>grubx64.efi</tt>, you must install rEFInd using that name and to the same directory in which <tt>shim.efi</tt> resides. In theory, rEFInd could be signed with a Secure Boot key, a shim key, or a MOK; however, because Microsoft won't sign binaries distributed under the GPLv3, I can't distribute a version of rEFInd signed with Microsoft's Secure Boot key; and as I don't have access to the private shim keys used by any distribution, I can't distribute a rEFInd binary signed by them. (If distributions begin including rEFInd in their package sets, though, such distribution-provided binaries could be signed with the distributions' shim keys.) Thus, rEFInd will normally be signed by a MOK. Beginning with version 0.5.0, rEFInd binaries that I provide are signed by me.</li>
+<li><b>rEFInd</b>&mdash;Naturally, you need rEFInd. Because shim is hard-coded to launch a program called <tt>grubx64.efi</tt>, you must install rEFInd using that name and to the same directory in which <tt>shim.efi</tt> resides. In theory, rEFInd could be signed with a Secure Boot key, a shim key, or a MOK; however, because Microsoft won't sign binaries distributed under the GPLv3, I can't distribute a version of rEFInd signed with Microsoft's Secure Boot key; and as I don't have access to the private shim keys used by any distribution, I can't distribute a rEFInd binary signed by them. (If distributions begin including rEFInd in their package sets, though, such distribution-provided binaries could be signed with the distributions' shim keys.) Thus, rEFInd will normally be signed by a MOK. Beginning with version 0.5.0, rEFInd binaries that I provide are signed by me. Beginning with version 0.5.1, the installation script provides an option to sign the rEFInd binary with your own key, provided the necessary support software is installed.</li>
 
 <li><b>Your boot loaders and kernels</b>&mdash;Your OS boot loaders, and perhaps your Linux kernels, must be signed. They can be signed with any of the three key types. Indeed, your system may have a mix of all three types&mdash;a Windows 8 boot loader will most likely be signed with Microsoft's Secure Boot key, GRUB and kernels provided by most distributions will be signed with their own shim keys, and if you use your own locally-compiled kernel or a boot loader from an unusual source you may need to sign it with a MOK. Aside from signing, these files can be installed in exactly the same way as if your computer were not using Secure Boot.</li>
 
@@ -142,31 +169,62 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <ol>
 
-<li>Boot the computer. This can be a challenge in and of itself. You may need to use a Secure Boot&ndash;enabled Linux emergency disc, temporarily disable Secure Boot, or do the work from Windows.</li>
+<li>Boot the computer. This can be a challenge in and of itself. You may
+    need to use a Secure Boot&ndash;enabled Linux emergency disc,
+    temporarily disable Secure Boot, or do the work from Windows.</li>
 
-<li><a href="getting.html">Download rEFInd</a> in binary form (the binary zip or CD-R image file). If you download the binary zip file, unzip it; if you get the CD-R image file, burn it to a CD-R and mount it.</li>
+<li><a href="getting.html">Download rEFInd</a> in binary form (the binary
+    zip or CD-R image file). If you download the binary zip file, unzip it;
+    if you get the CD-R image file, burn it to a CD-R and mount it.</li>
 
-<li>Download shim from <a href="http://www.codon.org.uk/~mjg59/shim-signed/">Matthew J. Garrett's download site</a> or from your distribution. (Don't use Ubuntu 12.10's version, though; as noted earlier, it's inadequate for use with rEFInd.)</li>
+<li>Download shim from <a
+    href="http://www.codon.org.uk/~mjg59/shim-signed/">Matthew J. Garrett's
+    download site</a> or from your distribution. (Don't use Ubuntu 12.10's
+    version, though; as noted earlier, it's inadequate for use with
+    rEFInd.)</li>
 
-<li>Copy the <tt>shim.efi</tt> and <tt>MokManager.efi</tt> binaries to the directory you intend to use for rEFInd&mdash;for instance, <tt>EFI/refind</tt> on the ESP.</li>
+<p class="sidebar"><b>Tip:</b> If you're running Linux, you can save some effort by using the <tt>install.sh</tt> script with its <tt>--shim <tt class="variable">/path/to/shim.efi</tt></tt> option rather than installing manually, as in steps 4&ndash;6 of this procedure. If you've installed <tt>openssl</tt> and <tt>sbsign</tt>, using <tt>--localkeys</tt> will generate local signing keys and re-sign the rEFInd binaries with your own key, too. You can then use <tt>sbsign</tt> and the keys in <tt>/etc/refind.d/keys</tt> to sign your kernels or boot loaders.</p>
 
-<li>Follow the installation instructions for rEFInd on the <a href="installing.html">Installing rEFInd</a> page; however, give rEFInd the filename <tt>grubx64.efi</tt> and register <tt>shim.efi</tt> with the EFI by using <tt>efibootmgr</tt> in Linux or <tt>bcdedit</tt> in Windows. This is most cleanly done by following the manual instructions; however, you can use the <tt>install.sh</tt> script if you subsequently rename the files and register <tt>shim.efi</tt> with <tt>efibootmgr</tt>. Be sure that rEFInd (as <tt>grubx64.efi</tt>), <tt>shim.efi</tt>, and <tt>MokManager.efi</tt> all reside in the same directory.</li>
+<li>Copy the <tt>shim.efi</tt> and <tt>MokManager.efi</tt> binaries to the
+    directory you intend to use for rEFInd&mdash;for instance,
+    <tt>EFI/refind</tt> on the ESP.</li>
 
-<li>Copy the <tt>refind.cer</tt> file from the rEFInd package to your ESP, ideally to a location with few other files. (The rEFInd installation directory should work fine.)</li>
+<li>Follow the installation instructions for rEFInd on the <a
+    href="installing.html">Installing rEFInd</a> page; however, give rEFInd
+    the filename <tt>grubx64.efi</tt> and register <tt>shim.efi</tt> with
+    the EFI by using <tt>efibootmgr</tt> in Linux or <tt>bcdedit</tt> in
+    Windows. Be sure that rEFInd (as <tt>grubx64.efi</tt>),
+    <tt>shim.efi</tt>, and <tt>MokManager.efi</tt> all reside in the same
+    directory.</li>
 
-<li>Reboot. With any luck, you'll see a simple text-mode user interface with a label of <tt>Shim UEFI key management</tt>. This is the MokManager program, which shim launched when rEFInd failed verification because its key is not yet enrolled.</li>
+<li>Copy the <tt>refind.cer</tt> file from the rEFInd package to your ESP,
+    ideally to a location with few other files. (The rEFInd installation
+    directory should work fine.)</li>
 
-<li>Press your down arrow key and press Enter to select <tt>Enroll key from disk</tt>. The screen will clear and prompt you to select a key, as shown here:</li>
+<li>Reboot. With any luck, you'll see a simple text-mode user interface
+    with a label of <tt>Shim UEFI key management</tt>. This is the
+    MokManager program, which shim launched when rEFInd failed verification
+    because its key is not yet enrolled.</li>
+
+<li>Press your down arrow key and press Enter to select <tt>Enroll key from
+    disk</tt>. The screen will clear and prompt you to select a key, as
+    shown here:</li>
 
     <br /><IMG SRC="MokManager1.png" ALIGN="CENTER" WIDTH="676"
     HEIGHT="186" ALT="MokManager's user interface is crude but effective."
     BORDER=2> <br />
 
-<li>Each of the lines with a long awkward string represents a disk partition. Select one and you'll see a list of files. Continue selecting subdirectories until you find the <tt>refind.cer</tt> file you copied to the ESP earlier.</li>
+<li>Each of the lines with a long awkward string represents a disk
+    partition. Select one and you'll see a list of files. Continue
+    selecting subdirectories until you find the <tt>refind.cer</tt> file
+    you copied to the ESP earlier.</li>
 
-<li>Select <tt>refind.cer</tt>. You can type <tt class="userinput">1</tt> to view the certificate's details if you like, or skip that and type <tt class="userinput">0</tt> to enroll the key.</li>
+<li>Select <tt>refind.cer</tt>. You can type <tt class="userinput">1</tt>
+    to view the certificate's details if you like, or skip that and type
+    <tt class="userinput">0</tt> to enroll the key.</li>
 
-<li>Back out of any directories you entered and return to the MokManager main menu.</li>
+<li>Back out of any directories you entered and return to the MokManager
+    main menu.</li>
 
 <li>Select <tt>Continue boot</tt> at the main menu.</li>
 
@@ -180,35 +238,72 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 <h2>Managing Your MOKs</h2>
 </a>
 
-<p>The preceding instructions provided the basics of getting rEFInd up and running, including using MokManager to enroll a MOK on your computer. If you need to sign binaries, though, you'll have to use additional tools. The OpenSSL package provides the cryptographic tools necessary, but actually signing EFI binaries requires additional software. Two packages for this are available: <tt>sbsigntool</tt> and <tt>pesign</tt>. Both are available in binary form from <a href="https://build.opensuse.org/project/show?project=home%3Ajejb1%3AUEFI">this OpenSUSE Build Service (OBS)</a> repository. The following procedure uses <tt>sbsigntool</tt>. To sign your own binaries, follow these steps:</p>
+<p>The preceding instructions provided the basics of getting rEFInd up and running, including using MokManager to enroll a MOK on your computer. If you need to sign binaries, though, you'll have to use additional tools. The OpenSSL package provides the cryptographic tools necessary, but actually signing EFI binaries requires additional software. Two packages for this are available: <tt>sbsigntool</tt> and <tt>pesign</tt>. Both are available in binary form from <a href="https://build.opensuse.org/project/show?project=home%3Ajejb1%3AUEFI">this OpenSUSE Build Service (OBS)</a> repository. The following procedure uses <tt>sbsigntool</tt>. To sign your own binaries, follow these steps (you can skip the first five steps if you've used <tt>install.sh</tt>'s <tt>--localkeys</tt> option):</p>
 
 <ol>
 
-<li>If it's not already installed, install OpenSSL on your computer. (It normally comes in a package called <tt>openssl</tt>.</li>
+<li>If it's not already installed, install OpenSSL on your computer. (It
+    normally comes in a package called <tt>openssl</tt>.)</li>
 
-<li>Type the following two commands to generate your public and private keys:
+<li>If you did <i>not</i> re-sign your rEFInd binaries with
+    <tt>install.sh</tt>'s <tt>--localkeys</tt> option, type the following
+    two commands to generate your public and private keys:
 
 <pre class="listing">
-$ <tt class="userinput">openssl req -new -x509 -newkey rsa:2048 -keyout MOK.key -out MOK.crt \
-  -nodes -days 3650 -subj "/CN=Your Name/"</tt>
-$ <tt class="userinput">openssl x509 -in MOK.crt -out MOK.cer -outform DER</tt>
+$ <tt class="userinput">openssl req -new -x509 -newkey rsa:2048 -keyout refind_local.key \
+  -out refind_local.crt -nodes -days 3650 -subj "/CN=Your Name/"</tt>
+$ <tt class="userinput">openssl x509 -in refind_local.crt -out refind_local.cer -outform DER</tt>
 </pre>
 
-Change <tt>Your Name</tt> to your own name or other identifying characteristics, and adjust the certificate's time span (set via <tt>-days</tt>) as you see fit. If you omit the <tt>-nodes</tt> option, the program will prompt you for a passphrase for added security. Remember this, since you'll need it to sign your binaries. The result is a private key file (<tt>MOK.key</tt>), which is highly sensitive since it's required to sign binaries, and two public keys (<tt>MOK.crt</tt> and <tt>MOK.cer</tt>), which can be used to verify signed binaries' authenticity. The two public key files are equivalent, but are used by different tools&mdash;<tt>sbsigntool</tt> uses <tt>MOK.crt</tt> to sign binaries, but MokManager uses <tt>MOK.cer</tt> to enroll the key.</li>
+    Change <tt>Your Name</tt> to your own name or other identifying
+    characteristics, and adjust the certificate's time span (set via
+    <tt>-days</tt>) as you see fit. If you omit the <tt>-nodes</tt> option,
+    the program will prompt you for a passphrase for added security.
+    Remember this, since you'll need it to sign your binaries. The result
+    is a private key file (<tt>refind_local.key</tt>), which is highly
+    sensitive since it's required to sign binaries, and two public keys
+    (<tt>refind_local.crt</tt> and <tt>refind_local.cer</tt>), which can be
+    used to verify signed binaries' authenticity. The two public key files
+    are equivalent, but are used by different
+    tools&mdash;<tt>sbsigntool</tt> uses <tt>refind_local.crt</tt> to sign
+    binaries, but MokManager uses <tt>refind_local.cer</tt> to enroll the
+    key. If you used <tt>install.sh</tt>'s <tt>--localkeys</tt> option,
+    this step is unnecessary, since these keys have already been created
+    and are stored in <tt>/etc/refind.d/keys</tt>.</li>
 
-<li>Copy the three key files to a secure location and adjust permissions such that only you can read <tt>MOK.key</tt>. You'll need these keys to sign future binaries, so don't discard them.</li>
+<li>Copy the three key files to a secure location and adjust permissions
+    such that only you can read <tt>refind_local.key</tt>. You'll need
+    these keys to sign future binaries, so don't discard them.</li>
 
-<li>Copy the <tt>MOK.cer</tt> file to your ESP, ideally to a location with few other files. (MokManager's user interface becomes unreliable when browsing directories with lots of files.)</li>
+<li>Copy the <tt>refind_local.cer</tt> file to your ESP, ideally to a
+    location with few other files. (MokManager's user interface becomes
+    unreliable when browsing directories with lots of files.)</li>
 
-<li>Download and install the <tt>sbsigntool</tt> package. Binary links for various distributions are available from the <a href="https://build.opensuse.org/package/show?package=sbsigntools&project=home%3Ajejb1%3AUEFI">OpenSUSE Build Service</a>, or you can obtain the source code by typing <tt class="userinput">git clone git://kernel.ubuntu.com/jk/sbsigntool</tt>.</li>
+<li>Download and install the <tt>sbsigntool</tt> package. Binary links for
+    various distributions are available from the <a
+    href="https://build.opensuse.org/package/show?package=sbsigntools&project=home%3Ajejb1%3AUEFI">OpenSUSE
+    Build Service</a>, or you can obtain the source code by typing <tt
+    class="userinput">git clone
+    git://kernel.ubuntu.com/jk/sbsigntool</tt>.</li>
 
-<li>Sign your binary by typing <tt class="userinput">sbsign --key MOK.key --cert MOK.crt --output <tt class="variable">binary-signed.efi binary.efi</tt></tt>, adjusting the paths to the keys and the binary names.</li>
+<li>Sign your binary by typing <tt class="userinput">sbsign --key
+    refind_local.key --cert refind_local.crt --output <tt
+    class="variable">binary-signed.efi binary.efi</tt></tt>, adjusting the
+    paths to the keys and the binary names.</li>
 
-<li>Copy your signed binary to a suitable location on the ESP for rEFInd to locate it. Be sure to include any support files that it needs, too.</li>
+<li>Copy your signed binary to a suitable location on the ESP for rEFInd to
+    locate it. Be sure to include any support files that it needs,
+    too.</li>
 
-<li>Check your <tt>refind.conf</tt> file to ensure that the <tt>showtools</tt> option is either commented out or includes <tt>mok_tool</tt> among its options.</li>
+<li>Check your <tt>refind.conf</tt> file to ensure that the
+    <tt>showtools</tt> option is either commented out or includes
+    <tt>mok_tool</tt> among its options.</li>
 
-<li>Reboot. You can try launching the boot loader you just installed, but chances are it will generate an <tt>Access Denied</tt> message. For it to work, you must launch MokManager using the tool that rEFInd presents on its second row. You can then enroll your <tt>MOK.cer</tt> key just as you enrolled the <tt>refind.cer</tt> key.</li>
+<li>Reboot. You can try launching the boot loader you just installed, but
+    chances are it will generate an <tt>Access Denied</tt> message. For it
+    to work, you must launch MokManager using the tool that rEFInd presents
+    on its second row. You can then enroll your <tt>refind_local.cer</tt>
+    key just as you enrolled the <tt>refind.cer</tt> key.</li>
 
 </ol>
 

@@ -222,8 +222,8 @@ With your development system set up, you can compile rEFInd as follows:
    directory. (Typing "ARCH=ia32 make fs" builds IA32 filesystem drivers on
    an x86-64 system, provided TianoCore is properly configured, as
    described earlier.) The result is filesystem drivers in the filesystems
-   subdirectory, and also copies placed in the drivers subdirectory. You
-   must install the TianoCore EDK2 to build the drivers.
+   subdirectory, and also copies placed in the drivers_{arch} subdirectory.
+   You must install the TianoCore EDK2 to build the drivers.
 
 If rEFInd doesn't compile correctly, you'll need to track down the source
 of the problem. Double-check that you've got all the necessary development
@@ -308,8 +308,8 @@ Compiling the EFI Filesystem Drivers
 
 To build all the drivers, you can type "make fs" from the main directory,
 which builds the drivers and places copies in both the filesystems and
-drivers subdirectories. If you want to build just one driver, you can
-change into the "filesystems" directory and type "make {fsname}", where
+drivers_{arch} subdirectories. If you want to build just one driver, you
+can change into the "filesystems" directory and type "make {fsname}", where
 {fsname} is a filesystem name -- "ext2", "reiserfs", "iso9660", or "hfs".
 
 To install drivers, you can type "make install" in the "filesystems"
@@ -317,11 +317,13 @@ directory. This copies all the drivers to the
 "/boot/efi/EFI/refind/drivers" directory. Alternatively, you can copy the
 files you want manually. As of version 0.4.8, the install.sh script
 includes an optional "--drivers" option that will install the drivers along
-with the main rEFInd program.
+with the main rEFInd program, but to the drivers_{arch} subdirectory of the
+main rEFInd installation directory.
 
 *CAUTION:* Install drivers for your system's architecture *ONLY*.
 Installing drivers for the wrong architecture causes some systems to hang
-at boot time.
+at boot time. This risk can be minimized by including the architecture code
+in the drivers subdirectory name (drivers_x64 or drivers_ia32).
 
 The drivers all rely on filesystem wrapper code created by rEFIt's author,
 Christoph Pfisterer. Most of the drivers seem to have passed through
