@@ -99,7 +99,7 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p class="sidebar"><b>Warning:</b> If you're using a Macintosh, you should run <tt>install.sh</tt> from Mac OS X rather than from Linux. If run from Linux, rEFInd is unlikely to be fully installed. Worse, it's conceivable that running <tt>install.sh</tt> from Linux will damage your firmware, requiring that it be re-flashed. The reason is that Apple uses non-standard methods to enable a boot loader, and the Linux functions in <tt>install.sh</tt> assume standard EFI installation methods.</p>
 
-<p>If you're using Linux or Mac OS X, the easiest way to install rEFInd is to use the <tt>install.sh</tt> script. This script automatically copies rEFInd's files to your ESP or other target location and makes changes to your firmware's NVRAM settings so that rEFInd will start the next time you boot. If you've booted to OS X or in EFI mode to Linux on a UEFI-based PC, <tt>install.sh</tt> will probably do the right thing, so you can get by with the quick instructions. If your setup is unusual, though, or if you want to create a USB flash drive with rEFInd on it, you should read the <a href="#extra_installsh">extra instructions</a> for this utility.</p>
+<p>If you're using Linux or Mac OS X, the easiest way to install rEFInd is to use the <tt>install.sh</tt> script. This script automatically copies rEFInd's files to your ESP or other target location and makes changes to your firmware's NVRAM settings so that rEFInd will start the next time you boot. If you've booted to OS X or in non-Secure-Boot EFI mode to Linux on a UEFI-based PC, <tt>install.sh</tt> will probably do the right thing, so you can get by with the quick instructions. If your setup is unusual, if your computer uses Secure Boot, or if you want to create a USB flash drive with rEFInd on it, you should read the <a href="#extra_installsh">extra instructions</a> for this utility.</p>
 
 <h3>Quick <tt>install.sh</tt> Instructions</h3>
 
@@ -113,7 +113,7 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 # <tt class="userinput">./install.sh</tt>
 Installing rEFInd on Linux....
 ESP was found at /boot/efi using vfat
-Copied rEFInd binary file refind_x64.efi
+Copied rEFInd binary files
 
 Copying sample configuration file as refind.conf; edit this file to configure
 rEFInd.
@@ -129,7 +129,7 @@ Not running as root; attempting to elevate privileges via sudo....
 Password:
 Installing rEFInd on OS X....
 Installing rEFInd to the partition mounted at '/'
-Copied rEFInd binary file refind_ia32.efi
+Copied rEFInd binary files
 
 Copying sample configuration file as refind.conf; edit this file to configure
 rEFInd.
@@ -164,14 +164,6 @@ Installation has completed successfully.</pre>
     the Terminal window. You'll need to press the Return or Enter key to
     run the script.</li>
 
-<li>Under OS X, passing the <tt>--esp</tt> option causes the script to
-    install rEFInd to the ESP. The script finds the first ESP that's
-    identified by the <tt>diskutil</tt> program and, if it's not already
-    mounted, mounts it to install rEFInd. Thus, it's conceivable that
-    <tt>install.sh</tt> will install rEFInd to the wrong partition if you
-    have multiple disks or if a disk has multiple ESPs. If you believe this
-    has happened, you may need to re-install manually.</li>
-
 <li>If you're using OS X 10.7's Whole Disk Encryption (WDE) feature, you
     <i>must</i> install rEFInd to the ESP, so the <tt>--esp</tt> option to
     <tt>install.sh</tt> is required. I'm still a little bit foggy about
@@ -203,27 +195,43 @@ Installation has completed successfully.</pre>
     though; because of the popularity of dual boots with Windows on Macs,
     the BIOS/legacy scans are enabled by default on Macs.</li>
 
-<li>Under both Linux and OS X, you can add the <tt>--drivers</tt> option to
-    have <tt>install.sh</tt> install all the filesystem drivers along with
-    the main rEFInd program. (The default is to <i>not</i> install any
-    drivers.)</li>
-
-<li>Under both Linux and OS X, you can add the <tt>--usedefault <tt
-    class="variable">devicepath</tt></tt> option to install rEFInd to the
-    specified device as <tt>EFI/BOOT/bootx64.efi</tt> and
-    <tt>EFI/BOOT/bootia32.efi</tt>. The specified device must be a valid
-    FAT partition. This option also tells the script to <i>not</i> make
-    changes to the computer's NVRAM. The idea is that you can easily create
-    a bootable USB flash drive with this option: Create a proper
-    FAT-formatted ESP on a disk (say, <tt>/dev/sdd1</tt>) and then type <tt
-    class="userinput">bash ./install --usedefault /dev/sdd1</tt> to turn
-    the disk into an emergency disk. This option can also be used to
-    install rEFInd to an ESP using the <a href="#naming">alternative naming
-    options</a> described later. This latter usage will result in a
-    bootable rEFInd only if no other OS has already created an NVRAM
-    variable pointing to itself.</li>
-
 </ul>
+
+<p>In addition to these quirks, you should be aware of some options that <tt>install.sh</tt> supports to enable you to customize your installation in various ways. The syntax for <tt>install.sh</tt> is as follows:</p>
+
+<pre class="listing">
+install.sh [--esp | --usedefault <tt class="variable">device-file</tt>] [--drivers] [--shim <tt class="variable">shim-filename</tt>] \
+           [--localkeys]
+</pre>
+
+<p>The details of the options are summarized in <a href="#table1">Table 1.</a> Using some of these options in unusual conditions can generate warnings and prompts to confirm your actions. In particular, using <tt>--shim</tt> or <tt>--localkeys</tt> when you're <i>not</i> booted in Secure Boot mode, or failing to use <tt>--shim</tt> when you <i>are</i> booted in Secure Boot mode, will generate a query and a request to confirm your installation. Consult the <a href="secureboot.html">Managing Secure Boot</a> page for more on this topic.</p>
+
+<table border="1" cellpadding="1" cellspacing="2" summary="Table 1: Options to <tt>install.sh</tt>"><a name="table1"><caption><b>Table 1: Options to <tt>install.sh</tt></b></caption></a>
+<tr>
+   <th>Option</th>
+   <th>Explanation</th>
+</tr>
+<tr>
+   <td><tt>--esp</tt></td>
+   <td>This option tells <tt>install.sh</tt> to install rEFInd to the ESP of your computer. This option is only useful on OS X; on Linux, installing to the ESP is the default, so <tt>--esp</tt> is implicit on Linux. Be aware that some users have reported sluggish boots when installing rEFInd to the ESP on Macs. Installing rEFInd anywhere but the ESP makes little sense on UEFI-based PCs, except for the partial exception of removable boot media, which you can prepare with <tt>--usedefault</tt>.</td>
+</tr>
+<tr>
+   <td><tt>--usedefault <tt class="variable">device-file</tt></tt></td>
+   <td>You can install rEFInd to a disk using the default/fallback filename of <tt>EFI/BOOT/bootx64.efi</tt> (and <tt>EFI/BOOT/bootia32.efi</tt>, if the 32-bit build is available) using this option. The <tt class="variable">device-file</tt> should be an <i>unmounted</i> ESP, or at least a FAT partition, as in <tt>--usedefault /dev/sdc1</tt>. Your computer's NVRAM entries will <i>not</i> be modified when installing in this way. The intent is that you can create a bootable USB flash drive or install rEFInd on a computer that tends to "forget" its NVRAM settings with this option. This option is mutually exclusive with <tt>--esp</tt>.</td>
+</tr>
+<tr>
+   <td><tt>--drivers</tt></td>
+   <td>Ordinarily <tt>install.sh</tt> does not install drivers; but when you specify this option, it does; it copies all the driver files for your architecture. You may want to remove unused driver files after you use this option, especially if your computer uses Secure Boot.</td>
+</tr>
+<tr>
+   <td><tt>--shim <tt class="variable">shim-filename</tt></tt></td>
+   <td>If you pass this option to <tt>install.sh</tt>, the script will copy the specified shim program file to the target directory, copy the <tt>MokManager.efi</tt> file from the shim program file's directory to the target directory, copy the 64-bit version of rEFInd as <tt>grubx64.efi</tt>, and register shim with the firmware. (If you also specify <tt>--usedefault</tt>, the NVRAM registration is skipped.) The intent is to simplify rEFInd installation on a computer that uses Secure Boot; when so set up, rEFInd will boot in Secure Boot mode, with one caveat: The first time you boot, MokManager will launch, and you must use it to locate and install a public key. This key file will be located in the rEFInd directory under the name <tt>refind.cer</tt>. Note that I'm not providing a shim binary myself, but you can download one from <a href="http://www.codon.org.uk/~mjg59/shim-signed/">here.</a> In the not-too-distant future, most distributions will provide their own shim programs, so you'll be able to point to them&mdash;for instance, in <tt>/boot/efi/EFI/redhat/shim.efi</tt>.</td>
+</tr>
+<tr>
+   <td><tt>--localkeys</tt></td>
+   <td>This option tells <tt>install.sh</tt> to generate a new Machine Owner Key (MOK), store it in <tt>/etc/refind.d/keys</tt> as <tt>refind_local.*</tt>, and re-sign all the 64-bit rEFInd binaries with this key before installing them. This is the preferable way to install rEFInd in Secure Boot mode, since it means your binaries will be signed locally rather than with my own key, which is used to sign many other users' binaries; however, this method requires that both the <tt>openssl</tt> and <tt>sbsign</tt> binaries be installed. The former is readily available in most distributions' repositories, but the latter is not, so this option is not the default.</td>
+</tr>
+</table>
 
 <p>In any event, you should peruse the script's output to ensure that everything looks OK. <tt>install.sh</tt> displays error messages when it encounters errors, such as if the ESP is mounted read-only or if you run out of disk space. You may need to correct such problems manually and re-run the script. In some cases you may need to fall back on manual installation, which gives you better control over details such as which partition to use for installation.</p>
 
@@ -247,7 +255,7 @@ Filesystem     1K-blocks  Used Available Use% Mounted on
 
 <ol>
 
-<li>Type <tt><b>cp -r refind /boot/efi/EFI/</b></tt> from the <tt>refind-<i>version</i></tt> directory in which the <tt>refind</tt> directory exists. This copies all the files that rEFInd needs to work. Note that this includes <i>all</i> of rEFInd's drivers.</li>
+<li>Type <tt><b>cp -r refind /boot/efi/EFI/</b></tt> from the <tt>refind-<i>version</i></tt> directory in which the <tt>refind</tt> directory exists. This copies all the files that rEFInd needs to work. Note that this includes <i>all</i> of rEFInd's drivers. This command also copies the rEFInd binaries as signed by me; if you prefer to re-sign the binaries yourself, you'll have to do so before or during the copy operation, as described on the <a href="secureboot.html">Managing Secure Boot</a> page.</li>
 
 <li>Type <tt><b>cd /boot/efi/EFI/refind</b></tt> to change into rEFInd's new directory on the ESP.</li>
 
@@ -260,7 +268,7 @@ Filesystem     1K-blocks  Used Available Use% Mounted on
 <p class="sidebar"><b>Weird:</b> A <a href="http://mjg59.dreamwidth.org/20187.html">bug exists</a> in some Lenovo computers (and perhaps in some others, too) that causes the firmware's boot manager to refuse to boot any boot loader that doesn't have the name <tt>Windows Boot Manager</tt> or <tt>Red Hat Enterprise Linux</tt>. If you have such a system, you must pass one of those names (in quotes) rather than <tt>rEFInd</tt> to <tt>efibootmgr</tt> via its <tt>-L</tt> option. This bug was reported to Lenovo in mid-November 2012, so with any luck updated firmware without this bug will be available later this year or early in 2013. I can make no promises about this, though.</p>
 
 <a name="efibootmgr">
-<li>On a UEFI-based system, type <tt><b>efibootmgr -c -l \\EFI\\refind\\refind_x64.efi -L rEFInd</b></tt> to add rEFInd to your EFI's list of available boot loaders, which it stores in NVRAM. Adjust the path to the binary as required if you install somewhere else. You may also need to include additional options if your ESP isn't on <tt>/dev/sda1</tt> or if your configuration is otherwise unusual; consult the <tt>efibootmgr</tt> man page for details. You may need to install this program on some systems; it's a standard part of most distributions' repositories.</li>
+<li>On a UEFI-based system, type <tt><b>efibootmgr -c -l \\EFI\\refind\\refind_x64.efi -L rEFInd</b></tt> to add rEFInd to your EFI's list of available boot loaders, which it stores in NVRAM. Adjust the path to the binary as required if you install somewhere else. You may also need to include additional options if your ESP isn't on <tt>/dev/sda1</tt> or if your configuration is otherwise unusual; consult the <tt>efibootmgr</tt> man page for details. You may need to install this program on some systems; it's a standard part of most distributions' repositories. Also, if you're installing in Secure Boot mode, you must normally register <tt>shim.efi</tt> rather than the rEFInd binary, and rename <tt>refind_x64.efi</tt> to <tt>grubx64.efi</tt>.</li>
 </a>
 
 <li>If other boot loaders are already installed, you can use <tt>efibootmgr</tt> to adjust their boot order. For instance, <b><tt>efibootmgr -o 3,7,2</tt></b> sets the firmware to try boot loader #3 first, followed by #7, followed by #2. (The program should have displayed a list of boot loaders when you added yours in the preceding step.) Place rEFInd's number first to set it as the default boot program.</li>
