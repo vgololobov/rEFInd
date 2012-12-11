@@ -140,7 +140,6 @@ VOID fsw_efi_strcpy(CHAR16 *Dest, struct fsw_string *src)
     }
 }
 
-#ifdef VBOX
 int fsw_streq_ISO88591_UTF16(void *s1data, void *s2data, int len)
 {
     int i;
@@ -157,6 +156,5 @@ int fsw_streq_ISO88591_UTF16(void *s1data, void *s2data, int len)
 
     return 1;
 }
-#endif
 
 // EOF

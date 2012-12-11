@@ -62,7 +62,7 @@ BUILDME          = $(DRIVERNAME)_$(FILENAME_CODE).efi
 
 OPTIMFLAGS      = -fno-strict-aliasing -mno-red-zone -Wno-address -Os
 DEBUGFLAGS      = -Wall -Wno-missing-braces -Wno-array-bounds -ffunction-sections -fdata-sections
-CFLAGS          = $(OPTIMFLAGS) -g -fshort-wchar -fno-stack-protector $(DEBUGFLAGS) -c -include AutoGen.h
+CFLAGS          = $(OPTIMFLAGS) -g -fshort-wchar -fno-stack-protector $(DEBUGFLAGS) -c -include AutoGen.h -DHOST_EFI_EDK2
 
 prefix          = /usr/bin/
 CC              = $(prefix)gcc

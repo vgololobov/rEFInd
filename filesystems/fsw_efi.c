@@ -57,11 +57,7 @@
 #define DEBUG_LEVEL 0
 
 #ifndef FSTYPE
-#ifdef VBOX
 #error FSTYPE must be defined!
-#else
-#define FSTYPE ext2
-#endif
 #endif
 
 #define DEBUG_VBFS 1
@@ -192,7 +188,8 @@ EFI_STATUS EFIAPI fsw_efi_main(IN EFI_HANDLE         ImageHandle,
 {
     EFI_STATUS  Status;
 
-#ifndef VBOX
+#ifndef HOST_EFI_EDK2
+    // Not available in EDK2 toolkit
     InitializeLib(ImageHandle, SystemTable);
 #endif
 

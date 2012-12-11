@@ -51,14 +51,10 @@
 
 #ifndef _FSW_BASE_H_
 #define _FSW_BASE_H_
-//#define HOST_EFI 1
-#define VBOX
 
-#ifdef VBOX
-#include "VBoxFswParam.h"
+#ifdef HOST_EFI_EDK2
+#define HOST_EFI
 #endif
-
-//#include <Protocol/MsgLog.h> 
 
 #ifndef FSW_DEBUG_LEVEL
 /**
