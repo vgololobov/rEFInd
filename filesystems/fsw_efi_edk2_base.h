@@ -1,3 +1,7 @@
+/**
+ * \file fsw_efi_edk2_base.h
+ * Base definitions for the EDK EFI Toolkit environment.
+ */
 /*
  * Copyright (c) 2012 Stefan Agner
  *
@@ -88,7 +92,7 @@
 //                      );
 
 //#define CompareGuid(x, y) CompareGuidEdk1((x),(y))
-//# define FSW_DEBUG_LEVEL 3
+//#define FSW_DEBUG_LEVEL 3
 
 int fsw_streq_ISO88591_UTF16(void *s1data, void *s2data, int len);
 

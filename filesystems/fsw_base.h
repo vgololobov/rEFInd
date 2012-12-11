@@ -56,21 +56,20 @@
 #define HOST_EFI
 #endif
 
-#ifndef FSW_DEBUG_LEVEL
-/**
- * Global debugging level. Can be set locally for the scope of a single
- * file by defining the macro before fsw_base.h is included.
- */
-#define FSW_DEBUG_LEVEL 0
-#endif
-
-
 #ifdef HOST_EFI
 #include "fsw_efi_base.h"
 #endif
 
 #ifdef HOST_POSIX
-#include "fsw_posix_base.h"
+#include "test/fsw_posix_base.h"
+#endif
+
+#ifndef FSW_DEBUG_LEVEL
+/**
+ * Global debugging level. Can be set locally for the scope of a single
+ * file by defining the macro before fsw_base.h is included.
+ */
+#define FSW_DEBUG_LEVEL 3
 #endif
 
 // message printing
