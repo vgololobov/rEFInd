@@ -35,6 +35,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#define FSW_DEBUG_LEVEL 3
+
 #include "fsw_posix.h"
 
 
@@ -122,11 +124,8 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    //listdir(vol, "/System/Library/Extensions/udf.kext/", 0);
-    //listdir(vol, "/System/Library/Extensions/AppleACPIPlatform.kext/", 0);
-    //listdir(vol, "/System/Library/Extensions/", 0);
-    catfile(vol, "/System/Library/Extensions/AppleHPET.kext/Contents/Info.plist");
-    //listdir(vol, "/", 0);
+    listdir(vol, "/", 0);
+    catfile(vol, "/gaga/test");
 
     fsw_posix_unmount(vol);
 
