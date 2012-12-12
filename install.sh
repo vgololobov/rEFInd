@@ -27,6 +27,7 @@
 #
 # Revision history:
 #
+# 0.5.1.1 -- Fixed bug that caused script failure under OS X
 # 0.5.1   -- Added --shim & --localkeys options & create sample refind_linux.conf
 #            in /boot
 # 0.5.0   -- Added --usedefault & --drivers options & changed "esp" option to "--esp"
@@ -649,7 +650,7 @@ if [[ `whoami` != "root" ]] ; then
 fi
 CheckForFiles
 if [[ $OSName == 'Darwin' ]] ; then
-   if [[ $ShimDir != "none" ]] ; then
+   if [[ $ShimSource != "none" ]] ; then
       echo "The --shim option is not supported on OS X! Exiting!"
       exit 1
    fi

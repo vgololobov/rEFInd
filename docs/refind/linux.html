@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 3/19/2012; last Web page update:
-12/11/2012, referencing rEFInd 0.5.1</p>
+12/12/2012, referencing rEFInd 0.5.1</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -152,7 +152,7 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 <h3>Configuring a Maintenance-Free Setup</h3>
 </a>
 
-<p>The ideal configuration for use of the EFI stub loader involves giving rEFInd the ability to load your kernels directly from <tt>/boot</tt>. The main obstacle to doing so is that this directory is frequently on an XFS, JFS, Btrfs, or ext4 filesystem that the EFI can't read, or it's tucked away in an LVM or RAID configuration that the EFI can't read. Fortunately, this problem can be overcome with relatively little fuss. Several variant procedures are possible, but I begin by describing one that will almost always work, although it's got some important caveats (described at the end). If you're currently booting via GRUB 2, it is likely to cease working when you try this, although GRUB should be recoverable by re-installing it. (On the other hand, GRUB will become redundant once this method of booting starts working so you might prefer to remove it completely.) You should perform the following steps as <tt>root</tt>, or precede each of these commands with <tt>sudo</tt>:</p>
+<p>The ideal configuration for use of the EFI stub loader involves giving rEFInd the ability to load your kernels directly from <tt>/boot</tt>. The main obstacle to doing so is that this directory is frequently on an XFS, JFS, Btrfs, or ext4 filesystem that the EFI can't read, or it's tucked away in an LVM or RAID configuration that the EFI can't read. Fortunately, this problem can be overcome with relatively little fuss. Several variant procedures are possible, but I begin by describing one that will almost always work, although it's got some important caveats (described at the end). You should perform the following steps as <tt>root</tt>, or precede each of these commands with <tt>sudo</tt>:</p>
 
 <ol>
 
@@ -173,8 +173,8 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
     determine if you can work around the need for such permissions and
     ownership.</li>
 
-<li>Type <tt class="userinput">mv /boot/* /boot/efi</tt>. You'll see an
-    error message about being unable to move <tt>/boot/efi</tt> into
+<li>Type <tt class="userinput">cp -r /boot/* /boot/efi</tt>. You'll see an
+    error message about being unable to copy <tt>/boot/efi</tt> into
     itself. Ignore this.</li>
 
 <li>Type <tt class="userinput">umount /boot/efi</tt>.</li>
@@ -211,12 +211,14 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 </ol>
 
+<p>Recall that in step #4, you <i>copied</i> the contents of <tt>/boot</tt> (as a safety measure), but you did not move them. Therefore, you ended up with two copies of your kernels and other <tt>/boot</tt> directory contents, with one copy hiding the other when you mounted the ESP at <tt>/boot</tt>. Once you've booted successfully and are sure all is working well, you can recover some disk space by unmounting <tt>/boot</tt> and deleting the contents of the underlying <tt>/boot</tt> directory on your root (<tt>/</tt>) filesystem. Be sure that the <tt>/boot</tt> partition is unmounted before you do this, though! Also, be sure to leave the <tt>/boot</tt> directory itself in place, even if it has no contents; the directory is needed as a mount point for the <tt>/boot</tt> partition. Note that GRUB 2 may stop working if you delete its files from the root filesystem's <tt>/boot/grub</tt> directory, so if you want to keep GRUB around, you should re-install it with the separate <tt>/boot</tt> partition mounted.</p>
+
 <p>Once this task is done, updates to your kernel will automatically be stored in the root directory of your ESP, where rEFInd will automatically detect them. Thus, the boot configuration becomes maintenance-free. The procedure as just described has some drawbacks, though. By placing your kernels in the root directory of your ESP, you render them vulnerable to any other OS with which you might be dual-booting. Your ESP must also be large enough to hold all your kernels. If you dual-boot with multiple Linux distributions, they might conceivably overwrite each others' kernels, and distinguishing one from another becomes more difficult.</p>
 
-<p>For these reasons, a variant of this procedure may be desirable. Most of the steps are similar, but in this variant, you create a separate <tt>/boot</tt> partition that's independent of the ESP. This partition can use FAT, HFS+, ReiserFS, ext2fs, ext3fs; but if you use any of the last four filesystems (three on Macs), you must install the matching EFI filesystem driver that ships with rEFInd. Creating the filesystem will normally require you to shrink an existing partition by a suitable amount (200&ndash;500MiB). Mount your new <tt>/boot</tt> partition at a temporary location, copy or move the current <tt>/boot</tt> files into it, unmount it, and add it to <tt>/etc/fstab</tt> as <tt>/boot</tt>.</p>
+<p>For these reasons, a variant of this procedure is desirable on some systems. Most of the steps are similar, but in this variant, you create a separate <tt>/boot</tt> partition that's independent of the ESP. This partition can use FAT, HFS+, ReiserFS, ext2fs, or ext3fs; but if you use any of the last four filesystems (three on Macs), you must install the matching EFI filesystem driver that ships with rEFInd. Creating the filesystem will normally require you to shrink an existing partition by a suitable amount (200&ndash;500MiB). Mount your new <tt>/boot</tt> partition at a temporary location, copy or move the current <tt>/boot</tt> files into it, unmount it, and add it to <tt>/etc/fstab</tt> as <tt>/boot</tt>.</p>
 
 
-<p>If your distribution already uses a separate <tt>/boot</tt> partition (as Fedora 17 does by default), but if it uses ext4fs or some other unsuitable filesystem, you can back it up, create a fresh FAT, HFS+, ReiserFS, ext2, or ext3 filesystem on it, and restore the original files. If you use a separate non-ESP <tt>/boot</tt> partition, you'll probably want to continue mounting the ESP at <tt>/boot/efi</tt>.</p>
+<p>If your distribution already uses a separate <tt>/boot</tt> partition (as Fedora 17 does by default), but if it uses ext4fs or some other unsuitable filesystem, you can back it up, create a fresh FAT, HFS+, ReiserFS, ext2, or ext3 filesystem on it, and restore the original files. You'll probably need to adjust the UUID value in <tt>/etc/fstab</tt> to ensure that the computer mounts the new filesystem when you boot. If you use a separate non-ESP <tt>/boot</tt> partition, you'll probably want to continue mounting the ESP at <tt>/boot/efi</tt>.</p>
 
 <a name="efistub">
 <h2>EFI Stub Loader Support Technical Details</h2>
