@@ -74,10 +74,11 @@ typedef struct {
 #define HIDEUI_FLAG_ARROWS     (0x0010)
 #define HIDEUI_ALL             ((0xffff))
 
+#define CONFIG_FILE_NAME         L"refind.conf"
 #define DONT_SCAN_FILES L"shim.efi,MokManager.efi,TextMode.efi,ebounce.efi,GraphicsConsole.efi"
 
 EFI_STATUS ReadFile(IN EFI_FILE_HANDLE BaseDir, CHAR16 *FileName, REFIT_FILE *File, UINTN *size);
-VOID ReadConfig(VOID);
+VOID ReadConfig(CHAR16 *FileName);
 VOID ScanUserConfigured(VOID);
 UINTN ReadTokenLine(IN REFIT_FILE *File, OUT CHAR16 ***TokenList);
 VOID FreeTokenLine(IN OUT CHAR16 ***TokenList, IN OUT UINTN *TokenCount);

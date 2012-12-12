@@ -1,5 +1,29 @@
-0.5.1 (??/??/201?):
+0.5.1 (12/11/2012):
 -------------------
+
+- Added support for "0" options to "textonly" and "scan_all_linux_kernels"
+  to reverse the usual meaning of these tokens. This is useful for
+  including these options in a secondary configuration file called with the
+  new "include" token to override a setting set in the main file.
+
+- Added "include" token for refind.conf, to enable including a secondary
+  configuration file from a primary one.
+
+- Modified install.sh so that it creates a simple refind_linux.conf file in
+  /boot, if that file doesn't already exist and if install.sh is run from
+  Linux. If that directory happens to be on a FAT, HFS+, ext2fs, ext3fs, or
+  ReiserFS volume, and if the necessary drivers are installed, the result
+  is that rEFInd will detect the Linux installation with no further
+  configuration on many systems. (Some may still require tweaking of kernel
+  options, though; for instance, adding "dolvm" on Gentoo systems that use
+  LVM.)
+
+- Added --shim and --localkeys options to install.sh to help simplify setup
+  on systems with Secure Boot active.
+
+- Fixed (maybe) bug that caused resolution options to not be displayed on
+  recent Macs with GOP graphics when specifying an invalid resolution in
+  refind.conf.
 
 - Fixed bug that caused some programs (EFI shells, in particular) to hang
   when launching on some systems (DUET, in particular).

@@ -209,10 +209,6 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 	<tt>/usr/local/UDK2010/MyWorkSpace/MdeModulePkg/Core/Dxe/Image/Image.c</tt>
 	for the reference UEFI implementation. --> </li>
 
-    <li>When launching ELILO in Secure Boot mode, ELILO can't find its
-	configuration file. It's possible that a similar problem exists for
-	other boot loaders, too.</li>
-
     <li>When setting a resolution higher than about 800x600 (or maybe even
 	640x480) in text mode, the text displayed by rEFInd, and on some
 	systems shells and other programs launched from rEFInd, is
@@ -270,14 +266,6 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
     <ul>
 
-    <li>With the arrival of PCs preloaded with Windows 8 and with Secure
-	Boot enabled, some way to cope is in order. I'm thinking of adding
-	code to limit or prohibit booting of unsigned boot loaders if
-	rEFInd detects that Secure Boot is active, and link with the <a
-	href="http://mjg59.dreamwidth.org/18945.html">Shim</a>
-	pre-bootloader to help handle signing and authentication. I need to
-	research the technical details more, though.</li>
-
     <li>EFI supports network boots. rEFInd doesn't, but it would be nice if
 	it would.</li>
 
@@ -313,9 +301,6 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 	boot. Perhaps this could be done via a separate tool that could be
 	launched much like the shell or <tt>gptsync</tt>.</li>
 
-    <li>I'd like to give the user the ability to set custom options on a
-	single-boot basis, similar to what's possible in GRUB.</li>
-
     <li>A way to set the color of the font would be useful for theming
         purposes.</li>
 
@@ -326,11 +311,6 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 	priority list. If you'd like to contribute, I prefer something
 	written in a cross-platform GUI toolkit, so that a single code base
 	can be used on any of the major OSes.</li>
-
-    <li>A way to "source" one configuration file from another one would be
-	helpful for some types of configuration scripts. (This would enable
-	overriding options in a secondary file without modifying the
-	default original file, for instance.)</li>
 
     </ul></li> <!-- New features -->
 

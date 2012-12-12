@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 3/14/2012; last Web page update:
-12/6/2012, referencing rEFInd 0.5.0</p>
+12/11/2012, referencing rEFInd 0.5.1</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -175,8 +175,8 @@ timeout 20
 </tr>
 <tr>
    <td><tt>textonly</tt></td>
-   <td>None</td>
-   <td>rEFInd defaults to a graphical mode; however, if you prefer to do without the flashy graphics, you can run it in text mode by including this option.</td>
+   <td>None or <tt>0</tt></td>
+   <td>rEFInd defaults to a graphical mode; however, if you prefer to do without the flashy graphics, you can run it in text mode by including this option. Passing any option but <tt>0</tt> causes text mode to be used; passing a <tt>0</tt> causes graphics mode to be used. (This could be useful if you want to override a text-mode setting in an included secondary configuration file.)</td>
 </tr>
 <tr>
    <td><tt>resolution</tt></td>
@@ -220,13 +220,18 @@ timeout 20
 </tr>
 <tr>
    <td><tt>scan_all_linux_kernels</tt></td>
-   <td>None</td>
-   <td>When set, causes rEFInd to add Linux kernels (files with names that begin with <tt>vmlinuz</tt> or <tt>bzImage</tt>) to the list of EFI boot loaders, even if they lack <tt>.efi</tt> filename extensions. The hope is that this will simplify use of rEFInd on distributions that provide kernels with EFI stub loader support but that don't give those kernels names that end in <tt>.efi</tt>. Of course, the kernels must still be stored on a filesystem that rEFInd can read, and in a directory that it scans. (<a href="drivers.html">Drivers</a> and the <tt>also_scan_dirs</tt> options can help with those issues.) Note that this option can cause unwanted files to be improperly detected and given loader tags, such as older kernels without EFI stub loader support. Versions of rEFInd prior to 0.5.0 left this option commented out in the <tt>refind.conf-sample</tt> file, but as of version 0.5.0, this option is enabled in the default configuration file. The program default remains to not scan for such kernels, though, so you can delete or uncomment this option to keep them from appearing in your boot menu.</td>
+   <td>None or <tt>0</tt></td>
+   <td>When set, causes rEFInd to add Linux kernels (files with names that begin with <tt>vmlinuz</tt> or <tt>bzImage</tt>) to the list of EFI boot loaders, even if they lack <tt>.efi</tt> filename extensions. The hope is that this will simplify use of rEFInd on distributions that provide kernels with EFI stub loader support but that don't give those kernels names that end in <tt>.efi</tt>. Of course, the kernels must still be stored on a filesystem that rEFInd can read, and in a directory that it scans. (<a href="drivers.html">Drivers</a> and the <tt>also_scan_dirs</tt> options can help with those issues.) Note that this option can cause unwanted files to be improperly detected and given loader tags, such as older kernels without EFI stub loader support. Versions of rEFInd prior to 0.5.0 left this option commented out in the <tt>refind.conf-sample</tt> file, but as of version 0.5.0, this option is enabled in the default configuration file. The program default remains to not scan for such kernels, though, so you can delete or uncomment this option to keep them from appearing in your boot menu. Passing any option but <tt>0</tt> causes scans for all kernels to occur; passing a <tt>0</tt> causes these kernels to not be scanned. (This could be useful if you want to override a setting of <tt>scan_all_linux_kernels</tt> in an included secondary configuration file.)</td>
 </tr>
 <tr>
    <td><tt>default_selection</tt></td>
    <td>A substring of a boot loader's title; or a numeric position</td>
    <td>Sets the default boot OS based on the loader's title, which appears in the main menu beneath the icons when you select the loader. You can enter any substring of the title as the <tt>default_selection</tt>, so long as it's two or more characters in length. It's best to use a unique substring, since rEFInd stops searching when it finds the first match. Because rEFInd sorts entries within a directory in descending order by file modification time, if you specify a directory (or volume name, for loaders in a partition's root directory) as the <tt>default_selection</tt>, the most recent loader in that directory will be the default. One-character entries are matched against the first character of the title, except for digits, which refer to the numeric order of the boot loader entries.</td>
+</tr>
+<tr>
+   <td><tt>include</tt></td>
+   <td>filename</td>
+   <td>Includes the specified file into the current configuration file. Essentially, the included file replaces the <tt>include</tt> line, so positioning of this token is important if the included file includes options that contradict those in the main file. The included file must reside in the same directory as the rEFInd binary and the main configuration file. This option is valid only in the main configuration file; included files may not include third-tier configuration files.</td>
 </tr>
 </table>
 

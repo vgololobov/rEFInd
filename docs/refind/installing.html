@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 3/14/2012; last Web page update:
-12/6/2012, referencing rEFInd 0.5.0</p>
+12/11/2012, referencing rEFInd 0.5.1</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -194,6 +194,18 @@ Installation has completed successfully.</pre>
     to enable the relevant searches. This is <i>not</i> necessary on Macs,
     though; because of the popularity of dual boots with Windows on Macs,
     the BIOS/legacy scans are enabled by default on Macs.</li>
+
+<li>If you run <tt>install.sh</tt> on Linux and if
+    <tt>/boot/refind_linux.conf</tt> doesn't already exist,
+    <tt>install.sh</tt> creates this file and populates it with a couple of
+    sample entries. If <tt>/boot</tt> is on a FAT partition (or HFS+ on a
+    Mac), or if it's on an ext2fs, ext3fs, ReiserFS, or HFS+ partition and
+    you install an appropriate driver (for instance by passing
+    <tt>--drivers</tt> to the script), the result is that rEFInd will
+    detect your kernel and will probably boot it correctly. Some systems
+    will require manual tweaking to <tt>refind_linux.conf</tt>,
+    though&mdash;for instance, to add <tt>dolvm</tt> to the boot options on
+    Gentoo systems that use LVM.</li>
 
 </ul>
 

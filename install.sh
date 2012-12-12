@@ -27,7 +27,8 @@
 #
 # Revision history:
 #
-# 0.5.1   -- Added --shim & --localkeys options
+# 0.5.1   -- Added --shim & --localkeys options & create sample refind_linux.conf
+#            in /boot
 # 0.5.0   -- Added --usedefault & --drivers options & changed "esp" option to "--esp"
 # 0.4.5   -- Fixed check for rEFItBlesser in OS X
 # 0.4.2   -- Added notice about BIOS-based OSes & made NVRAM changes in Linux smarter
@@ -65,16 +66,15 @@ GetParams() {
               TargetIA32="bootia32.efi"
               shift
               ;;
+         --localkeys) LocalKeys=1
+              ;;
          --shim) ShimSource=$2
               shift
               ;;
          --drivers) InstallDrivers=1
               ;;
-         --localkeys) LocalKeys=1
-              ;;
          * ) echo "Usage: $0 [--esp | --usedefault {device-file}] [--drivers] "
-             echo "         [--localkeys] [--shim {shim-filename}]"
-             echo "Aborting!"
+             echo "                [--shim {shim-filename}] [--localkeys]"
              exit 1
       esac
       shift
@@ -553,6 +553,28 @@ AddBootEntry() {
    fi
 } # AddBootEntry()
 
+# Create a minimal/sample refind_linux.conf file in /boot.
+GenerateRefindLinuxConf() {
+   if [[ ! -f /boot/refind_linux.conf ]] ; then
+      if [[ -f /etc/default/grub ]] ; then
+         # We want the default options used by the distribution, stored here....
+         source /etc/default/grub
+      fi
+      RootFS=`df / | grep dev | cut -f 1 -d " "`
+      StartOfDevname=`echo $RootFS | cut -b 1-7`
+      if [[ $StartOfDevname == "/dev/sd" || $StartOfDevName == "/dev/hd" ]] ; then
+         # Identify root filesystem by UUID rather than by device node, if possible
+         Uuid=`blkid -o export $RootFS 2> /dev/null | grep UUID=`
+         if [[ -n $Uuid ]] ; then
+            RootFS=$Uuid
+         fi
+      fi
+      DefaultOptions="$GRUB_CMDLINE_LINUX $GRUB_CMDLINE_LINUX_DEFAULT"
+      echo "\"Boot with standard options\" \"ro root=$RootFS $DefaultOptions \"" > $RLConfFile
+      echo "\"Boot to single-user mode\"   \"ro root=$RootFS $DefaultOptions single\"" >> $RLConfFile
+   fi
+}
+
 # Controls rEFInd installation under Linux.
 # Sets Problems=1 if something goes wrong.
 InstallOnLinux() {
@@ -600,6 +622,7 @@ InstallOnLinux() {
    CopyRefindFiles
    if [[ $TargetDir != "/EFI/BOOT" ]] ; then
       AddBootEntry
+      GenerateRefindLinuxConf
    fi
 } # InstallOnLinux()
 
@@ -616,7 +639,7 @@ RefindDir="$ThisDir/refind"
 ThisScript="$ThisDir/`basename $0`"
 if [[ `whoami` != "root" ]] ; then
    echo "Not running as root; attempting to elevate privileges via sudo...."
-   sudo $ThisScript $1 $2 $3 $4 $5 $6
+   sudo $ThisScript "$@"
    if [[ $? != 0 ]] ; then
       echo "This script must be run as root (or using sudo). Exiting!"
       exit 1

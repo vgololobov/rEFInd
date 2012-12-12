@@ -118,7 +118,7 @@ static VOID AboutrEFInd(VOID)
 
     if (AboutMenu.EntryCount == 0) {
         AboutMenu.TitleImage = BuiltinIcon(BUILTIN_ICON_FUNC_ABOUT);
-        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.5.0.3");
+        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.5.1");
         AddMenuInfoLine(&AboutMenu, L"");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2006-2010 Christoph Pfisterer");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2012 Roderick W. Smith");
@@ -1860,7 +1860,7 @@ VOID RescanAll(VOID) {
    FreeList((VOID ***) &(MainMenu.Entries), &MainMenu.EntryCount);
    MainMenu.Entries = NULL;
    MainMenu.EntryCount = 0;
-   ReadConfig();
+   ReadConfig(CONFIG_FILE_NAME);
    ConnectAllDriversToAllControllers();
    ScanVolumes();
    ScanForBootloaders();
@@ -1910,7 +1910,7 @@ efi_main (IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable)
     FindLegacyBootType();
     if (GlobalConfig.LegacyType == LEGACY_TYPE_MAC)
        CopyMem(GlobalConfig.ScanFor, "ihebocm   ", NUM_SCAN_OPTIONS);
-    ReadConfig();
+    ReadConfig(CONFIG_FILE_NAME);
     WarnIfLegacyProblems();
     MainMenu.TimeoutSeconds = GlobalConfig.Timeout;
 

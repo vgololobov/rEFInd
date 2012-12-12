@@ -100,6 +100,17 @@ VOID egInitScreen(VOID)
     }
 }
 
+// // Returns current graphics mode number
+// UINT32 egGetGraphicsMode(VOID) {
+//    UINT32 retval = 0;
+// 
+//    if (GraphicsOutput != NULL) {
+//       retval = GraphicsOutput->Mode->Mode;
+//    }
+// 
+//    return retval;
+// } // UINT32 egGetGraphicsMode()
+
 // Sets the screen resolution to the specified value, if possible.
 // If the specified value is not valid, displays a warning with the valid
 // modes on UEFI systems, or silently fails on EFI 1.x systems. Note that
@@ -122,6 +133,8 @@ BOOLEAN egSetScreenSize(IN UINTN ScreenWidth, IN UINTN ScreenHeight) {
          if ((Status == EFI_SUCCESS) && (Size >= sizeof(*Info)) &&
              (Info->HorizontalResolution == ScreenWidth) && (Info->VerticalResolution == ScreenHeight)) {
             Status = refit_call2_wrapper(GraphicsOutput->SetMode, GraphicsOutput, ModeNum);
+//             if (Status == EFI_SUCCESS)
+//                Status = refit_call2_wrapper(ST->ConOut->SetMode, ST->ConOut, ModeNum);
             ModeSet = (Status == EFI_SUCCESS);
          } // if
          ModeNum++;
@@ -131,6 +144,7 @@ BOOLEAN egSetScreenSize(IN UINTN ScreenWidth, IN UINTN ScreenHeight) {
          egScreenWidth = ScreenWidth;
          egScreenHeight = ScreenHeight;
       } else {// If unsuccessful, display an error message for the user....
+         SwitchToText(FALSE);
          Print(L"Error setting mode %d x %d; using default mode!\nAvailable modes are:\n", ScreenWidth, ScreenHeight);
          ModeNum = 0;
          Status = EFI_SUCCESS;
@@ -142,6 +156,7 @@ BOOLEAN egSetScreenSize(IN UINTN ScreenWidth, IN UINTN ScreenHeight) {
             ModeNum++;
          } // while()
          PauseForKey();
+         SwitchToGraphics();
       } // if()
    } else if (UgaDraw != NULL) { // UGA mode (EFI 1.x)
       // Try to use current color depth & refresh rate for new mode. Maybe not the best choice
