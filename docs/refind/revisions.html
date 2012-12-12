@@ -14,8 +14,7 @@
 <p class="subhead">by Roderick W. Smith, <a
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
-<p>Last Web page update: 12/11/2012</p>
-
+<p>Last Web page update: 12/12/2012</p>
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
 
@@ -92,6 +91,8 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 <p>The following summarizes changes in rEFInd's public releases:</p>
 
 <ul>
+
+<li><b>0.5.1.1 (12/12/2012)</b>&mdash;This is a micro-update to fix a bug in the <tt>install.sh</tt> script that prevented it from working under OS X. Aside from that, and a few small documentation changes, this version changes nothing in rEFInd.</li>
 
 <li><b>0.5.1 (12/11/2012)</b>&mdash;The most important changes to this version are to the <tt>install.sh</tt> script. It now supports two options, <tt>--shim</tt> and <tt>--localkeys</tt>, to aid in installation on a Secure Boot system. See the <a href="installing.html">Installing rEFInd</a> and <a href="secureboot.html">Managing Secure Boot</a> pages for details. The script also now creates a sample <tt>/boot/refind_linux.conf</tt> file to assist in setting up boots via the Linux EFI stub loader. All of these <tt>install.sh</tt> improvements work only in Linux. A separate <tt>mkrlconf.sh</tt> script creates a <tt>/boot/refind_linux.conf</tt> file if it doesn't exist, for help in post-installation configuration. In rEFInd itself, I've fixed the bug that caused ELILO to be unable to locate its configuration file when launched in Secure Boot mode and fixed a couple of more obscure bugs. I've also added an <tt>include</tt> token to <tt>refind.conf</tt>, to enable you to create a secondary configuration file (say, one managed by scripts while leaving the main file untouched; or one dedicated to manual boot stanzas).</li>
 
