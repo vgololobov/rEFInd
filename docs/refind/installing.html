@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 3/14/2012; last Web page update:
-12/12/2012, referencing rEFInd 0.5.1.1</p>
+12/13/2012, referencing rEFInd 0.5.1.2</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -200,20 +200,20 @@ Installation has completed successfully.</pre>
     <tt>install.sh</tt> creates this file and populates it with a couple of
     sample entries. If <tt>/boot</tt> is on a FAT partition (or HFS+ on a
     Mac), or if it's on an ext2fs, ext3fs, ReiserFS, or HFS+ partition and
-    you install an appropriate driver (for instance by passing
-    <tt>--drivers</tt> to the script), the result is that rEFInd will
-    detect your kernel and will probably boot it correctly. Some systems
-    will require manual tweaking to <tt>refind_linux.conf</tt>,
-    though&mdash;for instance, to add <tt>dolvm</tt> to the boot options on
-    Gentoo systems that use LVM.</li>
+    you install an appropriate driver (as <tt>install.sh</tt> does
+    automatically when run from your working Linux installation), the
+    result is that rEFInd will detect your kernel and will probably boot it
+    correctly. Some systems will require manual tweaking to
+    <tt>refind_linux.conf</tt>, though&mdash;for instance, to add
+    <tt>dolvm</tt> to the boot options on Gentoo systems that use LVM.</li>
 
 </ul>
 
 <p>In addition to these quirks, you should be aware of some options that <tt>install.sh</tt> supports to enable you to customize your installation in various ways. The syntax for <tt>install.sh</tt> is as follows:</p>
 
 <pre class="listing">
-install.sh [--esp | --usedefault <tt class="variable">device-file</tt>] [--drivers] [--shim <tt class="variable">shim-filename</tt>] \
-           [--localkeys]
+install.sh [--esp | --usedefault <tt class="variable">device-file</tt>] [--nodrivers | --alldrivers] \
+           [--shim <tt class="variable">shim-filename</tt>] [--localkeys]
 </pre>
 
 <p>The details of the options are summarized in <a href="#table1">Table 1.</a> Using some of these options in unusual conditions can generate warnings and prompts to confirm your actions. In particular, using <tt>--shim</tt> or <tt>--localkeys</tt> when you're <i>not</i> booted in Secure Boot mode, or failing to use <tt>--shim</tt> when you <i>are</i> booted in Secure Boot mode, will generate a query and a request to confirm your installation. Consult the <a href="secureboot.html">Managing Secure Boot</a> page for more on this topic.</p>
@@ -232,8 +232,12 @@ install.sh [--esp | --usedefault <tt class="variable">device-file</tt>] [--drive
    <td>You can install rEFInd to a disk using the default/fallback filename of <tt>EFI/BOOT/bootx64.efi</tt> (and <tt>EFI/BOOT/bootia32.efi</tt>, if the 32-bit build is available) using this option. The <tt class="variable">device-file</tt> should be an <i>unmounted</i> ESP, or at least a FAT partition, as in <tt>--usedefault /dev/sdc1</tt>. Your computer's NVRAM entries will <i>not</i> be modified when installing in this way. The intent is that you can create a bootable USB flash drive or install rEFInd on a computer that tends to "forget" its NVRAM settings with this option. This option is mutually exclusive with <tt>--esp</tt>.</td>
 </tr>
 <tr>
-   <td><tt>--drivers</tt></td>
-   <td>Ordinarily <tt>install.sh</tt> does not install drivers; but when you specify this option, it does; it copies all the driver files for your architecture. You may want to remove unused driver files after you use this option, especially if your computer uses Secure Boot.</td>
+   <td><tt>--nodrivers</tt></td>
+   <td>Ordinarily <tt>install.sh</tt> attempts to install the driver required to read <tt>/boot</tt> on Linux. This attempt works only if you're using ext2fs, ext3fs, or ReiserFS on the relevant partition. If you want to forego this driver installation, pass the <tt>--nodrivers</tt> option. This option is the default on OS X or when you use <tt>--usedefault</tt>.</td>
+</tr>
+<tr>
+   <td><tt>--alldrivers</tt></td>
+   <td>When you specify this option, <tt>install.sh</tt> copies <i>all</i> the driver files for your architecture. You may want to remove unused driver files after you use this option, especially if your computer uses Secure Boot.</td>
 </tr>
 <tr>
    <td><tt>--shim <tt class="variable">shim-filename</tt></tt></td>
