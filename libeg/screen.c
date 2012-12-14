@@ -101,43 +101,59 @@ VOID egInitScreen(VOID)
     }
 }
 
-// Sets the screen resolution to the specified value, if possible.
-// If the specified value is not valid, displays a warning with the valid
-// modes on UEFI systems, or silently fails on EFI 1.x systems. Note that
-// this function attempts to set ANY screen resolution, even 0x0 or
-// ridiculously large values.
+// Sets the screen resolution to the specified value, if possible. If *ScreenHeight
+// is 0 and GOP mode is detected, assume that *ScreenWidth contains a GOP mode
+// number rather than a horizontal resolution. If the specified resolution is not
+// valid, displays a warning with the valid modes on GOP (UEFI) systems, or silently
+// fails on UGA (EFI 1.x) systems. Note that this function attempts to set ANY screen
+// resolution, even 0x0 or ridiculously large values.
+// Upon success, returns actual screen resolution in *ScreenWidth and *ScreenHeight.
+// These values are unchanged upon failure.
 // Returns TRUE if successful, FALSE if not.
-BOOLEAN egSetScreenSize(IN UINTN ScreenWidth, IN UINTN ScreenHeight) {
-   EFI_STATUS Status = EFI_SUCCESS;
-   EFI_GRAPHICS_OUTPUT_MODE_INFORMATION *Info;
-   UINT32 ModeNum = 0;
-   UINTN Size;
-   BOOLEAN ModeSet = FALSE;
-   UINT32 UGAWidth, UGAHeight, UGADepth, UGARefreshRate;
+BOOLEAN egSetScreenSize(IN OUT UINTN *ScreenWidth, IN OUT UINTN *ScreenHeight) {
+   EFI_STATUS                            Status = EFI_SUCCESS;
+   EFI_GRAPHICS_OUTPUT_MODE_INFORMATION  *Info;
+   UINT32                                ModeNum = 0;
+   UINTN                                 Size;
+   BOOLEAN                               ModeSet = FALSE;
+   UINT32                                UGAWidth, UGAHeight, UGADepth, UGARefreshRate;
 
    if (GraphicsOutput != NULL) { // GOP mode (UEFI)
-      // Do a loop through the modes to see if the specified one is available;
-      // and if so, switch to it....
-      while ((Status == EFI_SUCCESS) && (!ModeSet)) {
+      if (*ScreenHeight == 0) { // User specified a mode number (stored in *ScreenWidth); use it directly
+         ModeNum = (UINT32) *ScreenWidth;
          Status = refit_call4_wrapper(GraphicsOutput->QueryMode, GraphicsOutput, ModeNum, &Size, &Info);
-         if ((Status == EFI_SUCCESS) && (Size >= sizeof(*Info)) &&
-             (Info->HorizontalResolution == ScreenWidth) && (Info->VerticalResolution == ScreenHeight)) {
+         if (Status == EFI_SUCCESS) {
             Status = refit_call2_wrapper(GraphicsOutput->SetMode, GraphicsOutput, ModeNum);
-            ModeSet = (Status == EFI_SUCCESS);
-         } // if
-         ModeNum++;
-      } // while()
+            if (Status == EFI_SUCCESS) {
+               ModeSet = TRUE;
+               *ScreenWidth = Info->HorizontalResolution;
+               *ScreenHeight = Info->VerticalResolution;
+            }
+         }
+      } else { // User specified width & height; must find mode
+         // Do a loop through the modes to see if the specified one is available;
+         // and if so, switch to it....
+         while ((Status == EFI_SUCCESS) && (!ModeSet)) {
+            Status = refit_call4_wrapper(GraphicsOutput->QueryMode, GraphicsOutput, ModeNum, &Size, &Info);
+            if ((Status == EFI_SUCCESS) && (Size >= sizeof(*Info)) &&
+                (Info->HorizontalResolution == *ScreenWidth) && (Info->VerticalResolution == *ScreenHeight)) {
+               Status = refit_call2_wrapper(GraphicsOutput->SetMode, GraphicsOutput, ModeNum);
+               ModeSet = (Status == EFI_SUCCESS);
+            } // if
+            ModeNum++;
+         } // while()
+      } // if/else
 
       if (ModeSet) {
-         egScreenWidth = ScreenWidth;
-         egScreenHeight = ScreenHeight;
+         egScreenWidth = *ScreenWidth;
+         egScreenHeight = *ScreenHeight;
       } else {// If unsuccessful, display an error message for the user....
          SwitchToText(FALSE);
-         Print(L"Error setting graphics mode %d x %d; using default mode!\nAvailable modes are:\n", ScreenWidth, ScreenHeight);
+         Print(L"Error setting graphics mode %d x %d; using default mode!\nAvailable modes are:\n", *ScreenWidth, *ScreenHeight);
          ModeNum = 0;
          do {
             Status = refit_call4_wrapper(GraphicsOutput->QueryMode, GraphicsOutput, ModeNum, &Size, &Info);
-            if (Status == EFI_SUCCESS) {
+            if ((Status == EFI_SUCCESS) && (Info != NULL)) {
                Print(L"Mode %d: %d x %d\n", ModeNum, Info->HorizontalResolution, Info->VerticalResolution);
             } // else
          } while ((ModeNum++ < 10) || (Status == EFI_SUCCESS));
@@ -156,10 +172,10 @@ BOOLEAN egSetScreenSize(IN UINTN ScreenWidth, IN UINTN ScreenHeight) {
       // Try to use current color depth & refresh rate for new mode. Maybe not the best choice
       // in all cases, but I don't know how to probe for alternatives....
       Status = refit_call5_wrapper(UgaDraw->GetMode, UgaDraw, &UGAWidth, &UGAHeight, &UGADepth, &UGARefreshRate);
-      Status = refit_call5_wrapper(UgaDraw->SetMode, UgaDraw, ScreenWidth, ScreenHeight, UGADepth, UGARefreshRate);
+      Status = refit_call5_wrapper(UgaDraw->SetMode, UgaDraw, *ScreenWidth, *ScreenHeight, UGADepth, UGARefreshRate);
       if (Status == EFI_SUCCESS) {
-         egScreenWidth = ScreenWidth;
-         egScreenHeight = ScreenHeight;
+         egScreenWidth = *ScreenWidth;
+         egScreenHeight = *ScreenHeight;
          ModeSet = TRUE;
       } else {
          // TODO: Find a list of supported modes and display it.
@@ -192,7 +208,7 @@ UINT32 egSetTextMode(UINT32 RequestedMode) {
          UsedMode = RequestedMode;
       } else {
          SwitchToText(FALSE);
-         Print(L"Error setting text mode %d; available modes are:\n", ST->ConOut->Mode->Mode);
+         Print(L"Error setting text mode %d; available modes are:\n", RequestedMode);
          do {
             Status = refit_call4_wrapper(ST->ConOut->QueryMode, ST->ConOut, i, &Width, &Height);
             if (Status == EFI_SUCCESS)

@@ -463,9 +463,12 @@ VOID ReadConfig(CHAR16 *FileName)
         } else if (StriCmp(TokenList[0], L"textmode") == 0) {
            HandleInt(TokenList, TokenCount, &(GlobalConfig.RequestedTextMode));
 
-        } else if ((StriCmp(TokenList[0], L"resolution") == 0) && (TokenCount == 3)) {
+        } else if ((StriCmp(TokenList[0], L"resolution") == 0) && ((TokenCount == 2) || (TokenCount == 3))) {
            GlobalConfig.RequestedScreenWidth = Atoi(TokenList[1]);
-           GlobalConfig.RequestedScreenHeight = Atoi(TokenList[2]);
+           if (TokenCount == 3)
+              GlobalConfig.RequestedScreenHeight = Atoi(TokenList[2]);
+           else
+              GlobalConfig.RequestedScreenHeight = 0;
 
         } else if (StriCmp(TokenList[0], L"use_graphics_for") == 0) {
            GlobalConfig.GraphicsFor = 0;

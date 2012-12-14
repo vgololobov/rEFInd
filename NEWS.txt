@@ -3,6 +3,18 @@
 
 - Added identifying screen header to line editor.
 
+- Fixed bug that caused rEFInd's display to be mis-sized upon return
+  from a program that set the resolution itself.
+
+- Adjusted "resolution" refind.conf parameter so that it can accept EITHER
+  a resolution as width and height OR a single digit as a UEFI mode number
+  (which is system-specific). This is done because some systems present the
+  same mode twice in their mode lists, perhaps varying in refresh rate,
+  monitor output, or some other salient characteristics; specifying the
+  mode number enables selecting the higher-numbered mode, whereas using
+  horizontal and vertical resolution values selects the lowest-numbered
+  mode.
+
 - Added "textmode" refind.conf parameter to set the text mode used in
   text-only displays, and for the line editor and boot-time handoff
   display even in graphics mode.

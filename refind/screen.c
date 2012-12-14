@@ -115,8 +115,8 @@ VOID SetupScreen(VOID)
 {
     GlobalConfig.RequestedTextMode = egSetTextMode(GlobalConfig.RequestedTextMode);
 
-    if ((GlobalConfig.RequestedScreenWidth > 0) && (GlobalConfig.RequestedScreenHeight > 0) &&
-        egSetScreenSize(GlobalConfig.RequestedScreenWidth, GlobalConfig.RequestedScreenHeight)) {
+    if ((GlobalConfig.RequestedScreenWidth > 0) &&
+        (egSetScreenSize(&GlobalConfig.RequestedScreenWidth, &GlobalConfig.RequestedScreenHeight))) {
           UGAWidth = GlobalConfig.RequestedScreenWidth;
           UGAHeight = GlobalConfig.RequestedScreenHeight;
     } // if user requested a particular screen resolution
@@ -206,6 +206,9 @@ VOID BeginExternalScreen(IN BOOLEAN UseGraphicsMode, IN CHAR16 *Title)
 
 VOID FinishExternalScreen(VOID)
 {
+    // Reset the screen resolution, in case external program changed it....
+    SetupScreen();
+
     // make sure we clean up later
     GraphicsScreenDirty = TRUE;
 

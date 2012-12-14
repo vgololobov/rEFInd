@@ -71,17 +71,20 @@ timeout 20
 #
 #textmode 2
 
-# Set the screen's video resolution. Pass this option two values,
-# corresponding to the X and Y resolutions. Note that not all resolutions
-# are supported. On UEFI systems, passing an incorrect value results in a
-# message being shown on the screen to that effect, along with a list of
-# supported modes. On EFI 1.x systems (e.g., Macintoshes), setting an
-# incorrect mode silently fails. On both types of systems, setting an
-# incorrect resolution results in the default resolution being used.
-# A resolution of 1024x768 usually works, but higher values often don't.
+# Set the screen's video resolution. Pass this option either:
+#  * two values, corresponding to the X and Y resolutions
+#  * one value, corresponding to a GOP (UEFI) video mode
+# Note that not all resolutions are supported. On UEFI systems, passing
+# an incorrect value results in a message being shown on the screen to
+# that effect, along with a list of supported modes. On EFI 1.x systems
+# (e.g., Macintoshes), setting an incorrect mode silently fails. On both
+# types of systems, setting an incorrect resolution results in the default
+# resolution being used. A resolution of 1024x768 usually works, but higher
+# values often don't.
 # Default is "0 0" (use the system default resolution, usually 800x600).
 #
 #resolution 1024 768
+#resolution 3
 
 # Launch specified OSes in graphics mode. By default, rEFInd switches
 # to text mode and displays basic pre-launch information when launching
