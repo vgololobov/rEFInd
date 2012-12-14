@@ -1,5 +1,5 @@
 
-DRIVERNAME = ext2
+DRIVERNAME = ext4
 
 CC		= /usr/bin/gcc
 CFLAGS		= -Wall -g -D_REENTRANT -DVERSION=\"$(VERSION)\" -DHOST_POSIX -I ../ -DFSTYPE=$(DRIVERNAME)
