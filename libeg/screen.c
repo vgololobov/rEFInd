@@ -36,6 +36,7 @@
 
 #include "libegint.h"
 #include "../refind/screen.h"
+#include "../refind/lib.h"
 #include "../include/refit_call_wrapper.h"
 
 #include <efiUgaDraw.h>
@@ -100,17 +101,6 @@ VOID egInitScreen(VOID)
     }
 }
 
-// // Returns current graphics mode number
-// UINT32 egGetGraphicsMode(VOID) {
-//    UINT32 retval = 0;
-// 
-//    if (GraphicsOutput != NULL) {
-//       retval = GraphicsOutput->Mode->Mode;
-//    }
-// 
-//    return retval;
-// } // UINT32 egGetGraphicsMode()
-
 // Sets the screen resolution to the specified value, if possible.
 // If the specified value is not valid, displays a warning with the valid
 // modes on UEFI systems, or silently fails on EFI 1.x systems. Note that
@@ -133,8 +123,6 @@ BOOLEAN egSetScreenSize(IN UINTN ScreenWidth, IN UINTN ScreenHeight) {
          if ((Status == EFI_SUCCESS) && (Size >= sizeof(*Info)) &&
              (Info->HorizontalResolution == ScreenWidth) && (Info->VerticalResolution == ScreenHeight)) {
             Status = refit_call2_wrapper(GraphicsOutput->SetMode, GraphicsOutput, ModeNum);
-//             if (Status == EFI_SUCCESS)
-//                Status = refit_call2_wrapper(ST->ConOut->SetMode, ST->ConOut, ModeNum);
             ModeSet = (Status == EFI_SUCCESS);
          } // if
          ModeNum++;
@@ -145,7 +133,7 @@ BOOLEAN egSetScreenSize(IN UINTN ScreenWidth, IN UINTN ScreenHeight) {
          egScreenHeight = ScreenHeight;
       } else {// If unsuccessful, display an error message for the user....
          SwitchToText(FALSE);
-         Print(L"Error setting mode %d x %d; using default mode!\nAvailable modes are:\n", ScreenWidth, ScreenHeight);
+         Print(L"Error setting graphics mode %d x %d; using default mode!\nAvailable modes are:\n", ScreenWidth, ScreenHeight);
          ModeNum = 0;
          Status = EFI_SUCCESS;
          while (Status == EFI_SUCCESS) {
@@ -171,7 +159,7 @@ BOOLEAN egSetScreenSize(IN UINTN ScreenWidth, IN UINTN ScreenHeight) {
          // TODO: Find a list of supported modes and display it.
          // NOTE: Below doesn't actually appear unless we explicitly switch to text mode.
          // This is just a placeholder until something better can be done....
-         Print(L"Error setting mode %d x %d; unsupported mode!\n");
+         Print(L"Error setting graphics mode %d x %d; unsupported mode!\n");
       } // if/else
    } // if/else if
    return (ModeSet);
@@ -185,25 +173,65 @@ VOID egGetScreenSize(OUT UINTN *ScreenWidth, OUT UINTN *ScreenHeight)
         *ScreenHeight = egScreenHeight;
 }
 
+// Set a text mode
+// Returns the mode that was actually set.
+UINT32 egSetTextMode(UINT32 RequestedMode) {
+   UINTN         i = 0, Width, Height;
+   UINT32        UsedMode = ST->ConOut->Mode->Mode;
+   EFI_STATUS    Status;
+   BOOLEAN       GoOn = TRUE;
+
+   if (RequestedMode != ST->ConOut->Mode->Mode) {
+      Status = refit_call2_wrapper(ST->ConOut->SetMode, ST->ConOut, RequestedMode);
+      if (Status == EFI_SUCCESS) {
+         UsedMode = RequestedMode;
+      } else {
+         SwitchToText(FALSE);
+         Print(L"Error setting text mode %d; available modes are:\n", ST->ConOut->Mode->Mode);
+         while (GoOn) {
+            Status = refit_call4_wrapper(ST->ConOut->QueryMode, ST->ConOut, i, &Width, &Height);
+            if (Status == EFI_SUCCESS)
+               Print(L"Mode: %d: %d x %d\n", i, Width, Height);
+            else if (i > 1)
+               GoOn = 0;
+            i++;
+         }
+         PauseForKey();
+         SwitchToGraphics();
+      } // if/else successful change
+   } // if need to change mode
+   return UsedMode;
+} // UINT32 egSetTextMode()
+
 CHAR16 * egScreenDescription(VOID)
 {
-    CHAR16 *Temp;
+    CHAR16 *GraphicsInfo, *TextInfo = NULL;
+
+    GraphicsInfo = AllocateZeroPool(256 * sizeof(CHAR16));
+    if (GraphicsInfo == NULL)
+       return L"memory allocation error";
 
     if (egHasGraphics) {
         if (GraphicsOutput != NULL) {
-            Temp = AllocateZeroPool(256 * sizeof(CHAR16));
-            SPrint(Temp, 255, L"Graphics Output (UEFI), %dx%d", egScreenWidth, egScreenHeight);
-            return Temp;
+            SPrint(GraphicsInfo, 255, L"Graphics Output (UEFI), %dx%d", egScreenWidth, egScreenHeight);
         } else if (UgaDraw != NULL) {
-            Temp = AllocateZeroPool(256 * sizeof(CHAR16));
-            SPrint(Temp, 255, L"UGA Draw (EFI 1.10), %dx%d", egScreenWidth, egScreenHeight);
-            return Temp;
+            GraphicsInfo = AllocateZeroPool(256 * sizeof(CHAR16));
+            SPrint(GraphicsInfo, 255, L"UGA Draw (EFI 1.10), %dx%d", egScreenWidth, egScreenHeight);
         } else {
+            MyFreePool(GraphicsInfo);
+            MyFreePool(TextInfo);
             return L"Internal Error";
         }
+        if (!AllowGraphicsMode) { // graphics-capable HW, but in text mode
+           TextInfo = AllocateZeroPool(256 * sizeof(CHAR16));
+           SPrint(TextInfo, 255, L"(in %dx%d text mode)", ConWidth, ConHeight);
+           MergeStrings(&GraphicsInfo, TextInfo, L' ');
+        }
     } else {
-        return L"Text Console";
+        SPrint(GraphicsInfo, 255, L"Text-foo console, %dx%d", ConWidth, ConHeight);
     }
+    MyFreePool(TextInfo);
+    return GraphicsInfo;
 }
 
 BOOLEAN egHasGraphicsMode(VOID)

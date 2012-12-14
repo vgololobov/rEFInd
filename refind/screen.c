@@ -38,6 +38,7 @@
 #include "screen.h"
 #include "config.h"
 #include "libegint.h"
+#include "lib.h"
 #include "../include/refit_call_wrapper.h"
 
 #include "../include/egemb_refind_banner.h"
@@ -46,7 +47,7 @@
 
 UINTN ConWidth;
 UINTN ConHeight;
-CHAR16 *BlankLine;
+CHAR16 *BlankLine = NULL;
 
 static VOID DrawScreenHeader(IN CHAR16 *Title);
 
@@ -65,14 +66,23 @@ static BOOLEAN GraphicsScreenDirty;
 
 static BOOLEAN haveError = FALSE;
 
+static VOID PrepareBlankLine(VOID) {
+    UINTN i;
+
+    MyFreePool(BlankLine);
+    // make a buffer for a whole text line
+    BlankLine = AllocatePool((ConWidth + 1) * sizeof(CHAR16));
+    for (i = 0; i < ConWidth; i++)
+        BlankLine[i] = ' ';
+    BlankLine[i] = 0;
+}
+
 //
 // Screen initialization and switching
 //
 
 VOID InitScreen(VOID)
 {
-    UINTN i;
-
     // initialize libeg
     egInitScreen();
 
@@ -95,11 +105,7 @@ VOID InitScreen(VOID)
         ConHeight = 25;
     }
 
-    // make a buffer for a whole text line
-    BlankLine = AllocatePool((ConWidth + 1) * sizeof(CHAR16));
-    for (i = 0; i < ConWidth; i++)
-        BlankLine[i] = ' ';
-    BlankLine[i] = 0;
+    PrepareBlankLine();
 
     // show the banner (even when in graphics mode)
     DrawScreenHeader(L"Initializing...");
@@ -107,6 +113,8 @@ VOID InitScreen(VOID)
 
 VOID SetupScreen(VOID)
 {
+    GlobalConfig.RequestedTextMode = egSetTextMode(GlobalConfig.RequestedTextMode);
+
     if ((GlobalConfig.RequestedScreenWidth > 0) && (GlobalConfig.RequestedScreenHeight > 0) &&
         egSetScreenSize(GlobalConfig.RequestedScreenWidth, GlobalConfig.RequestedScreenHeight)) {
           UGAWidth = GlobalConfig.RequestedScreenWidth;
@@ -136,6 +144,7 @@ VOID SwitchToText(IN BOOLEAN CursorEnabled)
         ConWidth = 80;
         ConHeight = 25;
     }
+    PrepareBlankLine();
 }
 
 VOID SwitchToGraphics(VOID)
@@ -523,15 +532,21 @@ static void cursor_right(UINTN *cursor, UINTN *first, UINTN x_max, UINTN len)
       (*first)++;
 }
 
-BOOLEAN line_edit(CHAR16 *line_in, CHAR16 **line_out, UINTN x_max, UINTN y_pos) {
+BOOLEAN line_edit(CHAR16 *line_in, CHAR16 **line_out, UINTN x_max) {
    CHAR16 *line;
    UINTN size;
    UINTN len;
    UINTN first;
+   UINTN y_pos = 3;
    CHAR16 *print;
    UINTN cursor;
    BOOLEAN exit;
    BOOLEAN enter;
+
+   DrawScreenHeader(L"Line Editor");
+   refit_call3_wrapper(ST->ConOut->SetCursorPosition, ST->ConOut, (ConWidth - 71) / 2, ConHeight - 1);
+   refit_call2_wrapper(ST->ConOut->OutputString, ST->ConOut,
+                       L"Use cursor keys to edit, Esc to exit, Enter to boot with edited options");
 
    if (!line_in)
       line_in = L"";

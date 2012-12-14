@@ -72,6 +72,7 @@ typedef struct {
 #define HIDEUI_FLAG_SINGLEUSER (0x0004)
 #define HIDEUI_FLAG_HWTEST     (0x0008)
 #define HIDEUI_FLAG_ARROWS     (0x0010)
+#define HIDEUI_FLAG_HINTS      (0x0020)
 #define HIDEUI_ALL             ((0xffff))
 
 #define CONFIG_FILE_NAME         L"refind.conf"

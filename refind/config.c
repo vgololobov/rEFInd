@@ -381,6 +381,8 @@ VOID ReadConfig(CHAR16 *FileName)
                     GlobalConfig.HideUIFlags |= HIDEUI_FLAG_HWTEST;
                 } else if (StriCmp(FlagName, L"arrows") == 0) {
                    GlobalConfig.HideUIFlags |= HIDEUI_FLAG_ARROWS;
+                } else if (StriCmp(FlagName, L"hints") == 0) {
+                   GlobalConfig.HideUIFlags |= HIDEUI_FLAG_HINTS;
                 } else if (StriCmp(FlagName, L"all") == 0) {
                     GlobalConfig.HideUIFlags = HIDEUI_ALL;
                 } else {
@@ -457,6 +459,9 @@ VOID ReadConfig(CHAR16 *FileName)
            } else {
               GlobalConfig.TextOnly = TRUE;
            }
+
+        } else if (StriCmp(TokenList[0], L"textmode") == 0) {
+           HandleInt(TokenList, TokenCount, &(GlobalConfig.RequestedTextMode));
 
         } else if ((StriCmp(TokenList[0], L"resolution") == 0) && (TokenCount == 3)) {
            GlobalConfig.RequestedScreenWidth = Atoi(TokenList[1]);

@@ -42,6 +42,7 @@ if [[ ! -f $RLConfFile || $1 == "--force" ]] ; then
    DefaultOptions="$GRUB_CMDLINE_LINUX $GRUB_CMDLINE_LINUX_DEFAULT"
    echo "\"Boot with standard options\" \"ro root=$RootFS $DefaultOptions \"" > $RLConfFile
    echo "\"Boot to single-user mode\"   \"ro root=$RootFS $DefaultOptions single\"" >> $RLConfFile
+   echo "\"Boot with minimal options\"  \"ro root=$RootFS\"" >> $RLConfFile
 else
    echo "Existing $RLConfFile found! Not overwriting!"
    echo "To force overwriting, pass the --force option."

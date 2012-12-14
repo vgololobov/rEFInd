@@ -179,6 +179,11 @@ timeout 20
    <td>rEFInd defaults to a graphical mode; however, if you prefer to do without the flashy graphics, you can run it in text mode by including this option. Passing any option but <tt>0</tt> causes text mode to be used; passing a <tt>0</tt> causes graphics mode to be used. (This could be useful if you want to override a text-mode setting in an included secondary configuration file.)</td>
 </tr>
 <tr>
+   <td><tt>textmode</tt></td>
+   <td>text mode number</td>
+   <td>Sets the text-mode video resolution to be used in conjunction with <tt>textonly</tt> or for the line editor and program-launch screens. This option takes a single-digit code. Mode <tt>0</tt> is guaranteed to be present and should be 80x25. Mode <tt>1</tt> is supposed to be either invalid or 80x50, but some systems use this number for something else. Higher values are system-specific. If you set this option to an invalid value, rEFInd pauses during startup to tell you of that fact. Note that on some computers, setting this value without also using <tt>textonly</tt> results in an incorrect graphics video mode being set. Pressing the Esc key corrects the problem.</td>
+</tr>
+<tr>
    <td><tt>resolution</tt></td>
    <td>Two integer values</td>
    <td>Sets the video resolution used by rEFInd; takes a width and a height as options. For instance, <tt>resolution 1024 768</tt> sets the resolution to 1024x768. If you set a resolution that doesn't work on a UEFI-based system, rEFInd displays a message along with a list of valid modes. On an system built around EFI 1.<i>x</i> (such as a Mac), setting an incorrect resolution fails silently; you'll get the system's default resolution. You'll also get the system's default resolution if you set either resolution value to <tt>0</tt> or if you pass anything but two numbers. (Note that passing a resolution with an <tt>x</tt>, as in <tt>1024x768</tt>, will be interpreted as <i>one</i> option and so will cause the default resolution to be used.) Also, be aware that it is possible to set a valid resolution for your video card that's invalid for your monitor. If you do this, your monitor will go blank until you've booted an OS that resets the video mode.</td>

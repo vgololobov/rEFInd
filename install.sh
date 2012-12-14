@@ -31,7 +31,7 @@
 #
 # 0.5.2   -- Changed --drivers to --alldrivers and added --nodrivers option;
 #            changed default driver installation behavior in Linux to install
-#            the driver needed to read /boot
+#            the driver needed to read /boot (if available)
 # 0.5.1.2 -- Fixed bug that caused failure to generate refind_linux.conf file
 # 0.5.1.1 -- Fixed bug that caused script failure under OS X
 # 0.5.1   -- Added --shim & --localkeys options & create sample refind_linux.conf
@@ -608,6 +608,7 @@ GenerateRefindLinuxConf() {
       DefaultOptions="$GRUB_CMDLINE_LINUX $GRUB_CMDLINE_LINUX_DEFAULT"
       echo "\"Boot with standard options\" \"ro root=$RootFS $DefaultOptions \"" > $RLConfFile
       echo "\"Boot to single-user mode\"   \"ro root=$RootFS $DefaultOptions single\"" >> $RLConfFile
+      echo "\"Boot with minimal options\"  \"ro root=$RootFS\"" >> $RLConfFile
    fi
 }
 

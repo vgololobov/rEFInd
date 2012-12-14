@@ -11,11 +11,12 @@ timeout 20
 # Hide user interface elements for personal preference or to increase
 # security:
 #  banner      - the rEFInd title banner
-#  label       - text label in the menu
+#  label       - boot option text label in the menu
 #  singleuser  - remove the submenu options to boot Mac OS X in single-user
 #                or verbose modes; affects ONLY MacOS X
 #  hwtest      - the submenu option to run Apple's hardware test
 #  arrows      - scroll arrows on the OS selection tag line
+#  hints       - brief command summary in the menu
 #  all         - all of the above
 #
 #hideui singleuser
@@ -57,6 +58,18 @@ timeout 20
 # Default is to use graphics mode.
 #
 #textonly
+
+# Set the EFI text mode to be used for textual displays. This option
+# takes a single digit that refers to a mode number. The default is 0
+# (80x25), 1 is sometimes 80x50, and higher numbers are system-specific
+# modes. If you specify an invalid mode, rEFInd pauses during boot to
+# inform you of valid modes.
+# CAUTION: On VirtualBox, and perhaps on some real computers, specifying
+# a text mode and uncommenting the "textonly" option while NOT specifying
+# a resolution can result in an unusable display in the booted OS.
+# Default is 0
+#
+#textmode 2
 
 # Set the screen's video resolution. Pass this option two values,
 # corresponding to the X and Y resolutions. Note that not all resolutions
