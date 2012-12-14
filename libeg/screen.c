@@ -135,14 +135,20 @@ BOOLEAN egSetScreenSize(IN UINTN ScreenWidth, IN UINTN ScreenHeight) {
          SwitchToText(FALSE);
          Print(L"Error setting graphics mode %d x %d; using default mode!\nAvailable modes are:\n", ScreenWidth, ScreenHeight);
          ModeNum = 0;
-         Status = EFI_SUCCESS;
-         while (Status == EFI_SUCCESS) {
+         do {
             Status = refit_call4_wrapper(GraphicsOutput->QueryMode, GraphicsOutput, ModeNum, &Size, &Info);
-            if ((Status == EFI_SUCCESS) && (Size >= sizeof(*Info))) {
+            if (Status == EFI_SUCCESS) {
                Print(L"Mode %d: %d x %d\n", ModeNum, Info->HorizontalResolution, Info->VerticalResolution);
             } // else
-            ModeNum++;
-         } // while()
+         } while ((ModeNum++ < 10) || (Status == EFI_SUCCESS));
+//          Status = EFI_SUCCESS;
+//          while (Status == EFI_SUCCESS) {
+//             Status = refit_call4_wrapper(GraphicsOutput->QueryMode, GraphicsOutput, ModeNum, &Size, &Info);
+//             if ((Status == EFI_SUCCESS) && (Size >= sizeof(*Info))) {
+//                Print(L"Mode %d: %d x %d\n", ModeNum, Info->HorizontalResolution, Info->VerticalResolution);
+//             } // else
+//             ModeNum++;
+//          } // while()
          PauseForKey();
          SwitchToGraphics();
       } // if()
@@ -179,7 +185,6 @@ UINT32 egSetTextMode(UINT32 RequestedMode) {
    UINTN         i = 0, Width, Height;
    UINT32        UsedMode = ST->ConOut->Mode->Mode;
    EFI_STATUS    Status;
-   BOOLEAN       GoOn = TRUE;
 
    if (RequestedMode != ST->ConOut->Mode->Mode) {
       Status = refit_call2_wrapper(ST->ConOut->SetMode, ST->ConOut, RequestedMode);
@@ -188,14 +193,12 @@ UINT32 egSetTextMode(UINT32 RequestedMode) {
       } else {
          SwitchToText(FALSE);
          Print(L"Error setting text mode %d; available modes are:\n", ST->ConOut->Mode->Mode);
-         while (GoOn) {
+         do {
             Status = refit_call4_wrapper(ST->ConOut->QueryMode, ST->ConOut, i, &Width, &Height);
             if (Status == EFI_SUCCESS)
                Print(L"Mode: %d: %d x %d\n", i, Width, Height);
-            else if (i > 1)
-               GoOn = 0;
-            i++;
-         }
+         } while ((i++ < 2) || (Status == EFI_SUCCESS));
+
          PauseForKey();
          SwitchToGraphics();
       } // if/else successful change
