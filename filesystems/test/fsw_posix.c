@@ -40,7 +40,7 @@
 
 #ifndef FSTYPE
 /** The file system type name to use. */
-#define FSTYPE ext4
+#define FSTYPE ext2
 #endif
 
 

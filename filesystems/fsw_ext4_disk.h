@@ -109,6 +109,9 @@ struct ext4_group_desc
 /*
  * Macro-instructions used to manage group descriptors
  */
+#define EXT4_MIN_DESC_SIZE              32
+#define EXT4_MIN_DESC_SIZE_64BIT        64
+#define EXT4_MAX_DESC_SIZE              EXT4_MIN_BLOCK_SIZE
 #define EXT4_DESC_SIZE(s)              ((s)->s_desc_size)
 #define EXT4_BLOCKS_PER_GROUP(s)       ((s)->s_blocks_per_group)
 #define EXT4_DESC_PER_BLOCK(s)         (EXT4_BLOCK_SIZE(s) / EXT4_DESC_SIZE(s))
@@ -217,6 +220,38 @@ struct ext4_inode {
 	__le32  i_crtime;       /* File Creation time */
 	__le32  i_crtime_extra; /* extra FileCreationtime (nsec << 2 | epoch) */
 	__le32  i_version_hi;	/* high 32 bits for 64-bit version */
+};
+
+
+/*
+ * Inode flags used for atomic set/get
+ */
+enum {
+	EXT4_INODE_SECRM	= 0,	/* Secure deletion */
+	EXT4_INODE_UNRM		= 1,	/* Undelete */
+	EXT4_INODE_COMPR	= 2,	/* Compress file */
+	EXT4_INODE_SYNC		= 3,	/* Synchronous updates */
+	EXT4_INODE_IMMUTABLE	= 4,	/* Immutable file */
+	EXT4_INODE_APPEND	= 5,	/* writes to file may only append */
+	EXT4_INODE_NODUMP	= 6,	/* do not dump file */
+	EXT4_INODE_NOATIME	= 7,	/* do not update atime */
+/* Reserved for compression usage... */
+	EXT4_INODE_DIRTY	= 8,
+	EXT4_INODE_COMPRBLK	= 9,	/* One or more compressed clusters */
+	EXT4_INODE_NOCOMPR	= 10,	/* Don't compress */
+	EXT4_INODE_ECOMPR	= 11,	/* Compression error */
+/* End compression flags --- maybe not all used */
+	EXT4_INODE_INDEX	= 12,	/* hash-indexed directory */
+	EXT4_INODE_IMAGIC	= 13,	/* AFS directory */
+	EXT4_INODE_JOURNAL_DATA	= 14,	/* file data should be journaled */
+	EXT4_INODE_NOTAIL	= 15,	/* file tail should not be merged */
+	EXT4_INODE_DIRSYNC	= 16,	/* dirsync behaviour (directories only) */
+	EXT4_INODE_TOPDIR	= 17,	/* Top of directory hierarchies*/
+	EXT4_INODE_HUGE_FILE	= 18,	/* Set to each huge file */
+	EXT4_INODE_EXTENTS	= 19,	/* Inode uses extents */
+	EXT4_INODE_EA_INODE	= 21,	/* Inode used for large EA */
+	EXT4_INODE_EOFBLOCKS	= 22,	/* Blocks allocated beyond EOF */
+	EXT4_INODE_RESERVED	= 31,	/* reserved for ext4 lib */
 };
 
 /*
@@ -334,6 +369,7 @@ struct ext4_super_block {
 	__le32	s_reserved[108];	/* Padding to the end of the block */
 	__le32	s_checksum;		/* crc32c(superblock) */
 };
+
 /*
  * Revision levels
  */
@@ -402,6 +438,62 @@ enum {
     EXT4_FT_SYMLINK,
     EXT4_FT_MAX
 };
+
+/*
+ * ext4_inode has i_block array (60 bytes total).
+ * The first 12 bytes store ext4_extent_header;
+ * the remainder stores an array of ext4_extent.
+ * For non-inode extent blocks, ext4_extent_tail
+ * follows the array.
+ */
+
+/*
+ * This is the extent tail on-disk structure.
+ * All other extent structures are 12 bytes long.  It turns out that
+ * block_size % 12 >= 4 for at least all powers of 2 greater than 512, which
+ * covers all valid ext4 block sizes.  Therefore, this tail structure can be
+ * crammed into the end of the block without having to rebalance the tree.
+ */
+struct ext4_extent_tail {
+	__le32	et_checksum;	/* crc32c(uuid+inum+extent_block) */
+};
+
+/*
+ * This is the extent on-disk structure.
+ * It's used at the bottom of the tree.
+ */
+struct ext4_extent {
+	__le32	ee_block;	/* first logical block extent covers */
+	__le16	ee_len;		/* number of blocks covered by extent */
+	__le16	ee_start_hi;	/* high 16 bits of physical block */
+	__le32	ee_start_lo;	/* low 32 bits of physical block */
+};
+
+/*
+ * This is index on-disk structure.
+ * It's used at all the levels except the bottom.
+ */
+struct ext4_extent_idx {
+	__le32	ei_block;	/* index covers logical blocks from 'block' */
+	__le32	ei_leaf_lo;	/* pointer to the physical block of the next *
+				 * level. leaf or next index could be there */
+	__le16	ei_leaf_hi;	/* high 16 bits of physical block */
+	__u16	ei_unused;
+};
+
+
+/*
+ * Each block (leaves and indexes), even inode-stored has header.
+ */
+struct ext4_extent_header {
+	__le16	eh_magic;	/* probably will support different formats */
+	__le16	eh_entries;	/* number of valid entries */
+	__le16	eh_max;		/* capacity of store in entries */
+	__le16	eh_depth;	/* has tree real underlying blocks? */
+	__le32	eh_generation;	/* generation of the tree */
+};
+
+#define EXT4_EXT_MAGIC		(0xf30a)
 
 
 #endif
