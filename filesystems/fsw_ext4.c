@@ -308,7 +308,7 @@ static fsw_status_t fsw_ext4_get_extent(struct fsw_ext4_volume *vol, struct fsw_
     // Preconditions: The caller has checked that the requested logical block
     //  is within the file's size. The dnode has complete information, i.e.
     //  fsw_ext4_dnode_read_info was called successfully on it.
-    FSW_MSG_DEBUG((FSW_MSGSTR("fsw_ext4_get_extent: inode flags %x\n"), dno->raw->i_flags));
+    FSW_MSG_DEBUG((FSW_MSGSTR("fsw_ext4_get_extent: inode %d, block %d\n"), dno->g.dnode_id, extent->log_start));
     extent->type = FSW_EXTENT_TYPE_PHYSBLOCK;
     extent->log_count = 1;
 
@@ -331,18 +331,20 @@ static fsw_status_t fsw_ext4_get_extent(struct fsw_ext4_volume *vol, struct fsw_
 static fsw_status_t fsw_ext4_get_by_extent(struct fsw_ext4_volume *vol, struct fsw_ext4_dnode *dno,
                                         struct fsw_extent *extent)
 {
-    fsw_status_t    status;
-    fsw_u32         bno, release_bno, buf_bcnt, buf_offset, file_bcnt;
-    int             i;
-    fsw_u8          *buffer;
+    fsw_status_t  status;
+    fsw_u32       bno, release_bno, buf_bcnt, buf_offset, file_bcnt;
+    int           ext_cnt;
+    int           ext_depth;
+    void          *buffer;
+
     struct ext4_extent_header  *ext4_extent_header;
     struct ext4_extent         *ext4_extent;
 
     // Logical block requested by core...
     bno = extent->log_start;
 
-    // First buffer is the i_block field from inde...
-    buffer = dno->raw->i_block;
+    // First buffer is the i_block field from inode...
+    buffer = (void *)dno->raw->i_block;
     buf_bcnt = EXT4_NDIR_BLOCKS;
     buf_offset = 0;
 
@@ -358,25 +360,29 @@ static fsw_status_t fsw_ext4_get_by_extent(struct fsw_ext4_volume *vol, struct f
         // Leaf node, the header follows actual extents
         FSW_MSG_DEBUG((FSW_MSGSTR("fsw_ext4_get_by_extent: leaf extent with %d extents\n"), 
                       ext4_extent_header->eh_entries));
-        for(i = 0;i < ext4_extent_header->eh_entries;i++)
+
+        for(ext_cnt = 0;ext_cnt < ext4_extent_header->eh_entries;ext_cnt++)
         {
             ext4_extent = (struct ext4_extent *)(buffer + buf_offset);
+            buf_offset += sizeof(struct ext4_extent);
             FSW_MSG_DEBUG((FSW_MSGSTR("fsw_ext4_get_by_extent: extent with %d len\n"), ext4_extent->ee_len));
             FSW_MSG_DEBUG((FSW_MSGSTR("fsw_ext4_get_by_extent: extent with %d start_hi\n"), ext4_extent->ee_start_hi));
             FSW_MSG_DEBUG((FSW_MSGSTR("fsw_ext4_get_by_extent: extent with %d start_lo\n"), ext4_extent->ee_start_lo));
+            // Is the requested block in this extent?
             if(bno >= ext4_extent->ee_block && bno < ext4_extent->ee_block + ext4_extent->ee_len)
             {
-                extent->phys_start = ext4_extent->ee_start_lo;
+                extent->phys_start = ext4_extent->ee_start_lo + bno;
+                extent->log_count = ext4_extent->ee_len - (bno - ext4_extent->ee_block);
+                return FSW_SUCCESS;
             }
-            buf_offset += sizeof(struct ext4_extent);
         }
     }
     else
     {
-        return FSW_NOT_FOUND;
+        // Follow extent tree...
     }
     
-    return FSW_SUCCESS;
+    return FSW_NOT_FOUND;
 }
 
 /**
