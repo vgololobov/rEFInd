@@ -76,7 +76,7 @@ typedef uint64_t            fsw_u64;
 // message printing
 
 #define FSW_MSGSTR(s) s
-#define FSW_MSGFUNC printf
+#define FSW_MSGFUNC(str, ...) (fprintf(stderr, str, ##__VA_ARGS__))
 
 // 64-bit hooks
 

@@ -4,6 +4,7 @@
  */
 
 /*-
+ * Copyright (c) 2012 Stefan Agner
  * Copyright (c) 2006 Christoph Pfisterer
  *
  * Redistribution and use in source and binary forms, with or without
@@ -60,19 +61,20 @@ static int listdir(struct fsw_posix_volume *vol, char *path, int level)
 
     dir = fsw_posix_opendir(vol, path);
     if (dir == NULL) {
-        printf("opendir(%s) call failed.\n", path);
+        fprintf(stderr, "opendir(%s) call failed.\n", path);
         return 1;
     }
     while ((dent = fsw_posix_readdir(dir)) != NULL) {
         for (i = 0; i < level*2; i++)
-            fputc(' ', stdout);
-        printf("%d  %s\n", dent->d_type, dent->d_name);
+            fputc(' ', stderr);
+        fprintf(stderr, "%d  %s\n", dent->d_type, dent->d_name);
 
         if (dent->d_type == DT_DIR) {
             snprintf(subpath, 4095, "%s%s/", path, dent->d_name);
             listdir(vol, subpath, level + 1);
         }
     }
+
     fsw_posix_closedir(dir);
 
     return 0;
@@ -86,9 +88,10 @@ static int catfile(struct fsw_posix_volume *vol, char *path)
 
     file = fsw_posix_open(vol, path, 0, 0);
     if (file == NULL) {
-        printf("open(%s) call failed.\n", path);
+        fprintf(stderr, "open(%s) call failed.\n", path);
         return 1;
     }
+
     while ((r=fsw_posix_read(file, buf, sizeof(buf))) > 0)
     {
         int i;
@@ -108,24 +111,24 @@ int main(int argc, char **argv)
     int i;
 
     if (argc != 2) {
-        printf("Usage: lslr <file/device>\n");
+        fprintf(stderr, "Usage: lslr <file/device>\n");
         return 1;
     }
 
     for (i = 0; fstypes[i]; i++) {
         vol = fsw_posix_mount(argv[1], fstypes[i]);
         if (vol != NULL) {
-            printf("Mounted as '%s'.\n", fstypes[i]->name.data);
+            fprintf(stderr, "Mounted as '%s'.\n", fstypes[i]->name.data);
             break;
         }
     }
     if (vol == NULL) {
-        printf("Mounting failed.\n");
+        fprintf(stderr, "Mounting failed.\n");
         return 1;
     }
 
-    listdir(vol, "/", 0);
-    catfile(vol, "/gaga/test");
+    listdir(vol, "/boot/", 0);
+    catfile(vol, "/boot/vmlinuz-3.5.0-19-generic");
 
     fsw_posix_unmount(vol);
 
