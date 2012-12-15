@@ -111,7 +111,7 @@ static fsw_status_t fsw_ext4_volume_mount(struct fsw_ext4_volume *vol)
 
     if (vol->sb->s_rev_level == EXT4_DYNAMIC_REV &&
         (vol->sb->s_feature_incompat & ~(EXT4_FEATURE_INCOMPAT_FILETYPE | EXT4_FEATURE_INCOMPAT_RECOVER |
-                                         EXT4_FEATURE_INCOMPAT_EXTENTS)))
+                                         EXT4_FEATURE_INCOMPAT_EXTENTS | EXT4_FEATURE_INCOMPAT_FLEX_BG)))
         return FSW_UNSUPPORTED;
 
 
