@@ -376,15 +376,17 @@ VOID ReadConfig(CHAR16 *FileName)
                 } else if (StriCmp(FlagName, L"label") == 0) {
                    GlobalConfig.HideUIFlags |= HIDEUI_FLAG_LABEL;
                 } else if (StriCmp(FlagName, L"singleuser") == 0) {
-                    GlobalConfig.HideUIFlags |= HIDEUI_FLAG_SINGLEUSER;
+                   GlobalConfig.HideUIFlags |= HIDEUI_FLAG_SINGLEUSER;
                 } else if (StriCmp(FlagName, L"hwtest") == 0) {
-                    GlobalConfig.HideUIFlags |= HIDEUI_FLAG_HWTEST;
+                   GlobalConfig.HideUIFlags |= HIDEUI_FLAG_HWTEST;
                 } else if (StriCmp(FlagName, L"arrows") == 0) {
                    GlobalConfig.HideUIFlags |= HIDEUI_FLAG_ARROWS;
                 } else if (StriCmp(FlagName, L"hints") == 0) {
                    GlobalConfig.HideUIFlags |= HIDEUI_FLAG_HINTS;
+                } else if (StriCmp(FlagName, L"editor") == 0) {
+                   GlobalConfig.HideUIFlags |= HIDEUI_FLAG_EDITOR;
                 } else if (StriCmp(FlagName, L"all") == 0) {
-                    GlobalConfig.HideUIFlags = HIDEUI_ALL;
+                   GlobalConfig.HideUIFlags = HIDEUI_FLAG_ALL;
                 } else {
                     Print(L" unknown hideui flag: '%s'\n", FlagName);
                 }

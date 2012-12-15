@@ -59,6 +59,7 @@ BOOLEAN AllowGraphicsMode;
 
 EG_PIXEL StdBackgroundPixel  = { 0xbf, 0xbf, 0xbf, 0 };
 EG_PIXEL MenuBackgroundPixel = { 0xbf, 0xbf, 0xbf, 0 };
+EG_PIXEL DarkBackgroundPixel = { 0x0, 0x0, 0x0, 0 };
 
 static BOOLEAN GraphicsScreenDirty;
 
@@ -181,8 +182,6 @@ VOID FinishTextScreen(IN BOOLEAN WaitAlways)
 
 VOID BeginExternalScreen(IN BOOLEAN UseGraphicsMode, IN CHAR16 *Title)
 {
-    EG_PIXEL DarkBackgroundPixel  = { 0x0, 0x0, 0x0, 0 };
-
     if (!AllowGraphicsMode)
         UseGraphicsMode = FALSE;
 
@@ -236,8 +235,9 @@ static VOID DrawScreenHeader(IN CHAR16 *Title)
     UINTN y;
 
     // clear to black background
+    egClearScreen(&DarkBackgroundPixel); // first clear in graphics mode
     refit_call2_wrapper(ST->ConOut->SetAttribute, ST->ConOut, ATTR_BASIC);
-    refit_call1_wrapper(ST->ConOut->ClearScreen, ST->ConOut);
+    refit_call1_wrapper(ST->ConOut->ClearScreen, ST->ConOut); // then clear in text mode
 
     // paint header background
     refit_call2_wrapper(ST->ConOut->SetAttribute, ST->ConOut, ATTR_BANNER);

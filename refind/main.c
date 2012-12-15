@@ -215,8 +215,8 @@ static EFI_STATUS StartEFIImageList(IN EFI_DEVICE_PATH **DevicePaths,
        // TODO: Track down the cause of this error and fix it, if possible.
        // ReturnStatus = Status = refit_call6_wrapper(BS->LoadImage, FALSE, SelfImageHandle, DevicePaths[DevicePathIndex],
        //                                            ImageData, ImageSize, &ChildImageHandle);
-        ReturnStatus = Status = refit_call6_wrapper(BS->LoadImage, FALSE, SelfImageHandle, DevicePaths[DevicePathIndex],
-                                                    NULL, 0, &ChildImageHandle);
+       ReturnStatus = Status = refit_call6_wrapper(BS->LoadImage, FALSE, SelfImageHandle, DevicePaths[DevicePathIndex],
+                                                   NULL, 0, &ChildImageHandle);
        if ((Status == EFI_ACCESS_DENIED) && (ShimLoaded())) {
           FindVolumeAndFilename(DevicePaths[DevicePathIndex], &DeviceVolume, &loader);
           if (DeviceVolume != NULL) {

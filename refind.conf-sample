@@ -17,7 +17,9 @@ timeout 20
 #  hwtest      - the submenu option to run Apple's hardware test
 #  arrows      - scroll arrows on the OS selection tag line
 #  hints       - brief command summary in the menu
+#  editor      - the options editor (+, F2, or Insert on boot options menu)
 #  all         - all of the above
+# Default is none of these (all elements active)
 #
 #hideui singleuser
 #hideui all

@@ -358,7 +358,8 @@ static VOID IdentifyRows(IN SCROLL_STATE *State, IN REFIT_MENU_SCREEN *Screen) {
 //
 // generic menu function
 //
-static UINTN RunGenericMenu(IN REFIT_MENU_SCREEN *Screen, IN MENU_STYLE_FUNC StyleFunc, IN INTN DefaultEntryIndex, OUT REFIT_MENU_ENTRY **ChosenEntry)
+static UINTN RunGenericMenu(IN REFIT_MENU_SCREEN *Screen, IN MENU_STYLE_FUNC StyleFunc, IN OUT INTN *DefaultEntryIndex,
+                            OUT REFIT_MENU_ENTRY **ChosenEntry)
 {
     SCROLL_STATE State;
     EFI_STATUS Status;
@@ -380,8 +381,8 @@ static UINTN RunGenericMenu(IN REFIT_MENU_SCREEN *Screen, IN MENU_STYLE_FUNC Sty
     StyleFunc(Screen, &State, MENU_FUNCTION_INIT, NULL);
     IdentifyRows(&State, Screen);
     // override the starting selection with the default index, if any
-    if (DefaultEntryIndex >= 0 && DefaultEntryIndex <= State.MaxIndex) {
-        State.CurrentSelection = DefaultEntryIndex;
+    if (*DefaultEntryIndex >= 0 && *DefaultEntryIndex <= State.MaxIndex) {
+        State.CurrentSelection = *DefaultEntryIndex;
         UpdateScroll(&State, SCROLL_NONE);
     }
     State.PaintAll = TRUE;
@@ -487,6 +488,7 @@ static UINTN RunGenericMenu(IN REFIT_MENU_SCREEN *Screen, IN MENU_STYLE_FUNC Sty
 
     if (ChosenEntry)
         *ChosenEntry = Screen->Entries[State.CurrentSelection];
+    *DefaultEntryIndex = State.CurrentSelection;
     return MenuExit;
 } /* static UINTN RunGenericMenu() */
 
@@ -595,7 +597,7 @@ static VOID TextMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, 
             if (!(GlobalConfig.HideUIFlags & HIDEUI_FLAG_HINTS)) {
                refit_call3_wrapper(ST->ConOut->SetCursorPosition, ST->ConOut, 0, ConHeight - 1);
                refit_call2_wrapper(ST->ConOut->OutputString, ST->ConOut,
-                                   L"arrow keys to move cursor; Enter to boot; Insert or F2 for more options");
+                                   L"Use arrow keys to move cursor; Enter to boot; Insert or F2 for more options");
             }
             break;
 
@@ -713,11 +715,16 @@ static VOID GraphicsMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *Sta
                              EntriesPosX, EntriesPosY + i * TEXT_LINE_HEIGHT);
             }
             if (!(GlobalConfig.HideUIFlags & HIDEUI_FLAG_HINTS)) {
-               DrawMenuText(L"arrow keys to move cursor; Enter to boot;", 0,
-                            (UGAWidth - (41 * FONT_CELL_WIDTH)) / 2, UGAHeight - (FONT_CELL_HEIGHT * 3));
-               DrawMenuText(L"Insert or F2 to edit options", 0,
-                            (UGAWidth - (28 * FONT_CELL_WIDTH)) / 2, UGAHeight - (FONT_CELL_HEIGHT * 2));
-            }
+               if (GlobalConfig.HideUIFlags & HIDEUI_FLAG_EDITOR) {
+                  DrawMenuText(L"Use arrow keys to move cursor; Enter to boot", 0,
+                               (UGAWidth - (45 * FONT_CELL_WIDTH)) / 2, UGAHeight - (FONT_CELL_HEIGHT * 3));
+               } else {
+                  DrawMenuText(L"Use arrow keys to move cursor; Enter to boot;", 0,
+                               (UGAWidth - (45 * FONT_CELL_WIDTH)) / 2, UGAHeight - (FONT_CELL_HEIGHT * 3));
+                  DrawMenuText(L"Insert or F2 to edit options", 0,
+                               (UGAWidth - (28 * FONT_CELL_WIDTH)) / 2, UGAHeight - (FONT_CELL_HEIGHT * 2));
+               } // if/else
+            } // if
             break;
 
         case MENU_FUNCTION_PAINT_SELECTION:
@@ -790,7 +797,7 @@ static VOID PaintAll(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, UINTN
                        (UGAWidth - LAYOUT_TEXT_WIDTH) >> 1, textPosY);
 
    if (!(GlobalConfig.HideUIFlags & HIDEUI_FLAG_HINTS)) {
-      DrawMainMenuText(L"arrow keys to move cursor; Enter to boot;",
+      DrawMainMenuText(L"Use arrow keys to move cursor; Enter to boot;",
                        (UGAWidth - LAYOUT_TEXT_WIDTH) / 2, UGAHeight - (FONT_CELL_HEIGHT * 3));
       DrawMainMenuText(L"Insert or F2 for more options",
                        (UGAWidth - LAYOUT_TEXT_WIDTH) / 2, UGAHeight - (FONT_CELL_HEIGHT * 2));
@@ -946,6 +953,10 @@ static BOOLEAN EditOptions(LOADER_ENTRY *MenuEntry) {
    CHAR16 *EditedOptions;
    BOOLEAN retval = FALSE;
 
+   if (GlobalConfig.HideUIFlags & HIDEUI_FLAG_EDITOR) {
+      return FALSE;
+   }
+
    refit_call4_wrapper(ST->ConOut->QueryMode, ST->ConOut, ST->ConOut->Mode->Mode, &x_max, &y_max);
 
    if (!GlobalConfig.TextOnly)
@@ -967,12 +978,13 @@ static BOOLEAN EditOptions(LOADER_ENTRY *MenuEntry) {
 
 UINTN RunMenu(IN REFIT_MENU_SCREEN *Screen, OUT REFIT_MENU_ENTRY **ChosenEntry)
 {
+    INTN            DefaultEntry = -1;
     MENU_STYLE_FUNC Style = TextMenuStyle;
 
     if (AllowGraphicsMode)
         Style = GraphicsMenuStyle;
 
-    return RunGenericMenu(Screen, Style, -1, ChosenEntry);
+    return RunGenericMenu(Screen, Style, &DefaultEntry, ChosenEntry);
 }
 
 UINTN RunMainMenu(IN REFIT_MENU_SCREEN *Screen, IN CHAR16* DefaultSelection, OUT REFIT_MENU_ENTRY **ChosenEntry)
@@ -981,12 +993,12 @@ UINTN RunMainMenu(IN REFIT_MENU_SCREEN *Screen, IN CHAR16* DefaultSelection, OUT
     MENU_STYLE_FUNC MainStyle = TextMenuStyle;
     REFIT_MENU_ENTRY *TempChosenEntry;
     UINTN MenuExit = 0;
-    UINTN DefaultEntryIndex = -1;
+    INTN DefaultEntryIndex = -1;
+    INTN DefaultSubmenuIndex = -1;
 
     if (DefaultSelection != NULL) {
         // Find a menu entry that includes *DefaultSelection as a substring
         DefaultEntryIndex = FindMenuShortcutEntry(Screen, DefaultSelection);
-        // If that didn't work, should we scan more characters?  For now, no.
     }
 
     if (AllowGraphicsMode) {
@@ -995,12 +1007,12 @@ UINTN RunMainMenu(IN REFIT_MENU_SCREEN *Screen, IN CHAR16* DefaultSelection, OUT
     }
 
     while (!MenuExit) {
-        MenuExit = RunGenericMenu(Screen, MainStyle, DefaultEntryIndex, &TempChosenEntry);
+        MenuExit = RunGenericMenu(Screen, MainStyle, &DefaultEntryIndex, &TempChosenEntry);
         Screen->TimeoutSeconds = 0;
 
         if (MenuExit == MENU_EXIT_DETAILS) {
             if (TempChosenEntry->SubScreen != NULL) {
-               MenuExit = RunGenericMenu(TempChosenEntry->SubScreen, Style, -1, &TempChosenEntry);
+               MenuExit = RunGenericMenu(TempChosenEntry->SubScreen, Style, &DefaultSubmenuIndex, &TempChosenEntry);
                if (MenuExit == MENU_EXIT_ESCAPE || TempChosenEntry->Tag == TAG_RETURN)
                    MenuExit = 0;
                if (MenuExit == MENU_EXIT_DETAILS) {

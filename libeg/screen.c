@@ -176,6 +176,7 @@ BOOLEAN egSetScreenSize(IN OUT UINTN *ScreenWidth, IN OUT UINTN *ScreenHeight) {
          PauseForKey();
          SwitchToGraphics();
       } // if()
+
    } else if (UgaDraw != NULL) { // UGA mode (EFI 1.x)
       // Try to use current color depth & refresh rate for new mode. Maybe not the best choice
       // in all cases, but I don't know how to probe for alternatives....
@@ -304,9 +305,15 @@ VOID egClearScreen(IN EG_PIXEL *Color)
     if (!egHasGraphics)
         return;
 
-    FillColor.Red   = Color->r;
-    FillColor.Green = Color->g;
-    FillColor.Blue  = Color->b;
+    if (Color != NULL) {
+       FillColor.Red   = Color->r;
+       FillColor.Green = Color->g;
+       FillColor.Blue  = Color->b;
+    } else {
+       FillColor.Red   = 0x0;
+       FillColor.Green = 0x0;
+       FillColor.Blue  = 0x0;
+    }
     FillColor.Reserved = 0;
 
     if (GraphicsOutput != NULL) {
@@ -314,10 +321,9 @@ VOID egClearScreen(IN EG_PIXEL *Color)
         // layout, and the header from TianoCore actually defines them
         // to be the same type.
         refit_call10_wrapper(GraphicsOutput->Blt, GraphicsOutput, (EFI_GRAPHICS_OUTPUT_BLT_PIXEL *)&FillColor, EfiBltVideoFill,
-                            0, 0, 0, 0, egScreenWidth, egScreenHeight, 0);
+                             0, 0, 0, 0, egScreenWidth, egScreenHeight, 0);
     } else if (UgaDraw != NULL) {
-        refit_call10_wrapper(UgaDraw->Blt, UgaDraw, &FillColor, EfiUgaVideoFill,
-                     0, 0, 0, 0, egScreenWidth, egScreenHeight, 0);
+        refit_call10_wrapper(UgaDraw->Blt, UgaDraw, &FillColor, EfiUgaVideoFill, 0, 0, 0, 0, egScreenWidth, egScreenHeight, 0);
     }
 }
 

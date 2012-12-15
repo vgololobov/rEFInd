@@ -22,6 +22,9 @@
 - Fixed bug that caused tools (shell, etc.) to launch when they were
   highlighted and F2 or Insert was pressed.
 
+- Added "editor" option to the "hideui" token in refind.conf, which
+  disables the boot options editor.
+
 - Added hints text to rEFInd main menu and sub-menus. This can be disabled
   by setting the new "hints" option to the "hideui" token in refind.conf.
 
