@@ -338,6 +338,7 @@ static fsw_status_t fsw_ext4_get_by_extent(struct fsw_ext4_volume *vol, struct f
     void          *buffer;
 
     struct ext4_extent_header  *ext4_extent_header;
+    struct ext4_extent_idx     *ext4_extent_idx;
     struct ext4_extent         *ext4_extent;
 
     // Logical block requested by core...
@@ -347,39 +348,51 @@ static fsw_status_t fsw_ext4_get_by_extent(struct fsw_ext4_volume *vol, struct f
     buffer = (void *)dno->raw->i_block;
     buf_bcnt = EXT4_NDIR_BLOCKS;
     buf_offset = 0;
-
-    ext4_extent_header = (struct ext4_extent_header *)buffer + buf_offset;
-    buf_offset += sizeof(struct ext4_extent_header);
-    FSW_MSG_DEBUG((FSW_MSGSTR("fsw_ext4_get_by_extent: extent header magic %x\n"), 
-                  ext4_extent_header->eh_magic));
-    if(ext4_extent_header->eh_magic != EXT4_EXT_MAGIC)
-        return FSW_VOLUME_CORRUPTED;
-
-    if(ext4_extent_header->eh_depth == 0)
-    {
-        // Leaf node, the header follows actual extents
-        FSW_MSG_DEBUG((FSW_MSGSTR("fsw_ext4_get_by_extent: leaf extent with %d extents\n"), 
+    while(1) {
+        ext4_extent_header = (struct ext4_extent_header *)buffer + buf_offset;
+        buf_offset += sizeof(struct ext4_extent_header);
+        FSW_MSG_DEBUG((FSW_MSGSTR("fsw_ext4_get_by_extent: extent header with %d entries\n"), 
                       ext4_extent_header->eh_entries));
+        if(ext4_extent_header->eh_magic != EXT4_EXT_MAGIC)
+            return FSW_VOLUME_CORRUPTED;
 
         for(ext_cnt = 0;ext_cnt < ext4_extent_header->eh_entries;ext_cnt++)
         {
-            ext4_extent = (struct ext4_extent *)(buffer + buf_offset);
-            buf_offset += sizeof(struct ext4_extent);
-            FSW_MSG_DEBUG((FSW_MSGSTR("fsw_ext4_get_by_extent: extent with %d len\n"), ext4_extent->ee_len));
-            FSW_MSG_DEBUG((FSW_MSGSTR("fsw_ext4_get_by_extent: extent with %d start_hi\n"), ext4_extent->ee_start_hi));
-            FSW_MSG_DEBUG((FSW_MSGSTR("fsw_ext4_get_by_extent: extent with %d start_lo\n"), ext4_extent->ee_start_lo));
-            // Is the requested block in this extent?
-            if(bno >= ext4_extent->ee_block && bno < ext4_extent->ee_block + ext4_extent->ee_len)
+            if(ext4_extent_header->eh_depth == 0)
             {
-                extent->phys_start = ext4_extent->ee_start_lo + bno;
-                extent->log_count = ext4_extent->ee_len - (bno - ext4_extent->ee_block);
-                return FSW_SUCCESS;
+                // Leaf node, the header follows actual extents
+                ext4_extent = (struct ext4_extent *)(buffer + buf_offset);
+                buf_offset += sizeof(struct ext4_extent);
+                FSW_MSG_DEBUG((FSW_MSGSTR("fsw_ext4_get_by_extent: extent node cover %d...\n"), ext4_extent->ee_block));
+
+                // Is the requested block in this extent?
+                if(bno >= ext4_extent->ee_block && bno < ext4_extent->ee_block + ext4_extent->ee_len)
+                {
+                    extent->phys_start = ext4_extent->ee_start_lo + (bno - ext4_extent->ee_block);
+                    extent->log_count = ext4_extent->ee_len - (bno - ext4_extent->ee_block);
+                    return FSW_SUCCESS;
+                }
+            }
+            else
+            {
+                FSW_MSG_DEBUG((FSW_MSGSTR("fsw_ext4_get_by_extent: index extents, depth %d\n"), 
+                          ext4_extent_header->eh_depth));
+                ext4_extent_idx = (struct ext4_extent_idx *)(buffer + buf_offset);
+                buf_offset += sizeof(struct ext4_extent_idx);
+                
+                FSW_MSG_DEBUG((FSW_MSGSTR("fsw_ext4_get_by_extent: index node covers block %d...\n"),
+                          ext4_extent_idx->ei_block));
+                if(bno >= ext4_extent_idx->ei_block)
+                {
+                    // Follow extent tree...
+                    status = fsw_block_get(vol, ext4_extent_idx->ei_leaf_lo, 1, (void **)&buffer);
+                    if (status)
+                        return status;
+                    buf_offset = 0;
+                    break;
+                }
             }
         }
-    }
-    else
-    {
-        // Follow extent tree...
     }
     
     return FSW_NOT_FOUND;
