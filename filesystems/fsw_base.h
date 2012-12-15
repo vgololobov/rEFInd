@@ -69,7 +69,7 @@
  * Global debugging level. Can be set locally for the scope of a single
  * file by defining the macro before fsw_base.h is included.
  */
-#define FSW_DEBUG_LEVEL 3
+#define FSW_DEBUG_LEVEL 1
 #endif
 
 // message printing
