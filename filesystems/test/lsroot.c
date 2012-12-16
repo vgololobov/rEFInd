@@ -38,10 +38,11 @@
 #include "fsw_posix.h"
 
 
-extern struct fsw_fstype_table FSW_FSTYPE_TABLE_NAME(ext2);
 extern struct fsw_fstype_table FSW_FSTYPE_TABLE_NAME(reiserfs);
 extern struct fsw_fstype_table FSW_FSTYPE_TABLE_NAME(iso9660);
 extern struct fsw_fstype_table FSW_FSTYPE_TABLE_NAME(hfs);
+extern struct fsw_fstype_table FSW_FSTYPE_TABLE_NAME(ext2);
+extern struct fsw_fstype_table FSW_FSTYPE_TABLE_NAME(ext4);
 
 int main(int argc, char **argv)
 {
@@ -50,7 +51,7 @@ int main(int argc, char **argv)
     struct dirent *dent;
 
     if (argc != 2) {
-        printf("Usage: lsroot <file/device>\n");
+        fprintf(stderr, "Usage: lsroot <file/device>\n");
         return 1;
     }
 
@@ -58,17 +59,17 @@ int main(int argc, char **argv)
     //vol = fsw_posix_mount(argv[1], &FSW_FSTYPE_TABLE_NAME(reiserfs));
     vol = fsw_posix_mount(argv[1], &FSW_FSTYPE_TABLE_NAME(FSTYPE));
     if (vol == NULL) {
-        printf("Mounting failed.\n");
+        fprintf(stderr, "Mounting failed.\n");
         return 1;
     }
     //dir = fsw_posix_opendir(vol, "/drivers/net/");
     dir = fsw_posix_opendir(vol, "/");
     if (dir == NULL) {
-        printf("opendir call failed.\n");
+        fprintf(stderr, "opendir call failed.\n");
         return 1;
     }
     while ((dent = fsw_posix_readdir(dir)) != NULL) {
-        printf("- %s\n", dent->d_name);
+        fprintf(stderr, "- %s\n", dent->d_name);
     }
     fsw_posix_closedir(dir);
     fsw_posix_unmount(vol);

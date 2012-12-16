@@ -345,6 +345,8 @@ VOID ReadConfig(CHAR16 *FileName)
 
     // Set a few defaults only if we're loading the default file.
     if (StriCmp(FileName, CONFIG_FILE_NAME) == 0) {
+       MyFreePool(GlobalConfig.AlsoScan);
+       GlobalConfig.AlsoScan = StrDuplicate(ALSO_SCAN_DIRS);
        MyFreePool(GlobalConfig.DontScanDirs);
        GlobalConfig.DontScanDirs = StrDuplicate(SelfDirPath);
        MyFreePool(GlobalConfig.DontScanFiles);

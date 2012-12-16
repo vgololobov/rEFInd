@@ -118,7 +118,7 @@ static VOID AboutrEFInd(VOID)
 
     if (AboutMenu.EntryCount == 0) {
         AboutMenu.TitleImage = BuiltinIcon(BUILTIN_ICON_FUNC_ABOUT);
-        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.5.1.5");
+        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.5.1.6");
         AddMenuInfoLine(&AboutMenu, L"");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2006-2010 Christoph Pfisterer");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2012 Roderick W. Smith");
@@ -455,6 +455,22 @@ LOADER_ENTRY *InitializeLoaderEntry(IN LOADER_ENTRY *Entry) {
    return (NewEntry);
 } // LOADER_ENTRY *InitializeLoaderEntry()
 
+// Adds InitrdPath to Options, but only if Options doesn't already include an
+// initrd= line. Done to enable overriding the default initrd selection in a
+// refind_linux.conf file's options list.
+// Returns a pointer to a new string. The calling function is responsible for
+// freeing its memory.
+static CHAR16 *AddInitrdToOptions(CHAR16 *Options, CHAR16 *InitrdPath) {
+   CHAR16 *NewOptions;
+
+   NewOptions = StrDuplicate(Options);
+   if ((InitrdPath != NULL) && !StriSubCmp(L"initrd=", Options)) {
+      MergeStrings(&NewOptions, L"initrd=", L' ');
+      MergeStrings(&NewOptions, InitrdPath, 0);
+   }
+   return NewOptions;
+} // CHAR16 *AddInitrdToOptions()
+
 // Prepare a REFIT_MENU_SCREEN data structure for a subscreen entry. This sets up
 // the default entry that launches the boot loader using the same options as the
 // main Entry does. Subsequent options can be added by the calling function.
@@ -463,7 +479,7 @@ LOADER_ENTRY *InitializeLoaderEntry(IN LOADER_ENTRY *Entry) {
 // Returns a pointer to the new subscreen data structure, or NULL if there
 // were problems allocating memory.
 REFIT_MENU_SCREEN *InitializeSubScreen(IN LOADER_ENTRY *Entry) {
-   CHAR16              *FileName, *Temp = NULL;
+   CHAR16              *FileName, *MainOptions = NULL;
    REFIT_MENU_SCREEN   *SubScreen = NULL;
    LOADER_ENTRY        *SubEntry;
 
@@ -479,12 +495,9 @@ REFIT_MENU_SCREEN *InitializeSubScreen(IN LOADER_ENTRY *Entry) {
          SubEntry = InitializeLoaderEntry(Entry);
          if (SubEntry != NULL) {
             SubEntry->me.Title = L"Boot using default options";
-            if ((SubEntry->InitrdPath != NULL) && (StrLen(SubEntry->InitrdPath) > 0) && (!StriSubCmp(L"initrd", SubEntry->LoadOptions))) {
-               MergeStrings(&Temp, L"initrd=", 0);
-               MergeStrings(&Temp, SubEntry->InitrdPath, 0);
-               MergeStrings(&SubEntry->LoadOptions, Temp, L' ');
-               MyFreePool(Temp);
-            } // if
+            MainOptions = SubEntry->LoadOptions;
+            SubEntry->LoadOptions = AddInitrdToOptions(MainOptions, SubEntry->InitrdPath);
+            MyFreePool(MainOptions);
             AddMenuEntry(SubScreen, (REFIT_MENU_ENTRY *)SubEntry);
          } // if (SubEntry != NULL)
       } // if (SubScreen != NULL)
@@ -583,18 +596,14 @@ VOID GenerateSubScreen(LOADER_ENTRY *Entry, IN REFIT_VOLUME *Volume) {
    } else if (Entry->OSType == 'L') {   // entries for Linux kernels with EFI stub loaders
       File = ReadLinuxOptionsFile(Entry->LoaderPath, Volume);
       if (File != NULL) {
-         if ((Temp = FindInitrd(Entry->LoaderPath, Volume)) != NULL) {
-            MergeStrings(&InitrdOption, L"initrd=", 0);
-            MergeStrings(&InitrdOption, Temp, 0);
-         }
+         Temp =  FindInitrd(Entry->LoaderPath, Volume);
          TokenCount = ReadTokenLine(File, &TokenList); // read and discard first entry, since it's
          FreeTokenLine(&TokenList, &TokenCount);       // set up by InitializeSubScreen(), earlier....
          while ((TokenCount = ReadTokenLine(File, &TokenList)) > 1) {
             SubEntry = InitializeLoaderEntry(Entry);
             SubEntry->me.Title = StrDuplicate(TokenList[0]);
             MyFreePool(SubEntry->LoadOptions);
-            SubEntry->LoadOptions = StrDuplicate(TokenList[1]);
-            MergeStrings(&SubEntry->LoadOptions, InitrdOption, L' ');
+            SubEntry->LoadOptions = AddInitrdToOptions(TokenList[1], Temp);
             FreeTokenLine(&TokenList, &TokenCount);
             SubEntry->UseGraphicsMode = GlobalConfig.GraphicsFor & GRAPHICS_FOR_LINUX;
             AddMenuEntry(SubScreen, (REFIT_MENU_ENTRY *)SubEntry);
@@ -680,18 +689,15 @@ VOID GenerateSubScreen(LOADER_ENTRY *Entry, IN REFIT_VOLUME *Volume) {
 // kernel's directory; and if present, adds an initrd= option for an initial
 // RAM disk file with the same version number as the kernel file.
 static CHAR16 * GetMainLinuxOptions(IN CHAR16 * LoaderPath, IN REFIT_VOLUME *Volume) {
-   CHAR16 *Options = NULL, *InitrdName, *InitrdOption = NULL;
+   CHAR16 *Options = NULL, *InitrdName, *FullOptions = NULL;
 
    Options = GetFirstOptionsFromFile(LoaderPath, Volume);
    InitrdName = FindInitrd(LoaderPath, Volume);
-   if (InitrdName != NULL) {
-      MergeStrings(&InitrdOption, L"initrd=", 0);
-      MergeStrings(&InitrdOption, InitrdName, 0);
-   } // if
-   MergeStrings(&Options, InitrdOption, ' ');
-   MyFreePool(InitrdOption);
+   FullOptions = AddInitrdToOptions(Options, InitrdName);
+
+   MyFreePool(Options);
    MyFreePool(InitrdName);
-   return (Options);
+   return (FullOptions);
 } // static CHAR16 * GetMainLinuxOptions()
 
 // Sets a few defaults for a loader entry -- mainly the icon, but also the OS type
@@ -747,12 +753,6 @@ VOID SetLoaderDefaults(LOADER_ENTRY *Entry, CHAR16 *LoaderPath, IN REFIT_VOLUME 
    } else if (StriCmp(FileName, L"e.efi") == 0 || StriCmp(FileName, L"elilo.efi") == 0 || StriSubCmp(L"elilo", FileName)) {
       MergeStrings(&OSIconName, L"elilo,linux", L',');
       Entry->OSType = 'E';
-//       if (secure_mode()) { // hack to enable ELILO to boot in secure mode
-//          Temp = StrDuplicate(L"-C ");
-//          MergeStrings(&Temp, PathOnly, 0);
-//          MergeStrings(&Temp, L"elilo.conf", L'\\');
-//          Entry->LoadOptions = Temp;
-//       }
       if (ShortcutLetter == 0)
          ShortcutLetter = 'L';
       Entry->UseGraphicsMode = GlobalConfig.GraphicsFor & GRAPHICS_FOR_ELILO;

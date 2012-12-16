@@ -58,7 +58,7 @@
 
 
 /** Maximum size for a path, specifically symlink target paths. */
-#ifndef VBOX
+#ifndef HOST_EFI_EDK2
 #define FSW_PATH_MAX (4096)
 #else
 /* Too big allocations are handled with alloca() */

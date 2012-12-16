@@ -1,6 +1,10 @@
 0.5.2 (12/??/2012):
 -------------------
 
+- Added ext4fs driver!
+
+- Made "boot" the default value for "also_scan_dirs.
+
 - Added identifying screen header to line editor.
 
 - Fixed bug that caused rEFInd's display to be mis-sized upon return

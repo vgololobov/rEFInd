@@ -186,6 +186,8 @@ CopyDrivers() {
       case $BootFS in
          ext2 | ext3) DriverType="ext2"
               ;;
+	 ext4) DriverType="ext4"
+	      ;;
          reiserfs) DriverType="reiserfs"
               ;;
          hfsplus) DriverType="hfs"

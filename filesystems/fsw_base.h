@@ -51,30 +51,25 @@
 
 #ifndef _FSW_BASE_H_
 #define _FSW_BASE_H_
-//#define HOST_EFI 1
-#define VBOX
 
-#ifdef VBOX
-#include "VBoxFswParam.h"
+#ifdef HOST_EFI_EDK2
+#define HOST_EFI
 #endif
-
-//#include <Protocol/MsgLog.h> 
-
-#ifndef FSW_DEBUG_LEVEL
-/**
- * Global debugging level. Can be set locally for the scope of a single
- * file by defining the macro before fsw_base.h is included.
- */
-#define FSW_DEBUG_LEVEL 0
-#endif
-
 
 #ifdef HOST_EFI
 #include "fsw_efi_base.h"
 #endif
 
 #ifdef HOST_POSIX
-#include "fsw_posix_base.h"
+#include "test/fsw_posix_base.h"
+#endif
+
+#ifndef FSW_DEBUG_LEVEL
+/**
+ * Global debugging level. Can be set locally for the scope of a single
+ * file by defining the macro before fsw_base.h is included.
+ */
+#define FSW_DEBUG_LEVEL 1
 #endif
 
 // message printing

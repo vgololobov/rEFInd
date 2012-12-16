@@ -8,7 +8,7 @@
 
 INSTALL_DIR = /boot/efi/EFI/refind/drivers
 
-FILESYSTEMS = ext2 reiserfs iso9660 hfs
+FILESYSTEMS = ext2 reiserfs iso9660 hfs ext4
 TEXTFILES = $(FILESYSTEMS:=*.txt)
 
 all:	$(FILESYSTEMS)
@@ -28,6 +28,10 @@ iso9660:
 hfs:
 	rm -f fsw_efi.o
 	make DRIVERNAME=hfs -f Make.tiano
+
+ext4:
+	rm -f fsw_efi.o
+	make DRIVERNAME=ext4 -f Make.tiano
 
 # utility rules
 

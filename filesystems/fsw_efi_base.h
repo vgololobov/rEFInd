@@ -52,7 +52,11 @@
 #ifndef _FSW_EFI_BASE_H_
 #define _FSW_EFI_BASE_H_
 
-#ifndef VBOX
+// If its EDK2 EFI Toolkit
+#ifdef HOST_EFI_EDK2
+#include "fsw_efi_edk2_base.h"
+#else
+// Intel EFI Toolkit
 #include <efi.h>
 #include <efilib.h>
 #define PROTO_NAME(x) x
