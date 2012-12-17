@@ -47,10 +47,7 @@ make clean
 # Prepare a place and copy files there....
 mkdir -p ../snapshots/$1/refind-$1/icons
 cp --preserve=timestamps icons/*icns ../snapshots/$1/refind-$1/icons/
-cp -a docs images include EfiLib libeg refind filesystems install.sh mkrlconf.sh CREDITS.txt NEWS.txt BUILDING.txt COPYING.txt LICENSE.txt README.txt refind.inf Make.tiano Make.common Makefile refind.conf-sample ../snapshots/$1/refind-$1
-if [[ SignIt == 1 ]] ; then
-   cp $KeysDir/refind.cer $KeysDir/refind.crt ../snapshots/$1/refind-$1/
-fi
+cp -a docs images keys include EfiLib libeg refind filesystems install.sh mkrlconf.sh CREDITS.txt NEWS.txt BUILDING.txt COPYING.txt LICENSE.txt README.txt refind.inf Make.tiano Make.common Makefile refind.conf-sample ../snapshots/$1/refind-$1
 
 # Go there and prepare a souce code zip file....
 cd ../snapshots/$1/
@@ -87,11 +84,10 @@ else
    cp refind/refind_x64.efi refind-bin-$1/refind/refind_x64.efi
 fi
 cp refind-bin-$1/refind/refind_x64.efi $StartDir
-cp -a COPYING.txt LICENSE.txt README.txt docs CREDITS.txt install.sh mkrlconf.sh refind-bin-$1
+cp -a docs keys COPYING.txt LICENSE.txt README.txt CREDITS.txt install.sh mkrlconf.sh refind-bin-$1
 
 # Prepare the final .zip file and clean up
 if [[ $SignIt == 1 ]] ; then
-   cp $KeysDir/refind.cer $KeysDir/refind.crt refind-bin-$1/
    umount $KeysDir
 fi
 zip -9r ../refind-bin-$1.zip refind-bin-$1

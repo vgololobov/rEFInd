@@ -167,9 +167,18 @@ timeout 20
 # Directories are specified relative to the volume's root directory. This
 # option applies to ALL the volumes that rEFInd scans. If a specified
 # directory doesn't exist, it's ignored (no error condition results).
-# The default is to scan no additional directories.
+# The default is to scan the "boot" directory in addition to various
+# hard-coded directories.
 #
 #also_scan_dirs boot,EFI/linux/kernels
+
+# Partitions to omit from scans. You must specify a volume by its
+# label, which you can obtain in an EFI shell by typing "vol", from
+# Linux by typing "blkid /dev/{devicename}", or by examining the
+# disk's label in various OSes' file browsers.
+# The default is an empty list (all volumes are scanned).
+#
+#dont_scan_volumes
 
 # Directories that should NOT be scanned for boot loaders. By default,
 # rEFInd doesn't scan its own directory or the EFI/tools directory.

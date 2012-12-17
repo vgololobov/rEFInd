@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 3/19/2012; last Web page update:
-12/12/2012, referencing rEFInd 0.5.1</p>
+12/16/2012, referencing rEFInd 0.6.0</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -108,7 +108,31 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 <h2>Using the EFI Stub Loader: A Quick Setup Guide</h2>
 </a>
 
-<p>The EFI stub loader is basic and reliable, but it requires some setup to use it. I describe both <a href="#testing">a quick test configuration</a> and <a href="#longterm">a long-term setup.</a></p>
+<p>The EFI stub loader is basic and reliable, but it requires some setup to use it on some computers. I describe three methods of using it: an <a href="#easiest">easiest method</a> for those with compatible partition and filesystem layouts, a <a href="#testing">quick test configuration</a> for those without such a layout, and <a href="#longterm">a long-term setup</a> for those without the ideal setup.</p>
+
+<a name="easiest">
+<h3>For Those With Foresight or Luck: The Easiest Method</h3>
+</a>
+
+<p>This method requires that your <tt>/boot</tt> directory, whether it's on a separate partition or is a regular directory in your root (<tt>/</tt>) filesystem, be readable by the EFI. At the moment, all EFI implementations can read FAT and Macs can read HFS+. By using <a href="drivers.html">drivers,</a> you can make any EFI read HFS+, ISO-9660, ReiserFS, ext2fs, ext3fs, or ext4fs. Thus, if you use any of these filesystems on a regular partition (not an LVM or RAID configuration) that holds your kernels in <tt>/boot</tt>, you qualify for this easy method. The default partition layouts used by Ubuntu, Fedora, and many other distributions qualify, because they use one of these filesystems (usually ext4fs) in a normal partition or on a separate <tt>/boot</tt> partition. You must also have a 3.3.0 or later Linux kernel with EFI stub support, of course.</p>
+
+<p>If you installed rEFInd 0.6.0 or later with its <tt>install.sh</tt> script from your regular Linux installation, chances are everything's set up; you should be able to reboot and see your Linux kernels as boot options. If you installed manually, from OS X, or from an emergency system, though, you may need to do a couple of things manually:
+
+<ol>
+
+<li>Copy the relevant driver file for your filesystem and architecture to
+    the <tt>drivers</tt> or <tt>drivers_<tt class="variable">arch</tt></tt>
+    subdirectory of the rEFInd installation directory on the ESP. You may
+    need to create this subdirectory, too.</li>
+
+<li>Create a <tt>refind_linux.conf</tt> file in your <tt>/boot</tt>
+    directory. The <tt>mkrlconf.sh</tt> script that comes with rEFInd
+    should do this job, or you can do it manually as described <a
+    href="#efistub">later.</a></li>
+
+</ol>
+
+<p>When you reboot, you should see rEFInd options for your Linux kernels. If they work, your job is done, although you might want to apply some of the tweaks described in the <a href="#longterm">maintenance-free setup</a> section. If you have problems, you may need to adjust the <tt>refind_linux.conf</tt> file, as described in the <a href="#efistub">detailed configuration section.</a></p>
 
 <a name="testing">
 <h3>Testing the EFI Stub Loader</h3>
@@ -152,7 +176,7 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 <h3>Configuring a Maintenance-Free Setup</h3>
 </a>
 
-<p>The ideal configuration for use of the EFI stub loader involves giving rEFInd the ability to load your kernels directly from <tt>/boot</tt>. The main obstacle to doing so is that this directory is frequently on an XFS, JFS, Btrfs, or ext4 filesystem that the EFI can't read, or it's tucked away in an LVM or RAID configuration that the EFI can't read. Fortunately, this problem can be overcome with relatively little fuss. Several variant procedures are possible, but I begin by describing one that will almost always work, although it's got some important caveats (described at the end). You should perform the following steps as <tt>root</tt>, or precede each of these commands with <tt>sudo</tt>:</p>
+<p>If your <tt>/boot</tt> directory happens to be on an XFS, JFS, or Btrfs partition that the EFI can't read, or it's tucked away in an LVM or RAID configuration that the EFI can't read, you won't be able to use the <a href="#easiest">easiest solution.</a> Fortunately, this problem can be overcome with relatively little fuss. Several variant procedures are possible, but I begin by describing one that will almost always work, although it's got some important caveats (described at the end). You should perform the following steps as <tt>root</tt>, or precede each of these commands with <tt>sudo</tt>:</p>
 
 <ol>
 
@@ -215,10 +239,9 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Once this task is done, updates to your kernel will automatically be stored in the root directory of your ESP, where rEFInd will automatically detect them. Thus, the boot configuration becomes maintenance-free. The procedure as just described has some drawbacks, though. By placing your kernels in the root directory of your ESP, you render them vulnerable to any other OS with which you might be dual-booting. Your ESP must also be large enough to hold all your kernels. If you dual-boot with multiple Linux distributions, they might conceivably overwrite each others' kernels, and distinguishing one from another becomes more difficult.</p>
 
-<p>For these reasons, a variant of this procedure is desirable on some systems. Most of the steps are similar, but in this variant, you create a separate <tt>/boot</tt> partition that's independent of the ESP. This partition can use FAT, HFS+, ReiserFS, ext2fs, or ext3fs; but if you use any of the last four filesystems (three on Macs), you must install the matching EFI filesystem driver that ships with rEFInd. Creating the filesystem will normally require you to shrink an existing partition by a suitable amount (200&ndash;500MiB). Mount your new <tt>/boot</tt> partition at a temporary location, copy or move the current <tt>/boot</tt> files into it, unmount it, and add it to <tt>/etc/fstab</tt> as <tt>/boot</tt>.</p>
+<p>For these reasons, a variant of this procedure is desirable on some systems. Most of the steps are similar, but in this variant, you create a separate <tt>/boot</tt> partition that's independent of the ESP. This partition can use FAT, HFS+, ReiserFS, ext2fs, ext3fs, or ext4fs; but if you use any of the last five filesystems (four on Macs), you must install the matching EFI filesystem driver that ships with rEFInd. Creating the filesystem will normally require you to shrink an existing partition by a suitable amount (200&ndash;500MiB). Mount your new <tt>/boot</tt> partition at a temporary location, copy or move the current <tt>/boot</tt> files into it, unmount it, and add it to <tt>/etc/fstab</tt> as <tt>/boot</tt>.</p>
 
-
-<p>If your distribution already uses a separate <tt>/boot</tt> partition (as Fedora 17 does by default), but if it uses ext4fs or some other unsuitable filesystem, you can back it up, create a fresh FAT, HFS+, ReiserFS, ext2, or ext3 filesystem on it, and restore the original files. You'll probably need to adjust the UUID value in <tt>/etc/fstab</tt> to ensure that the computer mounts the new filesystem when you boot. If you use a separate non-ESP <tt>/boot</tt> partition, you'll probably want to continue mounting the ESP at <tt>/boot/efi</tt>.</p>
+<p>If your distribution already uses a separate <tt>/boot</tt> partition, but if it uses XFS or some other unsuitable filesystem, you can back it up, create a fresh FAT, HFS+, ReiserFS, ext2, ext3, or ext4 filesystem on it, and restore the original files. You'll probably need to adjust the UUID value in <tt>/etc/fstab</tt> to ensure that the computer mounts the new filesystem when you boot. If you use a separate non-ESP <tt>/boot</tt> partition, you'll probably want to continue mounting the ESP at <tt>/boot/efi</tt>.</p>
 
 <a name="efistub">
 <h2>EFI Stub Loader Support Technical Details</h2>
@@ -306,7 +329,7 @@ total 17943
 
 <a name="refind_linux">
 <pre class="listing">
-"Boot with defaults"         "root=/dev/sda3 ro quiet splash vt.handoff=7"
+"Boot using default options" "root=/dev/sda3 ro quiet splash vt.handoff=7"
 "Boot into single-user mode" "root=UUID=1cd95082-bce0-494c-a290-d2e642dd82b7 ro single"
 "Boot without graphics"      "root=UUID=1cd95082-bce0-494c-a290-d2e642dd82b7 ro"
 # "Boot alternate install"   "root=/dev/sdb9 ro quiet splash vt.handoff=7"
@@ -322,9 +345,7 @@ total 17943
     a refind_linux.conf file in the Linux kernel's directory."
     border=2></center><br />
 
-<p>Note that the first entry shown here takes a name that's set in rEFInd rather than the one specified in the <tt>refind_linux.conf</tt> file. The remaining names match those specified in the file, though.</p>
-
-<p>To assist in initial configuration, rEFInd's <tt>install.sh</tt> script creates a sample <tt>refind_linux.conf</tt> file in <tt>/boot</tt>. This sample file defines two entries that use the default GRUB options defined in <tt>/etc/default/grub</tt>. The first entry boots normally and the second boots into single-user mode. If you want to create a new file, you can use the <tt>mkrlconf.sh</tt> script that comes with rEFInd. If you pass it the <tt>--force</tt> option, it will overwrite the existing <tt>/boot/refind_linux.conf</tt> file; otherwise it will create the file only if one doesn't already exist.</p>
+<p>To assist in initial configuration, rEFInd's <tt>install.sh</tt> script creates a sample <tt>refind_linux.conf</tt> file in <tt>/boot</tt>. This sample file defines three entries, the first two of which use the default GRUB options defined in <tt>/etc/default/grub</tt> and the last of which uses minimal options. The first entry boots normally and the second boots into single-user mode. If you want to create a new file, you can use the <tt>mkrlconf.sh</tt> script that comes with rEFInd. If you pass it the <tt>--force</tt> option, it will overwrite the existing <tt>/boot/refind_linux.conf</tt> file; otherwise it will create the file only if one doesn't already exist.</p>
 
 <p>From a user's perspective, the submenus defined in this way work just like submenus defined via the <tt>submenuentry</tt> options in <tt>refind.conf</tt>, or like the submenus that rEFInd creates automatically for Mac OS X or ELILO. There are, however, limitations in what you can accomplish with this method:</p>
 

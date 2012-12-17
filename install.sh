@@ -29,7 +29,7 @@
 #
 # Revision history:
 #
-# 0.5.2   -- Changed --drivers to --alldrivers and added --nodrivers option;
+# 0.6.0   -- Changed --drivers to --alldrivers and added --nodrivers option;
 #            changed default driver installation behavior in Linux to install
 #            the driver needed to read /boot (if available)
 # 0.5.1.2 -- Fixed bug that caused failure to generate refind_linux.conf file
@@ -163,11 +163,12 @@ CopyShimFiles() {
 # Copy the public keys to the installation medium
 CopyKeys() {
    if [[ $LocalKeys == 1 ]] ; then
-      cp $EtcKeysDir/$LocalKeysBase.cer $InstallDir/$TargetDir
-      cp $EtcKeysDir/$LocalKeysBase.crt $InstallDir/$TargetDir
-   else
-      cp $ThisDir/refind.cer $InstallDir/$TargetDir
-      cp $ThisDir/refind.crt $InstallDir/$TargetDir
+      mkdir -p $InstallDir/$TargetDir/keys/
+      cp $EtcKeysDir/$LocalKeysBase.cer $InstallDir/$TargetDir/keys/
+      cp $EtcKeysDir/$LocalKeysBase.crt $InstallDir/$TargetDir/keys/
+#    else
+#       cp $ThisDir/refind.cer $InstallDir/$TargetDir/keys/
+#       cp $ThisDir/refind.crt $InstallDir/$TargetDir/keys/
    fi
 } # CopyKeys()
 
@@ -184,10 +185,8 @@ CopyDrivers() {
       BootFS=`blkid -o export $BootPart 2> /dev/null | grep TYPE= | cut -f 2 -d =`
       DriverType=""
       case $BootFS in
-         ext2 | ext3) DriverType="ext2"
+         ext2 | ext3 | ext4) DriverType="ext4"
               ;;
-	 ext4) DriverType="ext4"
-	      ;;
          reiserfs) DriverType="reiserfs"
               ;;
          hfsplus) DriverType="hfs"
@@ -247,8 +246,8 @@ CopyRefindFiles() {
          if [[ $LocalKeys == 0 ]] ; then
             echo "Storing copies of rEFInd Secure Boot public keys in $EtcKeysDir"
             mkdir -p $EtcKeysDir
-            cp $ThisDir/refind.cer $EtcKeysDir
-            cp $ThisDir/refind.crt $EtcKeysDir
+            cp $ThisDir/keys/refind.cer $EtcKeysDir
+            cp $ThisDir/keys/refind.crt $EtcKeysDir
          fi
       fi
    else
@@ -266,6 +265,7 @@ CopyRefindFiles() {
    if [[ $? != 0 ]] ; then
       Problems=1
    fi
+   cp -rf $ThisDir/keys $InstallDir/$TargetDir/
    if [[ -f $InstallDir/$TargetDir/refind.conf ]] ; then
       echo "Existing refind.conf file found; copying sample file as refind.conf-sample"
       echo "to avoid overwriting your customizations."
@@ -516,7 +516,7 @@ ReSignBinaries() {
    cp $RefindDir/refind_ia32.efi $TempDir
    cp -a $RefindDir/drivers_ia32 $TempDir 2> /dev/null
    cp -a $ThisDir/drivers_ia32 $TempDir 2> /dev/null
-   SignOneBinary $RefindDir/refind_x64.efi $ThisDir/refind_x64.efi
+   SignOneBinary $RefindDir/refind_x64.efi $TempDir/refind_x64.efi
    for Driver in `ls $RefindDir/drivers_x64/*.efi $ThisDir/drivers_x64/*.efi 2> /dev/null` ; do
       TempName=`basename $Driver`
       SignOneBinary $Driver $TempDir/drivers_x64/$TempName

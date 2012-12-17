@@ -347,6 +347,8 @@ VOID ReadConfig(CHAR16 *FileName)
     if (StriCmp(FileName, CONFIG_FILE_NAME) == 0) {
        MyFreePool(GlobalConfig.AlsoScan);
        GlobalConfig.AlsoScan = StrDuplicate(ALSO_SCAN_DIRS);
+//        MyFreePool(GlobalConfig.DontScanVolumes);
+//        GlobalConfig.DontScanVolumes = StrDuplicate(L" ");
        MyFreePool(GlobalConfig.DontScanDirs);
        GlobalConfig.DontScanDirs = StrDuplicate(SelfDirPath);
        MyFreePool(GlobalConfig.DontScanFiles);
@@ -410,6 +412,15 @@ VOID ReadConfig(CHAR16 *FileName)
 
         } else if (StriCmp(TokenList[0], L"also_scan_dirs") == 0) {
             HandleStrings(TokenList, TokenCount, &(GlobalConfig.AlsoScan));
+
+        } else if ((StriCmp(TokenList[0], L"don't_scan_volumes") == 0) || (StriCmp(TokenList[0], L"dont_scan_volumes") == 0)) {
+           HandleStrings(TokenList, TokenCount, &(GlobalConfig.AlsoScan));
+           // Note: Don't use HandleStrings() because it modifies slashes, which might be present in volume name
+            MyFreePool(GlobalConfig.DontScanVolumes);
+            GlobalConfig.DontScanVolumes = NULL;
+            for (i = 1; i < TokenCount; i++) {
+               MergeStrings(&GlobalConfig.DontScanVolumes, TokenList[i], L',');
+            }
 
         } else if ((StriCmp(TokenList[0], L"don't_scan_dirs") == 0) || (StriCmp(TokenList[0], L"dont_scan_dirs") == 0)) {
             HandleStrings(TokenList, TokenCount, &(GlobalConfig.DontScanDirs));
@@ -718,7 +729,6 @@ VOID ScanUserConfigured(VOID)
    CHAR16            *Title = NULL;
    UINTN             TokenCount, size;
    LOADER_ENTRY      *Entry;
-//   REFIT_MENU_SCREEN  *SubScreen;
 
    if (FileExists(SelfDir, CONFIG_FILE_NAME)) {
       Status = ReadFile(SelfDir, CONFIG_FILE_NAME, &File, &size);

@@ -14,7 +14,7 @@
 <p class="subhead">by Roderick W. Smith, <a
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
-<p>Last Web page update: 12/12/2012</p>
+<p>Last Web page update: 12/16/2012</p>
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
 
@@ -91,6 +91,8 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 <p>The following summarizes changes in rEFInd's public releases:</p>
 
 <ul>
+
+<li><b>0.6.0 (12/16/2012)</b>&mdash;The donation of a working ext4fs driver from Stefan Agner has prompted another big jump in the rEFInd version number, since this driver will greatly simplify installation on many systems: You may be able to simply run the <tt>install.sh</tt> script to get a working rEFInd that boots your Linux kernels directly, bypassing GRUB or ELILO. Other improvements in this version include bug fixes and minor changes to <tt>install.sh</tt>, the addition of hint text to the rEFInd main menu, the ability to disable the options editor via the <tt>editor</tt> option to <tt>hideui</tt> in <tt>refind.conf</tt>, a new <tt>textmode</tt> option to <tt>refind.conf</tt> to set the size of the text-mode display, a change to the code that adds your initial RAM disk to the boot options so that if you specify one manually (via <tt>refind_linux.conf</tt>), it will take precedence, and assorted obscure bug fixes. The <tt>NEWS.txt</tt> file goes into more details about many of these changes, as do the relevant pages of this HTML documentation.</li>
 
 <li><b>0.5.1.1 (12/12/2012)</b>&mdash;This is a micro-update to fix a bug in the <tt>install.sh</tt> script that prevented it from working under OS X. Aside from that, and a few small documentation changes, this version changes nothing in rEFInd.</li>
 

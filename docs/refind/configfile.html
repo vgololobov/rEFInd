@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 3/14/2012; last Web page update:
-12/11/2012, referencing rEFInd 0.5.1</p>
+12/16/2012, referencing rEFInd 0.6.0</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -205,13 +205,18 @@ timeout 20
 </tr>
 <tr>
    <td><tt>scan_delay</tt></td>
-   <td>Numeric (integer) value</td>
+   <td>numeric (integer) value</td>
    <td>Imposes a delay before rEFInd scans for disk devices. Ordinarily this is not necessary, but on some systems, some disks (particularly external drives and optical discs) can take a few seconds to become available. If some of your disks don't appear when rEFInd starts but they <i>do</i> appear when you press the Esc key to re-scan, try uncommenting this option and setting it to a modest value, such as <tt>2</tt>, <tt>5</tt>, or even <tt>10</tt>. The default is <tt>0</tt>.</td>
 </tr>
 <tr>
    <td><tt>also_scan_dirs</tt></td>
    <td>directory path(s)</td>
-   <td>Adds the specified directory or directories to the directory list that rEFInd scans for EFI boot loaders when <tt>scanfor</tt> includes the <tt>internal</tt>, <tt>external</tt>, or <tt>optical</tt> options. Directories are specified relative to the filesystem's root directory. If this option is used, it's applied to <i>all</i> the filesystems that rEFInd scans. If a specified directory doesn't exist, rEFInd ignores it (no error results).</td>
+   <td>Adds the specified directory or directories to the directory list that rEFInd scans for EFI boot loaders when <tt>scanfor</tt> includes the <tt>internal</tt>, <tt>external</tt>, or <tt>optical</tt> options. Directories are specified relative to the filesystem's root directory. If this option is used, it's applied to <i>all</i> the filesystems that rEFInd scans. If a specified directory doesn't exist, rEFInd ignores it (no error results). The default value is <tt>boot</tt>, which is useful for locating Linux kernels when you have an EFI driver for your Linux root (<tt>/</tt>) filesystem.</td>
+</tr>
+<tr>
+   <td><tt>dont_scan_volumes</tt> or <tt>don't_scan_volumes</tt></td>
+   <td>filesystem label(s)</td>
+   <td>Adds the specified volume or volumes to a volume "blacklist"&mdash;these filesystems are <i>not</i> scanned for EFI boot loaders. This may be useful to keep unwanted EFI boot entries, such as for a Macintosh recovery partition, from appearing on the main list of boot loaders.</td>
 </tr>
 <tr>
    <td><tt>dont_scan_dirs</tt> or <tt>don't_scan_dirs</tt></td>

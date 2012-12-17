@@ -721,8 +721,8 @@ static VOID GraphicsMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *Sta
                } else {
                   DrawMenuText(L"Use arrow keys to move cursor; Enter to boot;", 0,
                                (UGAWidth - (45 * FONT_CELL_WIDTH)) / 2, UGAHeight - (FONT_CELL_HEIGHT * 3));
-                  DrawMenuText(L"Insert or F2 to edit options", 0,
-                               (UGAWidth - (28 * FONT_CELL_WIDTH)) / 2, UGAHeight - (FONT_CELL_HEIGHT * 2));
+                  DrawMenuText(L"Insert or F2 to edit options; Esc to return to main menu", 0,
+                               (UGAWidth - (56 * FONT_CELL_WIDTH)) / 2, UGAHeight - (FONT_CELL_HEIGHT * 2));
                } // if/else
             } // if
             break;
@@ -799,7 +799,7 @@ static VOID PaintAll(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, UINTN
    if (!(GlobalConfig.HideUIFlags & HIDEUI_FLAG_HINTS)) {
       DrawMainMenuText(L"Use arrow keys to move cursor; Enter to boot;",
                        (UGAWidth - LAYOUT_TEXT_WIDTH) / 2, UGAHeight - (FONT_CELL_HEIGHT * 3));
-      DrawMainMenuText(L"Insert or F2 for more options",
+      DrawMainMenuText(L"Insert or F2 for more options; Esc to refresh",
                        (UGAWidth - LAYOUT_TEXT_WIDTH) / 2, UGAHeight - (FONT_CELL_HEIGHT * 2));
    } // if
 } // static VOID PaintAll()

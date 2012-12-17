@@ -94,7 +94,7 @@ static VOID UninitVolumes(VOID);
 //
 
 // Converts forward slashes to backslashes, removes duplicate slashes, and
-// removes slashes from the end of the pathname.
+// removes slashes from both the start and end of the pathname.
 // Necessary because some (buggy?) EFI implementations produce "\/" strings
 // in pathnames, because some user inputs can produce duplicate directory
 // separators, and because we want consistent start and end slashes for
@@ -106,23 +106,20 @@ VOID CleanUpPathNameSlashes(IN OUT CHAR16 *PathName) {
    UINTN    i, FinalChar = 0;
    BOOLEAN  LastWasSlash = FALSE;
 
-   NewName = AllocateZeroPool(sizeof(CHAR16) * (StrLen(PathName) + 4));
+   NewName = AllocateZeroPool(sizeof(CHAR16) * (StrLen(PathName) + 2));
    if (NewName != NULL) {
       for (i = 0; i < StrLen(PathName); i++) {
          if ((PathName[i] == L'/') || (PathName[i] == L'\\')) {
-            if ((!LastWasSlash) /* && (FinalChar != 0) */)
+            if ((!LastWasSlash) && (FinalChar != 0))
                NewName[FinalChar++] = L'\\';
             LastWasSlash = TRUE;
          } else {
-            if (FinalChar == 0) {
-               NewName[FinalChar++] = L'\\';
-            }
             NewName[FinalChar++] = PathName[i];
             LastWasSlash = FALSE;
          } // if/else
       } // for
       NewName[FinalChar] = 0;
-      if ((FinalChar > 1) && (NewName[FinalChar - 1] == L'\\'))
+      if ((FinalChar > 0) && (NewName[FinalChar - 1] == L'\\'))
          NewName[--FinalChar] = 0;
       if (FinalChar == 0) {
          NewName[0] = L'\\';
@@ -133,6 +130,39 @@ VOID CleanUpPathNameSlashes(IN OUT CHAR16 *PathName) {
       FreePool(NewName);
    } // if allocation OK
 } // CleanUpPathNameSlashes()
+
+// VOID CleanUpPathNameSlashes(IN OUT CHAR16 *PathName) {
+//    CHAR16   *NewName;
+//    UINTN    i, FinalChar = 0;
+//    BOOLEAN  LastWasSlash = FALSE;
+// 
+//    NewName = AllocateZeroPool(sizeof(CHAR16) * (StrLen(PathName) + 4));
+//    if (NewName != NULL) {
+//       for (i = 0; i < StrLen(PathName); i++) {
+//          if ((PathName[i] == L'/') || (PathName[i] == L'\\')) {
+//             if ((!LastWasSlash) /* && (FinalChar != 0) */)
+//                NewName[FinalChar++] = L'\\';
+//             LastWasSlash = TRUE;
+//          } else {
+//             if (FinalChar == 0) {
+//                NewName[FinalChar++] = L'\\';
+//             }
+//             NewName[FinalChar++] = PathName[i];
+//             LastWasSlash = FALSE;
+//          } // if/else
+//       } // for
+//       NewName[FinalChar] = 0;
+//       if ((FinalChar > 1) && (NewName[FinalChar - 1] == L'\\'))
+//          NewName[--FinalChar] = 0;
+//       if (FinalChar == 0) {
+//          NewName[0] = L'\\';
+//          NewName[1] = 0;
+//       }
+//       // Copy the transformed name back....
+//       StrCpy(PathName, NewName);
+//       FreePool(NewName);
+//    } // if allocation OK
+// } // CleanUpPathNameSlashes()
 
 // Splits an EFI device path into device and filename components. For instance, if InString is
 // PciRoot(0x0)/Pci(0x1f,0x2)/Ata(Secondary,Master,0x0)/HD(2,GPT,8314ae90-ada3-48e9-9c3b-09a88f80d921,0x96028,0xfa000)/\bzImage-3.5.1.efi,
@@ -1229,7 +1259,7 @@ VOID MergeStrings(IN OUT CHAR16 **First, IN CHAR16 *Second, CHAR16 AddChar) {
          StrCat(NewString, *First);
          if (AddChar) {
             NewString[Length1] = AddChar;
-            NewString[Length1 + 1] = 0;
+            NewString[Length1 + 1] = '\0';
          } // if (AddChar)
       } // if (*First != NULL)
       if (Second != NULL)
@@ -1463,18 +1493,18 @@ BOOLEAN EjectMedia(VOID) {
 } // VOID EjectMedia()
 
 
-// Return the GUID as a string, suitable for display to the user. Note that the calling
-// function is responsible for freeing the allocated memory.
-CHAR16 * GuidAsString(EFI_GUID *GuidData) {
-   CHAR16 *TheString;
-
-   TheString = AllocateZeroPool(42 * sizeof(CHAR16));
-   if (TheString != 0) {
-      SPrint (TheString, 82, L"%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
-              (UINTN)GuidData->Data1, (UINTN)GuidData->Data2, (UINTN)GuidData->Data3,
-              (UINTN)GuidData->Data4[0], (UINTN)GuidData->Data4[1], (UINTN)GuidData->Data4[2],
-              (UINTN)GuidData->Data4[3], (UINTN)GuidData->Data4[4], (UINTN)GuidData->Data4[5],
-              (UINTN)GuidData->Data4[6], (UINTN)GuidData->Data4[7]);
-   }
-   return TheString;
-} // GuidAsString(EFI_GUID *GuidData)
+// // Return the GUID as a string, suitable for display to the user. Note that the calling
+// // function is responsible for freeing the allocated memory.
+// CHAR16 * GuidAsString(EFI_GUID *GuidData) {
+//    CHAR16 *TheString;
+// 
+//    TheString = AllocateZeroPool(42 * sizeof(CHAR16));
+//    if (TheString != 0) {
+//       SPrint (TheString, 82, L"%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+//               (UINTN)GuidData->Data1, (UINTN)GuidData->Data2, (UINTN)GuidData->Data3,
+//               (UINTN)GuidData->Data4[0], (UINTN)GuidData->Data4[1], (UINTN)GuidData->Data4[2],
+//               (UINTN)GuidData->Data4[3], (UINTN)GuidData->Data4[4], (UINTN)GuidData->Data4[5],
+//               (UINTN)GuidData->Data4[6], (UINTN)GuidData->Data4[7]);
+//    }
+//    return TheString;
+// } // GuidAsString(EFI_GUID *GuidData)

@@ -61,7 +61,7 @@
 // 
 // variables
 
-#define MACOSX_LOADER_PATH      L"\\System\\Library\\CoreServices\\boot.efi"
+#define MACOSX_LOADER_PATH      L"System\\Library\\CoreServices\\boot.efi"
 #if defined (EFIX64)
 #define SHELL_NAMES             L"\\EFI\\tools\\shell.efi,\\shellx64.efi"
 #define DRIVER_DIRS             L"drivers,drivers_x64"
@@ -97,7 +97,7 @@ static REFIT_MENU_SCREEN MainMenu       = { L"Main Menu", NULL, 0, NULL, 0, NULL
 static REFIT_MENU_SCREEN AboutMenu      = { L"About", NULL, 0, NULL, 0, NULL, 0, NULL };
 
 REFIT_CONFIG GlobalConfig = { FALSE, FALSE, 0, 0, 0, 20, 0, 0, GRAPHICS_FOR_OSX, LEGACY_TYPE_MAC, 0,
-                              NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                              NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
                               {TAG_SHELL, TAG_APPLE_RECOVERY, TAG_MOK_TOOL, TAG_ABOUT, TAG_SHUTDOWN, TAG_REBOOT, 0, 0, 0, 0, 0 }};
 
 // Structure used to hold boot loader filenames and time stamps in
@@ -118,7 +118,7 @@ static VOID AboutrEFInd(VOID)
 
     if (AboutMenu.EntryCount == 0) {
         AboutMenu.TitleImage = BuiltinIcon(BUILTIN_ICON_FUNC_ABOUT);
-        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.5.1.6");
+        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.6.0");
         AddMenuInfoLine(&AboutMenu, L"");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2006-2010 Christoph Pfisterer");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2012 Roderick W. Smith");
@@ -186,7 +186,7 @@ static EFI_STATUS StartEFIImageList(IN EFI_DEVICE_PATH **DevicePaths,
     // set load options
     if (LoadOptions != NULL) {
         if (LoadOptionsPrefix != NULL) {
-            MergeStrings(&FullLoadOptions, LoadOptionsPrefix, 0);
+//            MergeStrings(&FullLoadOptions, LoadOptionsPrefix, 0);
             MergeStrings(&FullLoadOptions, LoadOptions, L' ');
             if (OSType == 'M') {
                MergeStrings(&FullLoadOptions, L" ", 0);
@@ -461,9 +461,10 @@ LOADER_ENTRY *InitializeLoaderEntry(IN LOADER_ENTRY *Entry) {
 // Returns a pointer to a new string. The calling function is responsible for
 // freeing its memory.
 static CHAR16 *AddInitrdToOptions(CHAR16 *Options, CHAR16 *InitrdPath) {
-   CHAR16 *NewOptions;
+   CHAR16 *NewOptions = NULL;
 
-   NewOptions = StrDuplicate(Options);
+   if (Options != NULL)
+      NewOptions = StrDuplicate(Options);
    if ((InitrdPath != NULL) && !StriSubCmp(L"initrd=", Options)) {
       MergeStrings(&NewOptions, L"initrd=", L' ');
       MergeStrings(&NewOptions, InitrdPath, 0);
@@ -494,7 +495,7 @@ REFIT_MENU_SCREEN *InitializeSubScreen(IN LOADER_ENTRY *Entry) {
          // default entry
          SubEntry = InitializeLoaderEntry(Entry);
          if (SubEntry != NULL) {
-            SubEntry->me.Title = L"Boot using default options";
+            SubEntry->me.Title = StrDuplicate(L"Boot using default options");
             MainOptions = SubEntry->LoadOptions;
             SubEntry->LoadOptions = AddInitrdToOptions(MainOptions, SubEntry->InitrdPath);
             MyFreePool(MainOptions);
@@ -510,7 +511,7 @@ REFIT_MENU_SCREEN *InitializeSubScreen(IN LOADER_ENTRY *Entry) {
 VOID GenerateSubScreen(LOADER_ENTRY *Entry, IN REFIT_VOLUME *Volume) {
    REFIT_MENU_SCREEN  *SubScreen;
    LOADER_ENTRY       *SubEntry;
-   CHAR16             *InitrdOption = NULL, *Temp;
+   CHAR16             *InitrdName;
    CHAR16             DiagsFileName[256];
    REFIT_FILE         *File;
    UINTN              TokenCount;
@@ -580,7 +581,7 @@ VOID GenerateSubScreen(LOADER_ENTRY *Entry, IN REFIT_VOLUME *Volume) {
       } // not single-user
 
       // check for Apple hardware diagnostics
-      StrCpy(DiagsFileName, L"\\System\\Library\\CoreServices\\.diagnostics\\diags.efi");
+      StrCpy(DiagsFileName, L"System\\Library\\CoreServices\\.diagnostics\\diags.efi");
       if (FileExists(Volume->RootDir, DiagsFileName) && !(GlobalConfig.HideUIFlags & HIDEUI_FLAG_HWTEST)) {
          SubEntry = InitializeLoaderEntry(Entry);
          if (SubEntry != NULL) {
@@ -596,20 +597,26 @@ VOID GenerateSubScreen(LOADER_ENTRY *Entry, IN REFIT_VOLUME *Volume) {
    } else if (Entry->OSType == 'L') {   // entries for Linux kernels with EFI stub loaders
       File = ReadLinuxOptionsFile(Entry->LoaderPath, Volume);
       if (File != NULL) {
-         Temp =  FindInitrd(Entry->LoaderPath, Volume);
-         TokenCount = ReadTokenLine(File, &TokenList); // read and discard first entry, since it's
-         FreeTokenLine(&TokenList, &TokenCount);       // set up by InitializeSubScreen(), earlier....
+         InitrdName =  FindInitrd(Entry->LoaderPath, Volume);
+         TokenCount = ReadTokenLine(File, &TokenList);
+         // first entry requires special processing, since it was initially set
+         // up with a default title but correct options by InitializeSubScreen(),
+         // earlier....
+         if ((SubScreen->Entries != NULL) && (SubScreen->Entries[0] != NULL)) {
+            MyFreePool(SubScreen->Entries[0]->Title);
+            SubScreen->Entries[0]->Title = StrDuplicate(TokenList[0]);
+         } // if
+         FreeTokenLine(&TokenList, &TokenCount);
          while ((TokenCount = ReadTokenLine(File, &TokenList)) > 1) {
             SubEntry = InitializeLoaderEntry(Entry);
             SubEntry->me.Title = StrDuplicate(TokenList[0]);
             MyFreePool(SubEntry->LoadOptions);
-            SubEntry->LoadOptions = AddInitrdToOptions(TokenList[1], Temp);
+            SubEntry->LoadOptions = AddInitrdToOptions(TokenList[1], InitrdName);
             FreeTokenLine(&TokenList, &TokenCount);
             SubEntry->UseGraphicsMode = GlobalConfig.GraphicsFor & GRAPHICS_FOR_LINUX;
             AddMenuEntry(SubScreen, (REFIT_MENU_ENTRY *)SubEntry);
          } // while
-         MyFreePool(InitrdOption);
-         MyFreePool(Temp);
+         MyFreePool(InitrdName);
          MyFreePool(File);
       } // if Linux options file exists
 
@@ -820,8 +827,7 @@ INTN TimeComp(EFI_TIME *Time1, EFI_TIME *Time2) {
    INT64 Time1InSeconds, Time2InSeconds;
 
    // Following values are overestimates; I'm assuming 31 days in every month.
-   // This is fine for the purpose of this function, which has a limited
-   // purpose.
+   // This is fine for the purpose of this function, which is limited
    Time1InSeconds = Time1->Second + (Time1->Minute * 60) + (Time1->Hour * 3600) + (Time1->Day * 86400) +
                     (Time1->Month * 2678400) + ((Time1->Year - 1998) * 32140800);
    Time2InSeconds = Time2->Second + (Time2->Minute * 60) + (Time2->Hour * 3600) + (Time2->Day * 86400) +
@@ -880,8 +886,10 @@ static VOID ScanLoaderDir(IN REFIT_VOLUME *Volume, IN CHAR16 *Path, IN CHAR16 *P
     CHAR16                  FileName[256], *Extension;
     struct LOADER_LIST      *LoaderList = NULL, *NewLoader;
 
-    if ((!SelfDirPath || !Path || ((StriCmp(Path, SelfDirPath) == 0) && Volume->DeviceHandle != SelfVolume->DeviceHandle) ||
-        (StriCmp(Path, SelfDirPath) != 0)) && (!IsIn(Path, GlobalConfig.DontScanDirs))) {
+    if ((!SelfDirPath || !Path || ((StriCmp(Path, SelfDirPath) == 0) && (Volume->DeviceHandle != SelfVolume->DeviceHandle)) ||
+           (StriCmp(Path, SelfDirPath) != 0)) &&
+         (!IsIn(Path, GlobalConfig.DontScanDirs)) &&
+         (!IsIn(Volume->VolName, GlobalConfig.DontScanVolumes))) {
        // look through contents of the directory
        DirIterOpen(Volume->RootDir, Path, &DirIter);
        while (DirIterNext(&DirIter, 2, Pattern, &DirEntry)) {
@@ -893,9 +901,9 @@ static VOID ScanLoaderDir(IN REFIT_VOLUME *Volume, IN CHAR16 *Path, IN CHAR16 *P
                 continue;   // skip this
 
           if (Path)
-                SPrint(FileName, 255, L"\\%s\\%s", Path, DirEntry->FileName);
+             SPrint(FileName, 255, L"\\%s\\%s", Path, DirEntry->FileName);
           else
-                SPrint(FileName, 255, L"\\%s", DirEntry->FileName);
+             SPrint(FileName, 255, L"\\%s", DirEntry->FileName);
           CleanUpPathNameSlashes(FileName);
           NewLoader = AllocateZeroPool(sizeof(struct LOADER_LIST));
           if (NewLoader != NULL) {
@@ -935,22 +943,22 @@ static VOID ScanEfiFiles(REFIT_VOLUME *Volume) {
 
    if ((Volume->RootDir != NULL) && (Volume->VolName != NULL)) {
       // check for Mac OS X boot loader
-      if (!IsIn(L"\\System\\Library\\CoreServices", GlobalConfig.DontScanDirs)) {
+      if (!IsIn(L"System\\Library\\CoreServices", GlobalConfig.DontScanDirs)) {
          StrCpy(FileName, MACOSX_LOADER_PATH);
          if (FileExists(Volume->RootDir, FileName) && !IsIn(L"boot.efi", GlobalConfig.DontScanFiles)) {
             AddLoaderEntry(FileName, L"Mac OS X", Volume);
          }
 
          // check for XOM
-         StrCpy(FileName, L"\\System\\Library\\CoreServices\\xom.efi");
+         StrCpy(FileName, L"System\\Library\\CoreServices\\xom.efi");
          if (FileExists(Volume->RootDir, FileName) && !IsIn(L"boot.efi", GlobalConfig.DontScanFiles)) {
             AddLoaderEntry(FileName, L"Windows XP (XoM)", Volume);
          }
       } // if Mac directory not in GlobalConfig.DontScanDirs list
 
       // check for Microsoft boot loader/menu
-      StrCpy(FileName, L"\\EFI\\Microsoft\\Boot\\Bootmgfw.efi");
-      if (FileExists(Volume->RootDir, FileName) && !IsIn(L"\\EFI\\Microsoft\\Boot", GlobalConfig.DontScanDirs) &&
+      StrCpy(FileName, L"EFI\\Microsoft\\Boot\\Bootmgfw.efi");
+      if (FileExists(Volume->RootDir, FileName) && !IsIn(L"EFI\\Microsoft\\Boot", GlobalConfig.DontScanDirs) &&
           !IsIn(L"bootmgfw.efi", GlobalConfig.DontScanFiles)) {
          AddLoaderEntry(FileName, L"Microsoft EFI boot", Volume);
       }
@@ -963,7 +971,7 @@ static VOID ScanEfiFiles(REFIT_VOLUME *Volume) {
       while (DirIterNext(&EfiDirIter, 1, NULL, &EfiDirEntry)) {
          if (StriCmp(EfiDirEntry->FileName, L"tools") == 0 || EfiDirEntry->FileName[0] == '.')
             continue;   // skip this, doesn't contain boot loaders
-         SPrint(FileName, 255, L"\\EFI\\%s", EfiDirEntry->FileName);
+         SPrint(FileName, 255, L"EFI\\%s", EfiDirEntry->FileName);
          ScanLoaderDir(Volume, FileName, MatchPatterns);
       } // while()
       Status = DirIterClose(&EfiDirIter);
@@ -1805,16 +1813,16 @@ static VOID ScanForTools(VOID) {
             break;
          case TAG_GPTSYNC:
             MyFreePool(FileName);
-            FileName = NULL;
-            MergeStrings(&FileName, L"\\efi\\tools\\gptsync.efi", 0);
+            FileName = StrDuplicate(L"\\efi\\tools\\gptsync.efi");
+//            MergeStrings(&FileName, L"\\efi\\tools\\gptsync.efi", 0);
             if (FileExists(SelfRootDir, FileName)) {
                AddToolEntry(SelfLoadedImage->DeviceHandle, FileName, L"Make Hybrid MBR", BuiltinIcon(BUILTIN_ICON_TOOL_PART), 'P', FALSE);
             }
             break;
          case TAG_APPLE_RECOVERY:
             MyFreePool(FileName);
-            FileName = NULL;
-            MergeStrings(&FileName, L"\\com.apple.recovery.boot\\boot.efi", 0);
+            FileName = StrDuplicate(L"\\com.apple.recovery.boot\\boot.efi");
+//            MergeStrings(&FileName, L"\\com.apple.recovery.boot\\boot.efi", 0);
             for (VolumeIndex = 0; VolumeIndex < VolumesCount; VolumeIndex++) {
                if ((Volumes[VolumeIndex]->RootDir != NULL) && (FileExists(Volumes[VolumeIndex]->RootDir, FileName))) {
                   SPrint(Description, 255, L"Apple Recovery on %s", Volumes[VolumeIndex]->VolName);

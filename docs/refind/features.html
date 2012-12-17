@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 3/14/2012; last Web page update:
-12/11/2012, referencing rEFInd 0.5.1</p>
+12/16/2012, referencing rEFInd 0.6.0</p>
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
 
@@ -111,7 +111,7 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <li>Inclusion of drivers for the Linux ReiserFS and ext2 filesystems in the
     main package. (These drivers are absent from rEFInd prior to version
-    0.4.0; and the rEFInd versions don't work on at least some Macs.)</li>
+    0.4.0.)</li>
 
 </ul>
 
@@ -143,7 +143,7 @@ lack a usable CSM.</li>
 
 <li>The ability to specify additional directories to scan for boot loaders and drivers (as of version 0.2.7).</li>
 
-<li>The ability to specify directories to <i>not</i> be scanned for boot loaders, even if they would ordinarily be scanned (as of version 0.4.2).</li>
+<li>The ability to specify volumes and directories to <i>not</i> be scanned for boot loaders, even if they would ordinarily be scanned (as of version 0.6.0 for volumes and 0.4.2 for directories).</li>
 
 <li>The ability to re-scan boot loaders, to assist when changing removable media or after making a change to the configuration file with an EFI shell (as of version 0.3.5).</li>
 
@@ -151,7 +151,7 @@ lack a usable CSM.</li>
 
 <li>The ability to specify an additional icon storage directory, to assist in efforts to customize rEFInd's appearance (as of version 0.3.4).</li>
 
-<li>The ability to set the screen's resolution, within limits imposed by the EFI (as of rEFInd 0.3.0).</li>
+<li>The ability to set the screen's graphics resolution, within limits imposed by the EFI (as of rEFInd 0.3.0). Similarly, as of version 0.6.0, you can specify the text-mode resolution.</li>
 
 <li>Proper handling of more OS options than can fit on the screen. (rEFIt displays an empty list in graphical mode when it detects too many OSes.)</li>
 
@@ -167,9 +167,9 @@ lack a usable CSM.</li>
 
 <li>An "exit" option (disabled by default), so that you can return to whatever shell or boot manager you used to launch rEFInd, should this ability be desirable. (This feature first appeared in rEFInd 0.2.4.)</li>
 
-<li>Drivers for ISO-9660 and HFS+, which are not included in rEFIt. (The ISO-9660 driver is based on code from the rEFIt project, but was never completed by its original author. It was completed by Oracle for VirtualBox.)</li>
+<li>Drivers for ISO-9660, HFS+, and ext4fs, which are not included in rEFIt. (The ISO-9660 driver is based on code from the rEFIt project, but was never completed by its original author. It was completed by Oracle for VirtualBox. The ext4fs driver is derived from the rEFIt ext2fs driver.)</li>
 
-<li>Beginning with version 0.5.0, the ability to "talk" to the <a href="http://mjg59.dreamwidth.org/20303.html">shim boot loader</a> to validate binaries supported by shim or its machine owner key (MOK) list when booting in EFI mode. As of version 0.5.0, this support is still crude and buggy; it should be considered an alpha-level feature at the moment.</li>
+<li>Beginning with version 0.5.0, the ability to "talk" to the <a href="http://mjg59.dreamwidth.org/20303.html">shim boot loader</a> to validate binaries supported by shim or its machine owner key (MOK) list when booting with Secure Boot active. As of version 0.6.0, this support is still crude and buggy; it should be considered an alpha-level feature at the moment.</li>
 
 </ul>
 
