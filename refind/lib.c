@@ -64,6 +64,15 @@ EFI_DEVICE_PATH EndDevicePath[] = {
 //#define EndDevicePath DevicePath
 #endif
 
+// "Magic" signatures for various filesystems
+#define FAT_MAGIC                        0xAA55
+#define EXT2_SUPER_MAGIC                 0xEF53
+#define HFSPLUS_MAGIC1                   0x2B48
+#define HFSPLUS_MAGIC2                   0x5848
+#define REISERFS_SUPER_MAGIC             0x52654973
+#define REISER2FS_SUPER_MAGIC_STRING     "ReIsEr2Fs"
+#define REISER2FS_JR_SUPER_MAGIC_STRING  "ReIsEr3Fs"
+
 // variables
 
 EFI_HANDLE       SelfImageHandle;
@@ -130,39 +139,6 @@ VOID CleanUpPathNameSlashes(IN OUT CHAR16 *PathName) {
       FreePool(NewName);
    } // if allocation OK
 } // CleanUpPathNameSlashes()
-
-// VOID CleanUpPathNameSlashes(IN OUT CHAR16 *PathName) {
-//    CHAR16   *NewName;
-//    UINTN    i, FinalChar = 0;
-//    BOOLEAN  LastWasSlash = FALSE;
-// 
-//    NewName = AllocateZeroPool(sizeof(CHAR16) * (StrLen(PathName) + 4));
-//    if (NewName != NULL) {
-//       for (i = 0; i < StrLen(PathName); i++) {
-//          if ((PathName[i] == L'/') || (PathName[i] == L'\\')) {
-//             if ((!LastWasSlash) /* && (FinalChar != 0) */)
-//                NewName[FinalChar++] = L'\\';
-//             LastWasSlash = TRUE;
-//          } else {
-//             if (FinalChar == 0) {
-//                NewName[FinalChar++] = L'\\';
-//             }
-//             NewName[FinalChar++] = PathName[i];
-//             LastWasSlash = FALSE;
-//          } // if/else
-//       } // for
-//       NewName[FinalChar] = 0;
-//       if ((FinalChar > 1) && (NewName[FinalChar - 1] == L'\\'))
-//          NewName[--FinalChar] = 0;
-//       if (FinalChar == 0) {
-//          NewName[0] = L'\\';
-//          NewName[1] = 0;
-//       }
-//       // Copy the transformed name back....
-//       StrCpy(PathName, NewName);
-//       FreePool(NewName);
-//    } // if allocation OK
-// } // CleanUpPathNameSlashes()
 
 // Splits an EFI device path into device and filename components. For instance, if InString is
 // PciRoot(0x0)/Pci(0x1f,0x2)/Ata(Secondary,Master,0x0)/HD(2,GPT,8314ae90-ada3-48e9-9c3b-09a88f80d921,0x96028,0xfa000)/\bzImage-3.5.1.efi,
@@ -402,6 +378,83 @@ VOID ExtractLegacyLoaderPaths(EFI_DEVICE_PATH **PathList, UINTN MaxPaths, EFI_DE
 // volume functions
 //
 
+// Return a pointer to a string containing a filesystem type name. If the
+// filesystem type is unknown, a blank (but non-null) string is returned.
+// The returned variable is a constant that should NOT be freed.
+static CHAR16 *FSTypeName(IN UINT32 TypeCode) {
+   CHAR16 *retval = NULL;
+
+   switch (TypeCode) {
+      case FS_TYPE_FAT:
+         retval = L" FAT";
+         break;
+      case FS_TYPE_HFSPLUS:
+         retval = L" HFS+";
+         break;
+      case FS_TYPE_EXT2:
+         retval = L" ext2";
+         break;
+      case FS_TYPE_EXT3:
+         retval = L" ext3";
+         break;
+      case FS_TYPE_EXT4:
+         retval = L" ext4";
+         break;
+      case FS_TYPE_REISERFS:
+         retval = L" ReiserFS";
+         break;
+      case FS_TYPE_ISO9660:
+         retval = L" ISO-9660";
+         break;
+      default:
+         retval = L"";
+         break;
+   } // switch
+   return retval;
+} // CHAR16 *FSTypeName()
+
+// Identify the filesystem type, if possible. Expects a Buffer containing
+// the first few (normally 4096) bytes of the filesystem, and outputs a
+// code representing the identified filesystem type.
+static UINT32 IdentifyFilesystemType(IN UINT8 *Buffer, IN UINTN BufferSize) {
+   UINT32       FoundType = FS_TYPE_UNKNOWN;
+   UINT32       *Ext2Incompat, *Ext2Compat;
+   UINT16       *Magic16;
+
+   if (Buffer != NULL) {
+
+      if (BufferSize >= (1024 + 100)) {
+         Magic16 = (UINT16*) (Buffer + 1024 + 56);
+         if (*Magic16 == EXT2_SUPER_MAGIC) { // ext2/3/4
+            Ext2Compat = (UINT32*) (Buffer + 1024 + 92);
+            Ext2Incompat = (UINT32*) (Buffer + 1024 + 96);
+            if ((*Ext2Incompat & 0x0040) || (*Ext2Incompat & 0x0200)) { // check for extents or flex_bg
+               return FS_TYPE_EXT4;
+            } else if (*Ext2Compat & 0x0004) { // check for journal
+               return FS_TYPE_EXT3;
+            } else { // none of these features; presume it's ext2...
+               return FS_TYPE_EXT2;
+            }
+         }
+      } // search for ext2/3/4 magic
+
+      if (BufferSize >= 512) {
+         Magic16 = (UINT16*) (Buffer + 510);
+         if (*Magic16 == FAT_MAGIC)
+            return FS_TYPE_FAT;
+      } // search for FAT magic
+
+      if (BufferSize >= (1024 + 2)) {
+         Magic16 = (UINT16*) (Buffer + 1024);
+         if ((*Magic16 == HFSPLUS_MAGIC1) || (*Magic16 == HFSPLUS_MAGIC2)) {
+            return FS_TYPE_HFSPLUS;
+         }
+      } // search for HFS+ magic
+   } // if (Buffer != NULL)
+
+   return FoundType;
+}
+
 static VOID ScanVolumeBootcode(IN OUT REFIT_VOLUME *Volume, OUT BOOLEAN *Bootable)
 {
     EFI_STATUS              Status;
@@ -426,6 +479,7 @@ static VOID ScanVolumeBootcode(IN OUT REFIT_VOLUME *Volume, OUT BOOLEAN *Bootabl
                                  Volume->BlockIOOffset, SECTOR_SIZE, SectorBuffer);
     if (!EFI_ERROR(Status)) {
 
+        Volume->FSType = IdentifyFilesystemType(SectorBuffer, SECTOR_SIZE);
         if (*((UINT16 *)(SectorBuffer + 510)) == 0xaa55 && SectorBuffer[0] != 0) {
             *Bootable = TRUE;
             Volume->HasBootCode = TRUE;
@@ -574,6 +628,90 @@ static VOID ScanVolumeDefaultIcon(IN OUT REFIT_VOLUME *Volume)
     } // switch()
 }
 
+// Return a string representing the input size in IEEE-1541 units.
+// The calling function is responsible for freeing the allocated memory.
+static CHAR16 *SizeInIEEEUnits(UINT64 SizeInBytes) {
+   float SizeInIeee;
+   UINTN Index = 0;
+   CHAR16 *Units, *Prefixes = L" KMGTPEZ";
+   CHAR16 *TheValue;
+
+   TheValue = AllocateZeroPool(sizeof(CHAR16) * 80);
+   if (TheValue != NULL) {
+      SizeInIeee = (float) SizeInBytes;
+      while ((SizeInIeee > 1024.0) && (Index < (StrLen(Prefixes) - 1))) {
+         Index++;
+         SizeInIeee /= 1024.0;
+      } // while
+      if (Prefixes[Index] == ' ') {
+         Units = StrDuplicate(L"-byte");
+      } else {
+         Units = StrDuplicate(L"  iB");
+         Units[1] = Prefixes[Index];
+      } // if/else
+      SPrint(TheValue, 79, L"%d%s", (UINTN) SizeInIeee, Units);
+   } // if
+   return TheValue;
+} // CHAR16 *SizeInSIUnits()
+
+// Return a name for the volume. Ideally this should be the label for the
+// filesystem it contains, but this function falls back to describing the
+// filesystem by size (200 MiB, etc.) and/or type (ext2, HFS+, etc.), if
+// this information can be extracted.
+// The calling function is responsible for freeing the memory allocated
+// for the name string.
+static CHAR16 *GetVolumeName(IN REFIT_VOLUME *Volume) {
+   EFI_FILE_SYSTEM_INFO    *FileSystemInfoPtr;
+   CHAR16                  *FoundName = NULL;
+   CHAR16                  *SISize, *TypeName;
+
+   FileSystemInfoPtr = LibFileSystemInfo(Volume->RootDir);
+   if (FileSystemInfoPtr != NULL) {
+       if ((FileSystemInfoPtr->VolumeLabel != NULL) && (StrLen(FileSystemInfoPtr->VolumeLabel) > 0)) {
+          FoundName = StrDuplicate(FileSystemInfoPtr->VolumeLabel);
+       }
+
+       // Special case: rEFInd HFS+ driver always returns label of "HFS+ volume", so wipe
+       // this so that we can build a new name that includes the size....
+       if ((FoundName != NULL) && (StrCmp(FoundName, L"HFS+ volume") == 0) && (Volume->FSType == FS_TYPE_HFSPLUS)) {
+          MyFreePool(FoundName);
+          FoundName = NULL;
+       } // if rEFInd HFS+ driver suspected
+
+       if (FoundName == NULL) { // filesystem has no name....
+          FoundName = AllocateZeroPool(sizeof(CHAR16) * 256);
+          if (FoundName != NULL) {
+             SISize = SizeInIEEEUnits(FileSystemInfoPtr->VolumeSize);
+             SPrint(FoundName, 255, L"%s%s volume", SISize, FSTypeName(Volume->FSType));
+             MyFreePool(SISize);
+          } // if allocated memory OK
+       } // if (FoundName == NULL)
+
+       FreePool(FileSystemInfoPtr);
+
+   } else {
+      FoundName = AllocateZeroPool(sizeof(CHAR16) * 256);
+      if (FoundName != NULL) {
+         TypeName = FSTypeName(Volume->FSType); // NOTE: Don't free TypeName; fn returns constant
+         if (StrLen(TypeName) > 0)
+            SPrint(FoundName, 255, L"%s volume", FSTypeName(Volume->FSType));
+         else
+            SPrint(FoundName, 255, L"unknown volume");
+      } // if allocated memory OK
+   } // if
+
+   // TODO: Above could be improved/extended, in case filesystem name is not found,
+   // such as:
+   //  - use partition label
+   //  - use or add disk/partition number (e.g., "(hd0,2)")
+
+   // Desperate fallback name....
+   if (FoundName == NULL) {
+      FoundName = StrDuplicate(L"unknown volume");
+   }
+   return FoundName;
+} // static CHAR16 *GetVolumeName()
+
 VOID ScanVolume(IN OUT REFIT_VOLUME *Volume)
 {
     EFI_STATUS              Status;
@@ -581,7 +719,6 @@ VOID ScanVolume(IN OUT REFIT_VOLUME *Volume)
     EFI_DEVICE_PATH         *DiskDevicePath, *RemainingDevicePath;
     EFI_HANDLE              WholeDiskHandle;
     UINTN                   PartialLength;
-    EFI_FILE_SYSTEM_INFO    *FileSystemInfoPtr;
     BOOLEAN                 Bootable;
 
     // get device path
@@ -694,20 +831,7 @@ VOID ScanVolume(IN OUT REFIT_VOLUME *Volume)
         Volume->IsReadable = TRUE;
     }
 
-    // get volume name
-    FileSystemInfoPtr = LibFileSystemInfo(Volume->RootDir);
-    if (FileSystemInfoPtr != NULL) {
-        Volume->VolName = StrDuplicate(FileSystemInfoPtr->VolumeLabel);
-        FreePool(FileSystemInfoPtr);
-    }
-
-    if (Volume->VolName == NULL) {
-       Volume->VolName = StrDuplicate(L"Unknown");
-    }
-    // TODO: if no official volume name is found or it is empty, use something else, e.g.:
-    //   - name from bytes 3 to 10 of the boot sector
-    //   - partition number
-    //   - name derived from file system type or partition type
+    Volume->VolName = GetVolumeName(Volume);
 
     // get custom volume icon if present
     if (FileExists(Volume->RootDir, VOLUME_BADGE_NAME))

@@ -193,9 +193,6 @@ VOID BeginExternalScreen(IN BOOLEAN UseGraphicsMode, IN CHAR16 *Title)
        DrawScreenHeader(Title);
     } // if/else
 
-    // show the header
-//    DrawScreenHeader(Title);
-
     if (!UseGraphicsMode)
         SwitchToText(TRUE);
 
@@ -205,9 +202,6 @@ VOID BeginExternalScreen(IN BOOLEAN UseGraphicsMode, IN CHAR16 *Title)
 
 VOID FinishExternalScreen(VOID)
 {
-    // Reset the screen resolution, in case external program changed it....
-    SetupScreen();
-
     // make sure we clean up later
     GraphicsScreenDirty = TRUE;
 
@@ -215,6 +209,9 @@ VOID FinishExternalScreen(VOID)
         SwitchToText(FALSE);
         PauseForKey();
     }
+
+    // Reset the screen resolution, in case external program changed it....
+    SetupScreen();
 
     // reset error flag
     haveError = FALSE;

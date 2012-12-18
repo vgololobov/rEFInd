@@ -46,16 +46,6 @@
 #define LibLocateProtocol EfiLibLocateProtocol
 #endif
 
-// Scan for at least this many text-mode and graphics-mode display modes, even
-// if the first modes are invalid. The number of text modes scanned must be at
-// least 3 on some computers to properly list all the available modes when the
-// user specifies an invalid value, since mode 1 (numbered from 0) is often
-// invalid, but mode 2 (the third one) is usually valid. AFAIK, gaps never
-// occur in graphics modes, although I've heard of one case that makes me think
-// some exceptions may occur.
-#define MIN_SCAN_TEXT_MODES 3
-#define MIN_SCAN_GRAPHICS_MODES 1
-
 // Console defines and variables
 
 static EFI_GUID ConsoleControlProtocolGuid = EFI_CONSOLE_CONTROL_PROTOCOL_GUID;
@@ -130,36 +120,39 @@ BOOLEAN egSetScreenSize(IN OUT UINTN *ScreenWidth, IN OUT UINTN *ScreenHeight) {
 
    if (GraphicsOutput != NULL) { // GOP mode (UEFI)
       if (*ScreenHeight == 0) { // User specified a mode number (stored in *ScreenWidth); use it directly
-         ModeNum = (UINT32) *ScreenWidth;
-         Status = refit_call4_wrapper(GraphicsOutput->QueryMode, GraphicsOutput, ModeNum, &Size, &Info);
-         if (Status == EFI_SUCCESS) {
-            Status = refit_call2_wrapper(GraphicsOutput->SetMode, GraphicsOutput, ModeNum);
-            if (Status == EFI_SUCCESS) {
-               ModeSet = TRUE;
-               *ScreenWidth = Info->HorizontalResolution;
-               *ScreenHeight = Info->VerticalResolution;
-            }
-         }
-      } else { // User specified width & height; must find mode
-         // Do a loop through the modes to see if the specified one is available;
-         // and if so, switch to it....
-         do {
+         if (*ScreenWidth == GraphicsOutput->Mode->Mode) { // user requested current mode; do nothing
+            ModeSet = TRUE;
+         } else {
+            ModeNum = (UINT32) *ScreenWidth;
             Status = refit_call4_wrapper(GraphicsOutput->QueryMode, GraphicsOutput, ModeNum, &Size, &Info);
-            if ((Status == EFI_SUCCESS) && (Size >= sizeof(*Info)) &&
-                (Info->HorizontalResolution == *ScreenWidth) && (Info->VerticalResolution == *ScreenHeight)) {
+            if (Status == EFI_SUCCESS) {
                Status = refit_call2_wrapper(GraphicsOutput->SetMode, GraphicsOutput, ModeNum);
-               ModeSet = (Status == EFI_SUCCESS);
-            } // if
-         } while (((++ModeNum < MIN_SCAN_GRAPHICS_MODES) || (Status == EFI_SUCCESS)) && !ModeSet);
-//          while ((Status == EFI_SUCCESS) && (!ModeSet)) {
-//             Status = refit_call4_wrapper(GraphicsOutput->QueryMode, GraphicsOutput, ModeNum, &Size, &Info);
-//             if ((Status == EFI_SUCCESS) && (Size >= sizeof(*Info)) &&
-//                 (Info->HorizontalResolution == *ScreenWidth) && (Info->VerticalResolution == *ScreenHeight)) {
-//                Status = refit_call2_wrapper(GraphicsOutput->SetMode, GraphicsOutput, ModeNum);
-//                ModeSet = (Status == EFI_SUCCESS);
-//             } // if
-//             ModeNum++;
-//          } // while()
+               if (Status == EFI_SUCCESS) {
+                  ModeSet = TRUE;
+                  *ScreenWidth = Info->HorizontalResolution;
+                  *ScreenHeight = Info->VerticalResolution;
+               } // if set mode OK
+            } // if queried mode OK
+         } // if/else
+
+      // User specified width & height; must find mode -- but only if change is required....
+      } else {
+         Status = refit_call4_wrapper(GraphicsOutput->QueryMode, GraphicsOutput, GraphicsOutput->Mode->Mode, &Size, &Info);
+         if ((Status == EFI_SUCCESS) && (Info->HorizontalResolution == *ScreenWidth) &&
+             (Info->VerticalResolution == *ScreenHeight)) {
+            ModeSet = TRUE; // user requested current mode; do nothing
+         } else {
+            // Do a loop through the modes to see if the specified one is available;
+            // and if so, switch to it....
+            do {
+               Status = refit_call4_wrapper(GraphicsOutput->QueryMode, GraphicsOutput, ModeNum, &Size, &Info);
+               if ((Status == EFI_SUCCESS) && (Size >= sizeof(*Info)) &&
+                   (Info->HorizontalResolution == *ScreenWidth) && (Info->VerticalResolution == *ScreenHeight)) {
+                  Status = refit_call2_wrapper(GraphicsOutput->SetMode, GraphicsOutput, ModeNum);
+                  ModeSet = (Status == EFI_SUCCESS);
+               } // if
+            } while ((++ModeNum < GraphicsOutput->Mode->MaxMode) && !ModeSet);
+         } // if/else
       } // if/else
 
       if (ModeSet) {
@@ -174,15 +167,7 @@ BOOLEAN egSetScreenSize(IN OUT UINTN *ScreenWidth, IN OUT UINTN *ScreenHeight) {
             if ((Status == EFI_SUCCESS) && (Info != NULL)) {
                Print(L"Mode %d: %d x %d\n", ModeNum, Info->HorizontalResolution, Info->VerticalResolution);
             } // else
-         } while ((++ModeNum < MIN_SCAN_GRAPHICS_MODES) || (Status == EFI_SUCCESS));
-//          Status = EFI_SUCCESS;
-//          while (Status == EFI_SUCCESS) {
-//             Status = refit_call4_wrapper(GraphicsOutput->QueryMode, GraphicsOutput, ModeNum, &Size, &Info);
-//             if ((Status == EFI_SUCCESS) && (Size >= sizeof(*Info))) {
-//                Print(L"Mode %d: %d x %d\n", ModeNum, Info->HorizontalResolution, Info->VerticalResolution);
-//             } // else
-//             ModeNum++;
-//          } // while()
+         } while (++ModeNum < GraphicsOutput->Mode->MaxMode);
          PauseForKey();
          SwitchToGraphics();
       } // if()
@@ -231,8 +216,8 @@ UINT32 egSetTextMode(UINT32 RequestedMode) {
          do {
             Status = refit_call4_wrapper(ST->ConOut->QueryMode, ST->ConOut, i, &Width, &Height);
             if (Status == EFI_SUCCESS)
-               Print(L"Mode: %d: %d x %d\n", i, Width, Height);
-         } while ((++i < MIN_SCAN_TEXT_MODES) || (Status == EFI_SUCCESS));
+               Print(L"Mode %d: %d x %d\n", i, Width, Height);
+         } while (++i < ST->ConOut->Mode->MaxMode);
 
          PauseForKey();
          SwitchToGraphics();

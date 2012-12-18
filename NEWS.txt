@@ -1,4 +1,17 @@
-0.5.2 (12/??/2012):
+0.6.1 (12/??/2012):
+-------------------
+
+- Instead of displaying a blank filesystem label when a filesystem has
+  none, rEFInd now displays the size of the filesystem, as in "boot
+  EFI\foo\bar.efi from 200 MiB volume" rather than "boot EFI\foo\bar.efi
+  from". For some filesystems, the filesystem type is included, as in "boot
+  EFI\foo\bar.efi from 200 MiB ext3 volume".
+
+- Fixed a bug that caused the screen to clear after displaying an error
+  message but before displaying the "Hit any key to continue" message when
+  a boot loader launch failed.
+
+0.6.0 (12/16/2012):
 -------------------
 
 - Fixed a memory allocation bug that could cause a program crash when

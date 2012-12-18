@@ -165,6 +165,13 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 	from the partition data is harder than extracting the volume's
 	label or counting up the filesystem numbers.</li>
 
+    <li>Currently, if a filesystem's label comes up empty, rEFInd
+	substitutes the size, so you get displays like <tt>boot
+	EFI\foo\bar.efi from 90 GiB volume</tt>. I'd like to add more
+	checks to substitute the GPT <i>partition</i> label if the
+	<i>filesystem</i> label comes up empty, or add a filesystem type
+	identifier to the size.</li>
+
     <li>The default_selection option in refind.conf could be improved by
 	supporting a list of default options, so that if the first item
 	isn't found, rEFInd will try to boot the second one in the list,

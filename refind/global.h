@@ -110,8 +110,15 @@
 #define DEVICE_TYPE_BIOS       0x05 /* returned by legacy (BIOS) boot loaders */
 #define DEVICE_TYPE_END        0x75 /* end of path */
 
-//TODO: may want to make this configurable via config file
-//static UINT16 SupportedLegacyDevices[] = {BBS_HARDDISK, BBS_CDROM, BBS_USB};
+// Filesystem type identifiers. Not all are yet used....
+#define FS_TYPE_UNKNOWN        0
+#define FS_TYPE_FAT            1
+#define FS_TYPE_EXT2           2
+#define FS_TYPE_EXT3           3
+#define FS_TYPE_EXT4           4
+#define FS_TYPE_HFSPLUS        5
+#define FS_TYPE_REISERFS       6
+#define FS_TYPE_ISO9660        7
 
 //
 // global definitions
@@ -152,6 +159,7 @@ typedef struct {
    EFI_DEVICE_PATH     *WholeDiskDevicePath;
    MBR_PARTITION_INFO  *MbrPartitionTable;
    BOOLEAN             IsReadable;
+   UINT32              FSType;
 } REFIT_VOLUME;
 
 typedef struct _refit_menu_entry {
