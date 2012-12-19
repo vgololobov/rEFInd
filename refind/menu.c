@@ -603,10 +603,12 @@ static VOID TextMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, 
 
         case MENU_FUNCTION_PAINT_SELECTION:
             // redraw selection cursor
-            refit_call3_wrapper(ST->ConOut->SetCursorPosition, ST->ConOut, 2, MenuPosY + (State->PreviousSelection - State->FirstVisible));
+            refit_call3_wrapper(ST->ConOut->SetCursorPosition, ST->ConOut, 2,
+                                MenuPosY + (State->PreviousSelection - State->FirstVisible));
             refit_call2_wrapper(ST->ConOut->SetAttribute, ST->ConOut, ATTR_CHOICE_BASIC);
             refit_call2_wrapper(ST->ConOut->OutputString, ST->ConOut, DisplayStrings[State->PreviousSelection]);
-            refit_call3_wrapper(ST->ConOut->SetCursorPosition, ST->ConOut, 2, MenuPosY + (State->CurrentSelection - State->FirstVisible));
+            refit_call3_wrapper(ST->ConOut->SetCursorPosition, ST->ConOut, 2,
+                                MenuPosY + (State->CurrentSelection - State->FirstVisible));
             refit_call2_wrapper(ST->ConOut->SetAttribute, ST->ConOut, ATTR_CHOICE_CURRENT);
             refit_call2_wrapper(ST->ConOut->OutputString, ST->ConOut, DisplayStrings[State->CurrentSelection]);
             break;

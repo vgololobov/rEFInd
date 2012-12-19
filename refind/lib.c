@@ -69,7 +69,7 @@ EFI_DEVICE_PATH EndDevicePath[] = {
 #define EXT2_SUPER_MAGIC                 0xEF53
 #define HFSPLUS_MAGIC1                   0x2B48
 #define HFSPLUS_MAGIC2                   0x5848
-#define REISERFS_SUPER_MAGIC             0x52654973
+#define REISERFS_SUPER_MAGIC_STRING      "ReIsErFs"
 #define REISER2FS_SUPER_MAGIC_STRING     "ReIsEr2Fs"
 #define REISER2FS_JR_SUPER_MAGIC_STRING  "ReIsEr3Fs"
 
@@ -87,6 +87,10 @@ UINTN            VolumesCount = 0;
 
 // Maximum size for disk sectors
 #define SECTOR_SIZE 4096
+
+// Number of bytes to read from a partition to determine its filesystem type
+// and identify its boot loader, and hence probable BIOS-mode OS installation
+#define SAMPLE_SIZE 69632 /* 68 KiB -- ReiserFS superblock begins at 64 KiB */
 
 // Default names for volume badges (mini-icon to define disk type) and icons
 #define VOLUME_BADGE_NAME L".VolumeBadge.icns"
@@ -420,8 +424,15 @@ static UINT32 IdentifyFilesystemType(IN UINT8 *Buffer, IN UINTN BufferSize) {
    UINT32       FoundType = FS_TYPE_UNKNOWN;
    UINT32       *Ext2Incompat, *Ext2Compat;
    UINT16       *Magic16;
+   char         *MagicString;
 
    if (Buffer != NULL) {
+
+      if (BufferSize >= 512) {
+         Magic16 = (UINT16*) (Buffer + 510);
+         if (*Magic16 == FAT_MAGIC)
+            return FS_TYPE_FAT;
+      } // search for FAT magic
 
       if (BufferSize >= (1024 + 100)) {
          Magic16 = (UINT16*) (Buffer + 1024 + 56);
@@ -438,11 +449,14 @@ static UINT32 IdentifyFilesystemType(IN UINT8 *Buffer, IN UINTN BufferSize) {
          }
       } // search for ext2/3/4 magic
 
-      if (BufferSize >= 512) {
-         Magic16 = (UINT16*) (Buffer + 510);
-         if (*Magic16 == FAT_MAGIC)
-            return FS_TYPE_FAT;
-      } // search for FAT magic
+      if (BufferSize >= (65536 + 62)) {
+         MagicString = (char*) (Buffer + 65536 + 52);
+         if ((CompareMem(MagicString, REISERFS_SUPER_MAGIC_STRING, 8) == 0) ||
+             (CompareMem(MagicString, REISER2FS_SUPER_MAGIC_STRING, 9) == 0) ||
+             (CompareMem(MagicString, REISER2FS_JR_SUPER_MAGIC_STRING, 9) == 0)) {
+            return FS_TYPE_REISERFS;
+         } // if
+      } // search for ReiserFS magic
 
       if (BufferSize >= (1024 + 2)) {
          Magic16 = (UINT16*) (Buffer + 1024);
@@ -458,7 +472,7 @@ static UINT32 IdentifyFilesystemType(IN UINT8 *Buffer, IN UINTN BufferSize) {
 static VOID ScanVolumeBootcode(IN OUT REFIT_VOLUME *Volume, OUT BOOLEAN *Bootable)
 {
     EFI_STATUS              Status;
-    UINT8                   SectorBuffer[SECTOR_SIZE];
+    UINT8                   Buffer[SAMPLE_SIZE];
     UINTN                   i;
     MBR_PARTITION_INFO      *MbrTable;
     BOOLEAN                 MbrTableFound;
@@ -470,98 +484,98 @@ static VOID ScanVolumeBootcode(IN OUT REFIT_VOLUME *Volume, OUT BOOLEAN *Bootabl
 
     if (Volume->BlockIO == NULL)
         return;
-    if (Volume->BlockIO->Media->BlockSize > SECTOR_SIZE)
+    if (Volume->BlockIO->Media->BlockSize > SAMPLE_SIZE)
         return;   // our buffer is too small...
 
     // look at the boot sector (this is used for both hard disks and El Torito images!)
     Status = refit_call5_wrapper(Volume->BlockIO->ReadBlocks,
                                  Volume->BlockIO, Volume->BlockIO->Media->MediaId,
-                                 Volume->BlockIOOffset, SECTOR_SIZE, SectorBuffer);
+                                 Volume->BlockIOOffset, SAMPLE_SIZE, Buffer);
     if (!EFI_ERROR(Status)) {
 
-        Volume->FSType = IdentifyFilesystemType(SectorBuffer, SECTOR_SIZE);
-        if (*((UINT16 *)(SectorBuffer + 510)) == 0xaa55 && SectorBuffer[0] != 0) {
+        Volume->FSType = IdentifyFilesystemType(Buffer, SAMPLE_SIZE);
+        if (*((UINT16 *)(Buffer + 510)) == 0xaa55 && Buffer[0] != 0) {
             *Bootable = TRUE;
             Volume->HasBootCode = TRUE;
         }
 
         // detect specific boot codes
-        if (CompareMem(SectorBuffer + 2, "LILO", 4) == 0 ||
-            CompareMem(SectorBuffer + 6, "LILO", 4) == 0 ||
-            CompareMem(SectorBuffer + 3, "SYSLINUX", 8) == 0 ||
-            FindMem(SectorBuffer, SECTOR_SIZE, "ISOLINUX", 8) >= 0) {
+        if (CompareMem(Buffer + 2, "LILO", 4) == 0 ||
+            CompareMem(Buffer + 6, "LILO", 4) == 0 ||
+            CompareMem(Buffer + 3, "SYSLINUX", 8) == 0 ||
+            FindMem(Buffer, SECTOR_SIZE, "ISOLINUX", 8) >= 0) {
             Volume->HasBootCode = TRUE;
             Volume->OSIconName = L"linux";
             Volume->OSName = L"Linux";
 
-        } else if (FindMem(SectorBuffer, 512, "Geom\0Hard Disk\0Read\0 Error", 26) >= 0) {   // GRUB
+        } else if (FindMem(Buffer, 512, "Geom\0Hard Disk\0Read\0 Error", 26) >= 0) {   // GRUB
             Volume->HasBootCode = TRUE;
             Volume->OSIconName = L"grub,linux";
             Volume->OSName = L"Linux";
 
 //         // Below doesn't produce a bootable entry, so commented out for the moment....
 //         // GRUB in BIOS boot partition:
-//         } else if (FindMem(SectorBuffer, 512, "Geom\0Read\0 Error", 16) >= 0) {
+//         } else if (FindMem(Buffer, 512, "Geom\0Read\0 Error", 16) >= 0) {
 //             Volume->HasBootCode = TRUE;
 //             Volume->OSIconName = L"grub,linux";
 //             Volume->OSName = L"Linux";
 //             Volume->VolName = L"BIOS Boot Partition";
 //             *Bootable = TRUE;
 
-        } else if ((*((UINT32 *)(SectorBuffer + 502)) == 0 &&
-                    *((UINT32 *)(SectorBuffer + 506)) == 50000 &&
-                    *((UINT16 *)(SectorBuffer + 510)) == 0xaa55) ||
-                    FindMem(SectorBuffer, SECTOR_SIZE, "Starting the BTX loader", 23) >= 0) {
+        } else if ((*((UINT32 *)(Buffer + 502)) == 0 &&
+                    *((UINT32 *)(Buffer + 506)) == 50000 &&
+                    *((UINT16 *)(Buffer + 510)) == 0xaa55) ||
+                    FindMem(Buffer, SECTOR_SIZE, "Starting the BTX loader", 23) >= 0) {
             Volume->HasBootCode = TRUE;
             Volume->OSIconName = L"freebsd";
             Volume->OSName = L"FreeBSD";
 
-        } else if (FindMem(SectorBuffer, 512, "!Loading", 8) >= 0 ||
-                   FindMem(SectorBuffer, SECTOR_SIZE, "/cdboot\0/CDBOOT\0", 16) >= 0) {
+        } else if (FindMem(Buffer, 512, "!Loading", 8) >= 0 ||
+                   FindMem(Buffer, SECTOR_SIZE, "/cdboot\0/CDBOOT\0", 16) >= 0) {
             Volume->HasBootCode = TRUE;
             Volume->OSIconName = L"openbsd";
             Volume->OSName = L"OpenBSD";
 
-        } else if (FindMem(SectorBuffer, 512, "Not a bootxx image", 18) >= 0 ||
-                   *((UINT32 *)(SectorBuffer + 1028)) == 0x7886b6d1) {
+        } else if (FindMem(Buffer, 512, "Not a bootxx image", 18) >= 0 ||
+                   *((UINT32 *)(Buffer + 1028)) == 0x7886b6d1) {
             Volume->HasBootCode = TRUE;
             Volume->OSIconName = L"netbsd";
             Volume->OSName = L"NetBSD";
 
-        } else if (FindMem(SectorBuffer, SECTOR_SIZE, "NTLDR", 5) >= 0) {
+        } else if (FindMem(Buffer, SECTOR_SIZE, "NTLDR", 5) >= 0) {
             Volume->HasBootCode = TRUE;
             Volume->OSIconName = L"win";
             Volume->OSName = L"Windows";
 
-        } else if (FindMem(SectorBuffer, SECTOR_SIZE, "BOOTMGR", 7) >= 0) {
+        } else if (FindMem(Buffer, SECTOR_SIZE, "BOOTMGR", 7) >= 0) {
             Volume->HasBootCode = TRUE;
             Volume->OSIconName = L"winvista,win";
             Volume->OSName = L"Windows";
 
-        } else if (FindMem(SectorBuffer, 512, "CPUBOOT SYS", 11) >= 0 ||
-                   FindMem(SectorBuffer, 512, "KERNEL  SYS", 11) >= 0) {
+        } else if (FindMem(Buffer, 512, "CPUBOOT SYS", 11) >= 0 ||
+                   FindMem(Buffer, 512, "KERNEL  SYS", 11) >= 0) {
             Volume->HasBootCode = TRUE;
             Volume->OSIconName = L"freedos";
             Volume->OSName = L"FreeDOS";
 
-        } else if (FindMem(SectorBuffer, 512, "OS2LDR", 6) >= 0 ||
-                   FindMem(SectorBuffer, 512, "OS2BOOT", 7) >= 0) {
+        } else if (FindMem(Buffer, 512, "OS2LDR", 6) >= 0 ||
+                   FindMem(Buffer, 512, "OS2BOOT", 7) >= 0) {
             Volume->HasBootCode = TRUE;
             Volume->OSIconName = L"ecomstation";
             Volume->OSName = L"eComStation";
 
-        } else if (FindMem(SectorBuffer, 512, "Be Boot Loader", 14) >= 0) {
+        } else if (FindMem(Buffer, 512, "Be Boot Loader", 14) >= 0) {
             Volume->HasBootCode = TRUE;
             Volume->OSIconName = L"beos";
             Volume->OSName = L"BeOS";
 
-        } else if (FindMem(SectorBuffer, 512, "yT Boot Loader", 14) >= 0) {
+        } else if (FindMem(Buffer, 512, "yT Boot Loader", 14) >= 0) {
             Volume->HasBootCode = TRUE;
             Volume->OSIconName = L"zeta,beos";
             Volume->OSName = L"ZETA";
 
-        } else if (FindMem(SectorBuffer, 512, "\x04" "beos\x06" "system\x05" "zbeos", 18) >= 0 ||
-                   FindMem(SectorBuffer, 512, "\x06" "system\x0c" "haiku_loader", 20) >= 0) {
+        } else if (FindMem(Buffer, 512, "\x04" "beos\x06" "system\x05" "zbeos", 18) >= 0 ||
+                   FindMem(Buffer, 512, "\x06" "system\x0c" "haiku_loader", 20) >= 0) {
             Volume->HasBootCode = TRUE;
             Volume->OSIconName = L"haiku,beos";
             Volume->OSName = L"Haiku";
@@ -578,21 +592,21 @@ static VOID ScanVolumeBootcode(IN OUT REFIT_VOLUME *Volume, OUT BOOLEAN *Bootabl
 #endif
 
         // dummy FAT boot sector (created by OS X's newfs_msdos)
-        if (FindMem(SectorBuffer, 512, "Non-system disk", 15) >= 0)
+        if (FindMem(Buffer, 512, "Non-system disk", 15) >= 0)
             Volume->HasBootCode = FALSE;
 
         // dummy FAT boot sector (created by Linux's mkdosfs)
-        if (FindMem(SectorBuffer, 512, "This is not a bootable disk", 27) >= 0)
+        if (FindMem(Buffer, 512, "This is not a bootable disk", 27) >= 0)
             Volume->HasBootCode = FALSE;
 
         // dummy FAT boot sector (created by Windows)
-        if (FindMem(SectorBuffer, 512, "Press any key to restart", 24) >= 0)
+        if (FindMem(Buffer, 512, "Press any key to restart", 24) >= 0)
             Volume->HasBootCode = FALSE;
 
         // check for MBR partition table
-        if (*((UINT16 *)(SectorBuffer + 510)) == 0xaa55) {
+        if (*((UINT16 *)(Buffer + 510)) == 0xaa55) {
             MbrTableFound = FALSE;
-            MbrTable = (MBR_PARTITION_INFO *)(SectorBuffer + 446);
+            MbrTable = (MBR_PARTITION_INFO *)(Buffer + 446);
             for (i = 0; i < 4; i++)
                 if (MbrTable[i].StartLBA && MbrTable[i].Size)
                     MbrTableFound = TRUE;

@@ -63,10 +63,10 @@
 
 #define MACOSX_LOADER_PATH      L"System\\Library\\CoreServices\\boot.efi"
 #if defined (EFIX64)
-#define SHELL_NAMES             L"\\EFI\\tools\\shell.efi,\\shellx64.efi"
+#define SHELL_NAMES             L"\\EFI\\tools\\shell.efi,\\EFI\\tools\\shellx64.efi,\\shellx64.efi"
 #define DRIVER_DIRS             L"drivers,drivers_x64"
 #elif defined (EFI32)
-#define SHELL_NAMES             L"\\EFI\\tools\\shell.efi,\\shellia32.efi"
+#define SHELL_NAMES             L"\\EFI\\tools\\shell.efi,\\EFI\\tools\shellia32.efi,\\shellia32.efi"
 #define DRIVER_DIRS             L"drivers,drivers_ia32"
 #else
 #define SHELL_NAMES             L"\\EFI\\tools\\shell.efi"
@@ -118,7 +118,7 @@ static VOID AboutrEFInd(VOID)
 
     if (AboutMenu.EntryCount == 0) {
         AboutMenu.TitleImage = BuiltinIcon(BUILTIN_ICON_FUNC_ABOUT);
-        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.6.0.1");
+        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.6.0.2");
         AddMenuInfoLine(&AboutMenu, L"");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2006-2010 Christoph Pfisterer");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2012 Roderick W. Smith");

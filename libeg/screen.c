@@ -122,6 +122,8 @@ BOOLEAN egSetScreenSize(IN OUT UINTN *ScreenWidth, IN OUT UINTN *ScreenHeight) {
       if (*ScreenHeight == 0) { // User specified a mode number (stored in *ScreenWidth); use it directly
          if (*ScreenWidth == GraphicsOutput->Mode->Mode) { // user requested current mode; do nothing
             ModeSet = TRUE;
+            *ScreenWidth = Info->HorizontalResolution;
+            *ScreenHeight = Info->VerticalResolution;
          } else {
             ModeNum = (UINT32) *ScreenWidth;
             Status = refit_call4_wrapper(GraphicsOutput->QueryMode, GraphicsOutput, ModeNum, &Size, &Info);
