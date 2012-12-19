@@ -35,11 +35,11 @@
  */
 /*
  * Modifications copyright (c) 2012 Roderick W. Smith
- * 
+ *
  * Modifications distributed under the terms of the GNU General Public
  * License (GPL) version 3 (GPLv3), a copy of which must be distributed
  * with this source code or binaries made from it.
- * 
+ *
  */
 
 #ifndef __GLOBAL_H_
@@ -182,6 +182,8 @@ typedef struct _refit_menu_screen {
    REFIT_MENU_ENTRY **Entries;
    UINTN       TimeoutSeconds;
    CHAR16      *TimeoutText;
+   CHAR16      *Hint1;
+   CHAR16      *Hint2;
 } REFIT_MENU_SCREEN;
 
 typedef struct {

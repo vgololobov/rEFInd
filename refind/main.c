@@ -87,14 +87,21 @@
 // a ".efi" extension to be found when scanning for boot loaders.
 #define LINUX_MATCH_PATTERNS    L"vmlinuz*,bzImage*"
 
+// Default hint text
+#define SUBSCREEN_HINT1            L"Use arrow keys to move cursor; Enter to boot;"
+#define SUBSCREEN_HINT2            L"Insert or F2 to edit options; Esc to return to main menu"
+#define SUBSCREEN_HINT2_NO_EDITOR  L"Esc to return to main menu"
+
 static REFIT_MENU_ENTRY MenuEntryAbout    = { L"About rEFInd", TAG_ABOUT, 1, 0, 'A', NULL, NULL, NULL };
 static REFIT_MENU_ENTRY MenuEntryReset    = { L"Reboot Computer", TAG_REBOOT, 1, 0, 'R', NULL, NULL, NULL };
 static REFIT_MENU_ENTRY MenuEntryShutdown = { L"Shut Down Computer", TAG_SHUTDOWN, 1, 0, 'U', NULL, NULL, NULL };
 static REFIT_MENU_ENTRY MenuEntryReturn   = { L"Return to Main Menu", TAG_RETURN, 0, 0, 0, NULL, NULL, NULL };
 static REFIT_MENU_ENTRY MenuEntryExit     = { L"Exit rEFInd", TAG_EXIT, 1, 0, 0, NULL, NULL, NULL };
 
-static REFIT_MENU_SCREEN MainMenu       = { L"Main Menu", NULL, 0, NULL, 0, NULL, 0, L"Automatic boot" };
-static REFIT_MENU_SCREEN AboutMenu      = { L"About", NULL, 0, NULL, 0, NULL, 0, NULL };
+static REFIT_MENU_SCREEN MainMenu       = { L"Main Menu", NULL, 0, NULL, 0, NULL, 0, L"Automatic boot",
+                                            L"Use arrow keys to move cursor; Enter to boot;",
+                                            L"Insert or F2 for more options; Esc to refresh" };
+static REFIT_MENU_SCREEN AboutMenu      = { L"About", NULL, 0, NULL, 0, NULL, 0, NULL, L"Press Enter to return to main menu", L"" };
 
 REFIT_CONFIG GlobalConfig = { FALSE, FALSE, 0, 0, 0, 20, 0, 0, GRAPHICS_FOR_OSX, LEGACY_TYPE_MAC, 0,
                               NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
@@ -395,6 +402,8 @@ static REFIT_MENU_SCREEN* CopyMenuScreen(REFIT_MENU_SCREEN *Entry) {
       for (i = 0; i < Entry->EntryCount && NewEntry->Entries; i++) {
          AddMenuEntry(NewEntry, Entry->Entries[i]);
       } // for
+      NewEntry->Hint1 = (Entry->Hint1) ? StrDuplicate(Entry->Hint1) : NULL;
+      NewEntry->Hint2 = (Entry->Hint2) ? StrDuplicate(Entry->Hint2) : NULL;
    } // if
    return (NewEntry);
 } // static REFIT_MENU_SCREEN* CopyMenuScreen()
@@ -501,6 +510,12 @@ REFIT_MENU_SCREEN *InitializeSubScreen(IN LOADER_ENTRY *Entry) {
             MyFreePool(MainOptions);
             AddMenuEntry(SubScreen, (REFIT_MENU_ENTRY *)SubEntry);
          } // if (SubEntry != NULL)
+         SubScreen->Hint1 = StrDuplicate(SUBSCREEN_HINT1);
+         if (GlobalConfig.HideUIFlags & HIDEUI_FLAG_EDITOR) {
+            SubScreen->Hint2 = StrDuplicate(SUBSCREEN_HINT2_NO_EDITOR);
+         } else {
+            SubScreen->Hint2 = StrDuplicate(SUBSCREEN_HINT2);
+         } // if/else
       } // if (SubScreen != NULL)
    } else { // existing subscreen; less initialization, and just add new entry later....
       SubScreen = Entry->me.SubScreen;
@@ -1270,6 +1285,12 @@ static LEGACY_ENTRY * AddLegacyEntry(IN CHAR16 *LoaderTitle, IN REFIT_VOLUME *Vo
     SubScreen->Title = AllocateZeroPool(256 * sizeof(CHAR16));
     SPrint(SubScreen->Title, 255, L"Boot Options for %s on %s", LoaderTitle, VolDesc);
     SubScreen->TitleImage = Entry->me.Image;
+    SubScreen->Hint1 = StrDuplicate(SUBSCREEN_HINT1);
+    if (GlobalConfig.HideUIFlags & HIDEUI_FLAG_EDITOR) {
+       SubScreen->Hint2 = StrDuplicate(SUBSCREEN_HINT2_NO_EDITOR);
+    } else {
+       SubScreen->Hint2 = StrDuplicate(SUBSCREEN_HINT2);
+    } // if/else
 
     // default entry
     SubEntry = AllocateZeroPool(sizeof(LEGACY_ENTRY));
@@ -1338,6 +1359,12 @@ static LEGACY_ENTRY * AddLegacyEntryUEFI(BDS_COMMON_OPTION *BdsOption, IN UINT16
     SubScreen->Title = AllocateZeroPool(256 * sizeof(CHAR16));
     SPrint(SubScreen->Title, 255, L"No boot options for legacy target");
     SubScreen->TitleImage = Entry->me.Image;
+    SubScreen->Hint1 = StrDuplicate(SUBSCREEN_HINT1);
+    if (GlobalConfig.HideUIFlags & HIDEUI_FLAG_EDITOR) {
+       SubScreen->Hint2 = StrDuplicate(SUBSCREEN_HINT2_NO_EDITOR);
+    } else {
+       SubScreen->Hint2 = StrDuplicate(SUBSCREEN_HINT2);
+    } // if/else
 
     // default entry
     SubEntry = AllocateZeroPool(sizeof(LEGACY_ENTRY));

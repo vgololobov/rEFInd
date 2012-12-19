@@ -680,7 +680,7 @@ static CHAR16 *GetVolumeName(IN REFIT_VOLUME *Volume) {
    CHAR16                  *SISize, *TypeName;
 
    FileSystemInfoPtr = LibFileSystemInfo(Volume->RootDir);
-   if (FileSystemInfoPtr != NULL) {
+   if (FileSystemInfoPtr != NULL) { // we have filesystem information (size, label)....
        if ((FileSystemInfoPtr->VolumeLabel != NULL) && (StrLen(FileSystemInfoPtr->VolumeLabel) > 0)) {
           FoundName = StrDuplicate(FileSystemInfoPtr->VolumeLabel);
        }
@@ -692,7 +692,7 @@ static CHAR16 *GetVolumeName(IN REFIT_VOLUME *Volume) {
           FoundName = NULL;
        } // if rEFInd HFS+ driver suspected
 
-       if (FoundName == NULL) { // filesystem has no name....
+       if (FoundName == NULL) { // filesystem has no name, so use fs type and size
           FoundName = AllocateZeroPool(sizeof(CHAR16) * 256);
           if (FoundName != NULL) {
              SISize = SizeInIEEEUnits(FileSystemInfoPtr->VolumeSize);
@@ -703,10 +703,10 @@ static CHAR16 *GetVolumeName(IN REFIT_VOLUME *Volume) {
 
        FreePool(FileSystemInfoPtr);
 
-   } else {
+   } else { // fs driver not returning info; fall back on our own information....
       FoundName = AllocateZeroPool(sizeof(CHAR16) * 256);
       if (FoundName != NULL) {
-         TypeName = FSTypeName(Volume->FSType); // NOTE: Don't free TypeName; fn returns constant
+         TypeName = FSTypeName(Volume->FSType); // NOTE: Don't free TypeName; function returns constant
          if (StrLen(TypeName) > 0)
             SPrint(FoundName, 255, L"%s volume", FSTypeName(Volume->FSType));
          else

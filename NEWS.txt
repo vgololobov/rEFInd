@@ -1,11 +1,13 @@
 0.6.1 (12/??/2012):
 -------------------
 
+- Refined hints displays to be more context-sensitive, particularly in text
+  mode.
+
 - Instead of displaying a blank filesystem label when a filesystem has
-  none, rEFInd now displays the size of the filesystem, as in "boot
-  EFI\foo\bar.efi from 200 MiB volume" rather than "boot EFI\foo\bar.efi
-  from". For some filesystems, the filesystem type is included, as in "boot
-  EFI\foo\bar.efi from 200 MiB ext3 volume".
+  none, rEFInd now displays the size and/or type of the filesystem, as in
+  "boot EFI\foo\bar.efi from 200 MiB ext3 volume" rather than "boot
+  EFI\foo\bar.efi from".
 
 - Fixed a bug that caused the screen to clear after displaying an error
   message but before displaying the "Hit any key to continue" message when

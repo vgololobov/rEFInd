@@ -35,11 +35,11 @@
  */
 /*
  * Modifications copyright (c) 2012 Roderick W. Smith
- * 
+ *
  * Modifications distributed under the terms of the GNU General Public
  * License (GPL) version 3 (GPLv3), a copy of which must be distributed
  * with this source code or binaries made from it.
- * 
+ *
  */
 
 #include "global.h"
@@ -512,7 +512,7 @@ static VOID TextMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, 
             MenuPosY = 4;
             if (Screen->InfoLineCount > 0)
                 MenuPosY += Screen->InfoLineCount + 1;
-            MenuHeight = ConHeight - MenuPosY - 2;
+            MenuHeight = ConHeight - MenuPosY - 3;
             if (Screen->TimeoutSeconds > 0)
                 MenuHeight -= 2;
             InitScroll(State, Screen->EntryCount, MenuHeight);
@@ -595,9 +595,14 @@ static VOID TextMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, 
             else
                refit_call2_wrapper(ST->ConOut->OutputString, ST->ConOut, L" ");
             if (!(GlobalConfig.HideUIFlags & HIDEUI_FLAG_HINTS)) {
-               refit_call3_wrapper(ST->ConOut->SetCursorPosition, ST->ConOut, 0, ConHeight - 1);
-               refit_call2_wrapper(ST->ConOut->OutputString, ST->ConOut,
-                                   L"Use arrow keys to move cursor; Enter to boot; Insert or F2 for more options");
+               if (Screen->Hint1 != NULL) {
+                  refit_call3_wrapper(ST->ConOut->SetCursorPosition, ST->ConOut, 0, ConHeight - 2);
+                  refit_call2_wrapper(ST->ConOut->OutputString, ST->ConOut, Screen->Hint1);
+               }
+               if (Screen->Hint2 != NULL) {
+                  refit_call3_wrapper(ST->ConOut->SetCursorPosition, ST->ConOut, 0, ConHeight - 1);
+                  refit_call2_wrapper(ST->ConOut->OutputString, ST->ConOut, Screen->Hint2);
+               }
             }
             break;
 
@@ -617,12 +622,12 @@ static VOID TextMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, 
             if (ParamText[0] == 0) {
                 // clear message
                 refit_call2_wrapper(ST->ConOut->SetAttribute, ST->ConOut, ATTR_BASIC);
-                refit_call3_wrapper(ST->ConOut->SetCursorPosition, ST->ConOut, 0, ConHeight - 2);
+                refit_call3_wrapper(ST->ConOut->SetCursorPosition, ST->ConOut, 0, ConHeight - 3);
                 refit_call2_wrapper(ST->ConOut->OutputString, ST->ConOut, BlankLine + 1);
             } else {
                 // paint or update message
                 refit_call2_wrapper(ST->ConOut->SetAttribute, ST->ConOut, ATTR_ERROR);
-                refit_call3_wrapper(ST->ConOut->SetCursorPosition, ST->ConOut, 3, ConHeight - 2);
+                refit_call3_wrapper(ST->ConOut->SetCursorPosition, ST->ConOut, 3, ConHeight - 3);
                 SPrint(TimeoutMessage, 255, L"%s  ", ParamText);
                 refit_call2_wrapper(ST->ConOut->OutputString, ST->ConOut, TimeoutMessage);
             }
@@ -717,15 +722,14 @@ static VOID GraphicsMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *Sta
                              EntriesPosX, EntriesPosY + i * TEXT_LINE_HEIGHT);
             }
             if (!(GlobalConfig.HideUIFlags & HIDEUI_FLAG_HINTS)) {
-               if (GlobalConfig.HideUIFlags & HIDEUI_FLAG_EDITOR) {
-                  DrawMenuText(L"Use arrow keys to move cursor; Enter to boot", 0,
-                               (UGAWidth - (45 * FONT_CELL_WIDTH)) / 2, UGAHeight - (FONT_CELL_HEIGHT * 3));
-               } else {
-                  DrawMenuText(L"Use arrow keys to move cursor; Enter to boot;", 0,
-                               (UGAWidth - (45 * FONT_CELL_WIDTH)) / 2, UGAHeight - (FONT_CELL_HEIGHT * 3));
-                  DrawMenuText(L"Insert or F2 to edit options; Esc to return to main menu", 0,
-                               (UGAWidth - (56 * FONT_CELL_WIDTH)) / 2, UGAHeight - (FONT_CELL_HEIGHT * 2));
-               } // if/else
+               if ((Screen->Hint1 != NULL) && (StrLen(Screen->Hint1) > 0)) {
+                  DrawMenuText(Screen->Hint1, 0, (UGAWidth - (StrLen(Screen->Hint1) * FONT_CELL_WIDTH)) / 2,
+                               UGAHeight - (FONT_CELL_HEIGHT * 3));
+               }
+               if ((Screen->Hint2 != NULL) && (StrLen(Screen->Hint2) > 0)) {
+                  DrawMenuText(Screen->Hint2, 0, (UGAWidth - (StrLen(Screen->Hint2) * FONT_CELL_WIDTH)) / 2,
+                               UGAHeight - (FONT_CELL_HEIGHT * 2));
+               } // if
             } // if
             break;
 
@@ -799,10 +803,8 @@ static VOID PaintAll(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, UINTN
                        (UGAWidth - LAYOUT_TEXT_WIDTH) >> 1, textPosY);
 
    if (!(GlobalConfig.HideUIFlags & HIDEUI_FLAG_HINTS)) {
-      DrawMainMenuText(L"Use arrow keys to move cursor; Enter to boot;",
-                       (UGAWidth - LAYOUT_TEXT_WIDTH) / 2, UGAHeight - (FONT_CELL_HEIGHT * 3));
-      DrawMainMenuText(L"Insert or F2 for more options; Esc to refresh",
-                       (UGAWidth - LAYOUT_TEXT_WIDTH) / 2, UGAHeight - (FONT_CELL_HEIGHT * 2));
+      DrawMainMenuText(Screen->Hint1, (UGAWidth - LAYOUT_TEXT_WIDTH) / 2, UGAHeight - (FONT_CELL_HEIGHT * 3));
+      DrawMainMenuText(Screen->Hint2, (UGAWidth - LAYOUT_TEXT_WIDTH) / 2, UGAHeight - (FONT_CELL_HEIGHT * 2));
    } // if
 } // static VOID PaintAll()
 
