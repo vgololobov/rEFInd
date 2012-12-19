@@ -1,6 +1,13 @@
 0.6.1 (12/??/2012):
 -------------------
 
+- Added the filesystem's label (up to the first space, dash, or underscore,
+  if present) as a search base for a menu icon. For instance, if the
+  filesystem is called "Arch", rEFInd will try to find an icon called
+  os_Arch.icns; if it's called "Mac boot", rEFInd will try to use
+  os_Mac.icns; and if it's "suse_root", rEFInd will search for
+  os_suse.icns.
+
 - Refined hints displays to be more context-sensitive, particularly in text
   mode.
 

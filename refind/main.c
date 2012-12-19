@@ -87,7 +87,7 @@
 // a ".efi" extension to be found when scanning for boot loaders.
 #define LINUX_MATCH_PATTERNS    L"vmlinuz*,bzImage*"
 
-// Default hint text
+// Default hint text for program-launch submenus
 #define SUBSCREEN_HINT1            L"Use arrow keys to move cursor; Enter to boot;"
 #define SUBSCREEN_HINT2            L"Insert or F2 to edit options; Esc to return to main menu"
 #define SUBSCREEN_HINT2_NO_EDITOR  L"Esc to return to main menu"
@@ -726,9 +726,10 @@ static CHAR16 * GetMainLinuxOptions(IN CHAR16 * LoaderPath, IN REFIT_VOLUME *Vol
 // code and shortcut letter. For Linux EFI stub loaders, also sets kernel options
 // that will (with luck) work fairly automatically.
 VOID SetLoaderDefaults(LOADER_ENTRY *Entry, CHAR16 *LoaderPath, IN REFIT_VOLUME *Volume) {
-   CHAR16          IconFileName[256];
-   CHAR16          *FileName, *PathOnly, *OSIconName = NULL, *Temp;
-   CHAR16          ShortcutLetter = 0;
+   CHAR16      IconFileName[256];
+   CHAR16      *FileName, *PathOnly, *OSIconName = NULL, *Temp;
+   CHAR16      ShortcutLetter = 0;
+   UINTN       i, Length;
 
    FileName = Basename(LoaderPath);
    PathOnly = FindPath(LoaderPath);
@@ -749,6 +750,22 @@ VOID SetLoaderDefaults(LOADER_ENTRY *Entry, CHAR16 *LoaderPath, IN REFIT_VOLUME 
    if (OSIconName != NULL) {
       ShortcutLetter = OSIconName[0];
    }
+
+   // Add the volume's label up to the first space, dash, or underscore (if present)
+   // as a potential base for finding an icon
+   if ((Volume->VolName) && (StrLen(Volume->VolName) > 0)) {
+      Temp = StrDuplicate(Volume->VolName);
+      if (Temp != NULL) {
+         i = 0;
+         Length = StrLen(Temp);
+         do {
+            if ((Temp[i] == L' ') || (Temp[i] == L'_') || (Temp[i] == L'-'))
+               Temp[i] = 0;
+         } while ((Temp[i] != 0) && (++i < Length));
+         MergeStrings(&OSIconName, Temp, L',');
+         MyFreePool(Temp);
+      } // if
+   } // if
 
    // detect specific loaders
    if (StriSubCmp(L"bzImage", LoaderPath) || StriSubCmp(L"vmlinuz", LoaderPath)) {
@@ -838,7 +855,7 @@ LOADER_ENTRY * AddLoaderEntry(IN CHAR16 *LoaderPath, IN CHAR16 *LoaderTitle, IN 
 // (Time1 == Time2). Precision is only to the nearest second; since
 // this is used for sorting boot loader entries, differences smaller
 // than this are likely to be meaningless (and unlikely!).
-INTN TimeComp(EFI_TIME *Time1, EFI_TIME *Time2) {
+INTN TimeComp(IN EFI_TIME *Time1, IN EFI_TIME *Time2) {
    INT64 Time1InSeconds, Time2InSeconds;
 
    // Following values are overestimates; I'm assuming 31 days in every month.
