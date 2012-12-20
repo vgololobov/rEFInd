@@ -72,6 +72,34 @@ struct fsw_fstype_table   FSW_FSTYPE_TABLE_NAME(ext4) = {
     fsw_ext4_readlink,
 };
 
+
+static inline int test_root(fsw_u32 a, int b)
+{
+        int num = b;
+
+        while (a > num)
+                num *= b;
+        return num == a;
+}
+
+static int fsw_ext4_group_sparse(fsw_u32 group)
+{
+        if (group <= 1)
+                return 1;
+        if (!(group & 1))
+                return 0;
+        return (test_root(group, 7) || test_root(group, 5) ||
+                test_root(group, 3));
+}
+
+/* calculate the first block number of the group */
+static inline fsw_u32
+fsw_ext4_group_first_block_no(struct ext4_super_block *sb, fsw_u32 group_no)
+{
+        return group_no * (fsw_u32)EXT4_BLOCKS_PER_GROUP(sb) +
+                sb->s_first_data_block;
+}
+
 /**
  * Mount an ext4 volume. Reads the superblock and constructs the
  * root directory dnode.
@@ -82,7 +110,7 @@ static fsw_status_t fsw_ext4_volume_mount(struct fsw_ext4_volume *vol)
     fsw_status_t    status;
     void            *buffer;
     fsw_u32         blocksize;
-    fsw_u32         groupcnt, groupno, gdesc_per_block, gdesc_bno, gdesc_index;
+    fsw_u32         groupcnt, groupno, gdesc_per_block, gdesc_bno, gdesc_index, metabg_of_gdesc;
     struct ext4_group_desc *gdesc;
     int             i;
     struct fsw_string s;
@@ -111,7 +139,8 @@ static fsw_status_t fsw_ext4_volume_mount(struct fsw_ext4_volume *vol)
 
     if (vol->sb->s_rev_level == EXT4_DYNAMIC_REV &&
         (vol->sb->s_feature_incompat & ~(EXT4_FEATURE_INCOMPAT_FILETYPE | EXT4_FEATURE_INCOMPAT_RECOVER |
-                                         EXT4_FEATURE_INCOMPAT_EXTENTS | EXT4_FEATURE_INCOMPAT_FLEX_BG)))
+                                         EXT4_FEATURE_INCOMPAT_EXTENTS | EXT4_FEATURE_INCOMPAT_FLEX_BG |
+                                         EXT4_FEATURE_INCOMPAT_META_BG)))
         return FSW_UNSUPPORTED;
 
 
@@ -146,29 +175,53 @@ static fsw_status_t fsw_ext4_volume_mount(struct fsw_ext4_volume *vol)
 
     // size of group descriptor depends on feature....
     if (!(vol->sb->s_feature_incompat & EXT4_FEATURE_INCOMPAT_64BIT)) {
-        // Default minimal group descriptor size...
+        // Default minimal group descriptor size... (this might not be set in old ext2 filesystems, therefor set it!)
         vol->sb->s_desc_size = EXT4_MIN_DESC_SIZE;
     }
 
     // Calculate group descriptor count the way the kernel does it...
     groupcnt = (vol->sb->s_blocks_count_lo - vol->sb->s_first_data_block + 
                 vol->sb->s_blocks_per_group - 1) / vol->sb->s_blocks_per_group;
-    // Descriptors in one block... s_desc_size needs to be set!
+
+    // Descriptors in one block... s_desc_size needs to be set! (Usually 128 since normal block 
+    // descriptors are 32 byte and block size is 4096)
     gdesc_per_block = EXT4_DESC_PER_BLOCK(vol->sb);
     
     // Read the group descriptors to get inode table offsets
     status = fsw_alloc(sizeof(fsw_u32) * groupcnt, &vol->inotab_bno);
     if (status)
         return status;
+
+    // Loop through all block group descriptors in order to get inode table locations
     for (groupno = 0; groupno < groupcnt; groupno++) {
-        // get the block group descriptor
-        gdesc_bno = (vol->sb->s_first_data_block + 1) + groupno / gdesc_per_block;
+
+        // Calculate the block number which contains the block group descriptor we look for
+        if(vol->sb->s_feature_incompat & EXT4_FEATURE_INCOMPAT_META_BG && groupno >= vol->sb->s_first_meta_bg)
+        {
+            // If option meta_bg is set, the block group descriptor is in meta block group...
+            metabg_of_gdesc = (fsw_u32)(groupno / gdesc_per_block) * gdesc_per_block;
+            gdesc_bno = fsw_ext4_group_first_block_no(vol->sb, metabg_of_gdesc);
+            // We need to know if the block group in questition has a super block, if yes, the 
+            // block group descriptors are in the next block number
+            if(!(vol->sb->s_feature_ro_compat & EXT4_FEATURE_RO_COMPAT_SPARSE_SUPER) || fsw_ext4_group_sparse(metabg_of_gdesc))
+                gdesc_bno += 1;
+        }
+        else
+        {
+            // All group descriptors follow the super block (+1)
+            gdesc_bno = (vol->sb->s_first_data_block + 1) + groupno / gdesc_per_block;
+        }
         gdesc_index = groupno % gdesc_per_block;
+
+        // Get block if necessary...
         status = fsw_block_get(vol, gdesc_bno, 1, (void **)&buffer);
         if (status)
             return status;
+
+        // Get group descriptor table and block number of inode table...
         gdesc = (struct ext4_group_desc *)(buffer + gdesc_index * vol->sb->s_desc_size);
         vol->inotab_bno[groupno] = gdesc->bg_inode_table_lo;
+
         fsw_block_release(vol, gdesc_bno, buffer);
     }
 
