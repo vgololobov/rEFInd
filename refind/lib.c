@@ -469,7 +469,7 @@ static UINT32 IdentifyFilesystemType(IN UINT8 *Buffer, IN UINTN BufferSize) {
    return FoundType;
 }
 
-static VOID ScanVolumeBootcode(IN OUT REFIT_VOLUME *Volume, OUT BOOLEAN *Bootable)
+static VOID ScanVolumeBootcode(REFIT_VOLUME *Volume, BOOLEAN *Bootable)
 {
     EFI_STATUS              Status;
     UINT8                   Buffer[SAMPLE_SIZE];
@@ -624,7 +624,7 @@ static VOID ScanVolumeBootcode(IN OUT REFIT_VOLUME *Volume, OUT BOOLEAN *Bootabl
         CheckError(Status, L"while reading boot sector");
 #endif
     }
-}
+} /* VOID ScanVolumeBootcode() */
 
 // default volume badge icon based on disk kind
 static VOID ScanVolumeDefaultIcon(IN OUT REFIT_VOLUME *Volume)
@@ -645,17 +645,18 @@ static VOID ScanVolumeDefaultIcon(IN OUT REFIT_VOLUME *Volume)
 // Return a string representing the input size in IEEE-1541 units.
 // The calling function is responsible for freeing the allocated memory.
 static CHAR16 *SizeInIEEEUnits(UINT64 SizeInBytes) {
-   float SizeInIeee;
-   UINTN Index = 0;
+   UINT64 SizeInIeee;
+   UINTN Index = 0, NumPrefixes;
    CHAR16 *Units, *Prefixes = L" KMGTPEZ";
    CHAR16 *TheValue;
 
-   TheValue = AllocateZeroPool(sizeof(CHAR16) * 80);
+   TheValue = AllocateZeroPool(sizeof(CHAR16) * 256);
    if (TheValue != NULL) {
-      SizeInIeee = (float) SizeInBytes;
-      while ((SizeInIeee > 1024.0) && (Index < (StrLen(Prefixes) - 1))) {
+      NumPrefixes = StrLen(Prefixes);
+      SizeInIeee = SizeInBytes;
+      while ((SizeInIeee > 1024) && (Index < (NumPrefixes - 1))) {
          Index++;
-         SizeInIeee /= 1024.0;
+         SizeInIeee /= 1024;
       } // while
       if (Prefixes[Index] == ' ') {
          Units = StrDuplicate(L"-byte");
@@ -663,7 +664,7 @@ static CHAR16 *SizeInIEEEUnits(UINT64 SizeInBytes) {
          Units = StrDuplicate(L"  iB");
          Units[1] = Prefixes[Index];
       } // if/else
-      SPrint(TheValue, 79, L"%d%s", (UINTN) SizeInIeee, Units);
+      SPrint(TheValue, 255, L"%ld%s", SizeInIeee, Units);
    } // if
    return TheValue;
 } // CHAR16 *SizeInSIUnits()
@@ -726,7 +727,7 @@ static CHAR16 *GetVolumeName(IN REFIT_VOLUME *Volume) {
    return FoundName;
 } // static CHAR16 *GetVolumeName()
 
-VOID ScanVolume(IN OUT REFIT_VOLUME *Volume)
+VOID ScanVolume(REFIT_VOLUME *Volume)
 {
     EFI_STATUS              Status;
     EFI_DEVICE_PATH         *DevicePath, *NextDevicePath;
@@ -915,7 +916,7 @@ static VOID ScanExtendedPartition(REFIT_VOLUME *WholeDiskVolume, MBR_PARTITION_I
             }
         }
     }
-}
+} /* VOID ScanExtendedPartition() */
 
 VOID ScanVolumes(VOID)
 {
@@ -1030,7 +1031,7 @@ VOID ScanVolumes(VOID)
             MyFreePool(SectorBuffer2);
         }
 
-    }
+    } // for
 } /* VOID ScanVolumes() */
 
 static VOID UninitVolumes(VOID)
@@ -1375,8 +1376,8 @@ BOOLEAN StriSubCmp(IN CHAR16 *SmallStr, IN CHAR16 *BigStr) {
 
 // Merges two strings, creating a new one and returning a pointer to it.
 // If AddChar != 0, the specified character is placed between the two original
-// strings (unless the first string is NULL). The original input string
-// *First is de-allocated and replaced by the new merged string.
+// strings (unless the first string is NULL or empty). The original input
+// string *First is de-allocated and replaced by the new merged string.
 // This is similar to StrCat, but safer and more flexible because
 // MergeStrings allocates memory that's the correct size for the
 // new merged string, so it can take a NULL *First and it cleans
@@ -1392,6 +1393,10 @@ VOID MergeStrings(IN OUT CHAR16 **First, IN CHAR16 *Second, CHAR16 AddChar) {
       Length2 = StrLen(Second);
    NewString = AllocatePool(sizeof(CHAR16) * (Length1 + Length2 + 2));
    if (NewString != NULL) {
+      if ((*First != NULL) && (StrLen(*First) == 0)) {
+         MyFreePool(*First);
+         *First = NULL;
+      }
       NewString[0] = L'\0';
       if (*First != NULL) {
          StrCat(NewString, *First);

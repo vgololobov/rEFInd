@@ -56,9 +56,11 @@
 
 #ifdef __MAKEWITH_TIANO
 #include "../EfiLib/BdsHelper.h"
+#else
+#define EFI_SECURITY_VIOLATION    EFIERR (26)
 #endif // __MAKEWITH_TIANO
 
-// 
+//
 // variables
 
 #define MACOSX_LOADER_PATH      L"System\\Library\\CoreServices\\boot.efi"
@@ -66,7 +68,7 @@
 #define SHELL_NAMES             L"\\EFI\\tools\\shell.efi,\\EFI\\tools\\shellx64.efi,\\shellx64.efi"
 #define DRIVER_DIRS             L"drivers,drivers_x64"
 #elif defined (EFI32)
-#define SHELL_NAMES             L"\\EFI\\tools\\shell.efi,\\EFI\\tools\shellia32.efi,\\shellia32.efi"
+#define SHELL_NAMES             L"\\EFI\\tools\\shell.efi,\\EFI\\tools\\shellia32.efi,\\shellia32.efi"
 #define DRIVER_DIRS             L"drivers,drivers_ia32"
 #else
 #define SHELL_NAMES             L"\\EFI\\tools\\shell.efi"
@@ -125,7 +127,7 @@ static VOID AboutrEFInd(VOID)
 
     if (AboutMenu.EntryCount == 0) {
         AboutMenu.TitleImage = BuiltinIcon(BUILTIN_ICON_FUNC_ABOUT);
-        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.6.0.2");
+        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.6.0.4");
         AddMenuInfoLine(&AboutMenu, L"");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2006-2010 Christoph Pfisterer");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2012 Roderick W. Smith");
@@ -224,7 +226,7 @@ static EFI_STATUS StartEFIImageList(IN EFI_DEVICE_PATH **DevicePaths,
        //                                            ImageData, ImageSize, &ChildImageHandle);
        ReturnStatus = Status = refit_call6_wrapper(BS->LoadImage, FALSE, SelfImageHandle, DevicePaths[DevicePathIndex],
                                                    NULL, 0, &ChildImageHandle);
-       if ((Status == EFI_ACCESS_DENIED) && (ShimLoaded())) {
+       if (((Status == EFI_ACCESS_DENIED) || (Status == EFI_SECURITY_VIOLATION)) && (ShimLoaded())) {
           FindVolumeAndFilename(DevicePaths[DevicePathIndex], &DeviceVolume, &loader);
           if (DeviceVolume != NULL) {
              Status = ReadFile(DeviceVolume->RootDir, loader, &File, &ImageSize);
@@ -725,9 +727,9 @@ static CHAR16 * GetMainLinuxOptions(IN CHAR16 * LoaderPath, IN REFIT_VOLUME *Vol
 // Sets a few defaults for a loader entry -- mainly the icon, but also the OS type
 // code and shortcut letter. For Linux EFI stub loaders, also sets kernel options
 // that will (with luck) work fairly automatically.
-VOID SetLoaderDefaults(LOADER_ENTRY *Entry, CHAR16 *LoaderPath, IN REFIT_VOLUME *Volume) {
+VOID SetLoaderDefaults(LOADER_ENTRY *Entry, CHAR16 *LoaderPath, REFIT_VOLUME *Volume) {
    CHAR16      IconFileName[256];
-   CHAR16      *FileName, *PathOnly, *OSIconName = NULL, *Temp;
+   CHAR16      *FileName, *PathOnly, *OSIconName = NULL, *Temp, *SubString;
    CHAR16      ShortcutLetter = 0;
    UINTN       i, Length;
 
@@ -735,6 +737,7 @@ VOID SetLoaderDefaults(LOADER_ENTRY *Entry, CHAR16 *LoaderPath, IN REFIT_VOLUME 
    PathOnly = FindPath(LoaderPath);
 
    // locate a custom icon for the loader
+   // Anything found here takes precedence over the "hints" in the OSIconName variable
    StrCpy(IconFileName, LoaderPath);
    ReplaceEfiExtension(IconFileName, L".icns");
    if (FileExists(Volume->RootDir, IconFileName)) {
@@ -743,6 +746,8 @@ VOID SetLoaderDefaults(LOADER_ENTRY *Entry, CHAR16 *LoaderPath, IN REFIT_VOLUME 
       Entry->me.Image = Volume->VolIconImage;
    } // icon matched to loader or volume
 
+   // Begin creating icon "hints" by using last part of directory path leading
+   // to the loader
    Temp = FindLastDirName(LoaderPath);
    MergeStrings(&OSIconName, Temp, L',');
    MyFreePool(Temp);
@@ -751,18 +756,22 @@ VOID SetLoaderDefaults(LOADER_ENTRY *Entry, CHAR16 *LoaderPath, IN REFIT_VOLUME 
       ShortcutLetter = OSIconName[0];
    }
 
-   // Add the volume's label up to the first space, dash, or underscore (if present)
-   // as a potential base for finding an icon
+   // Add every "word" in the volume label, delimited by spaces, dashes (-), or
+   // underscores (_), to the list of hints to be used in searching for OS
+   // icons.
    if ((Volume->VolName) && (StrLen(Volume->VolName) > 0)) {
-      Temp = StrDuplicate(Volume->VolName);
+      Temp = SubString = StrDuplicate(Volume->VolName);
       if (Temp != NULL) {
-         i = 0;
          Length = StrLen(Temp);
-         do {
-            if ((Temp[i] == L' ') || (Temp[i] == L'_') || (Temp[i] == L'-'))
+         for (i = 0; i < Length; i++) {
+            if ((Temp[i] == L' ') || (Temp[i] == L'_') || (Temp[i] == L'-')) {
                Temp[i] = 0;
-         } while ((Temp[i] != 0) && (++i < Length));
-         MergeStrings(&OSIconName, Temp, L',');
+               if (StrLen(SubString) > 0)
+                  MergeStrings(&OSIconName, SubString, L',');
+               SubString = Temp + i + 1;
+            } // if
+         } // for
+         MergeStrings(&OSIconName, SubString, L',');
          MyFreePool(Temp);
       } // if
    } // if
@@ -801,7 +810,7 @@ VOID SetLoaderDefaults(LOADER_ENTRY *Entry, CHAR16 *LoaderPath, IN REFIT_VOLUME 
       Entry->UseGraphicsMode = GlobalConfig.GraphicsFor & GRAPHICS_FOR_GRUB;
    } else if (StriCmp(FileName, L"cdboot.efi") == 0 ||
               StriCmp(FileName, L"bootmgr.efi") == 0 ||
-              StriCmp(FileName, L"Bootmgfw.efi") == 0) {
+              StriCmp(FileName, L"bootmgfw.efi") == 0) {
       MergeStrings(&OSIconName, L"win", L',');
       Entry->OSType = 'W';
       ShortcutLetter = 'W';
@@ -1415,7 +1424,6 @@ static VOID ScanLegacyUEFI(IN UINTN DiskType)
     BDS_COMMON_OPTION *BdsOption;
     LIST_ENTRY        TempList;
     BBS_BBS_DEVICE_PATH * BbsDevicePath = NULL;
-//    REFIT_VOLUME          Volume;
 
     InitializeListHead (&TempList);
     ZeroMem (Buffer, sizeof (Buffer));
@@ -1941,7 +1949,7 @@ static VOID InitializeLib(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *System
 //
 EFI_STATUS
 EFIAPI
-efi_main (IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable)
+efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
 {
     EFI_STATUS         Status;
     BOOLEAN            MainLoopRunning = TRUE;

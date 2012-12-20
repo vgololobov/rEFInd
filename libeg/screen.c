@@ -217,6 +217,7 @@ UINT32 egSetTextMode(UINT32 RequestedMode) {
    EFI_STATUS    Status;
 
    if (RequestedMode != ST->ConOut->Mode->Mode) {
+      SwitchToGraphics();
       Status = refit_call2_wrapper(ST->ConOut->SetMode, ST->ConOut, RequestedMode);
       if (Status == EFI_SUCCESS) {
          UsedMode = RequestedMode;
