@@ -33,11 +33,20 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+/*
+ * Modifications copyright (c) 2012 Roderick W. Smith
+ *
+ * Modifications distributed under the terms of the GNU General Public
+ * License (GPL) version 3 (GPLv3), a copy of which must be distributed
+ * with this source code or binaries made from it.
+ *
+ */
 
 #include "global.h"
 #include "screen.h"
 #include "config.h"
 #include "libegint.h"
+#include "lib.h"
 #include "../include/refit_call_wrapper.h"
 
 #include "../include/egemb_refind_banner.h"
@@ -46,7 +55,7 @@
 
 UINTN ConWidth;
 UINTN ConHeight;
-CHAR16 *BlankLine;
+CHAR16 *BlankLine = NULL;
 
 static VOID DrawScreenHeader(IN CHAR16 *Title);
 
@@ -58,6 +67,7 @@ BOOLEAN AllowGraphicsMode;
 
 EG_PIXEL StdBackgroundPixel  = { 0xbf, 0xbf, 0xbf, 0 };
 EG_PIXEL MenuBackgroundPixel = { 0xbf, 0xbf, 0xbf, 0 };
+EG_PIXEL DarkBackgroundPixel = { 0x0, 0x0, 0x0, 0 };
 
 static BOOLEAN GraphicsScreenDirty;
 
@@ -65,14 +75,23 @@ static BOOLEAN GraphicsScreenDirty;
 
 static BOOLEAN haveError = FALSE;
 
+static VOID PrepareBlankLine(VOID) {
+    UINTN i;
+
+    MyFreePool(BlankLine);
+    // make a buffer for a whole text line
+    BlankLine = AllocatePool((ConWidth + 1) * sizeof(CHAR16));
+    for (i = 0; i < ConWidth; i++)
+        BlankLine[i] = ' ';
+    BlankLine[i] = 0;
+}
+
 //
 // Screen initialization and switching
 //
 
 VOID InitScreen(VOID)
 {
-    UINTN i;
-
     // initialize libeg
     egInitScreen();
 
@@ -95,11 +114,7 @@ VOID InitScreen(VOID)
         ConHeight = 25;
     }
 
-    // make a buffer for a whole text line
-    BlankLine = AllocatePool((ConWidth + 1) * sizeof(CHAR16));
-    for (i = 0; i < ConWidth; i++)
-        BlankLine[i] = ' ';
-    BlankLine[i] = 0;
+    PrepareBlankLine();
 
     // show the banner (even when in graphics mode)
     DrawScreenHeader(L"Initializing...");
@@ -107,8 +122,10 @@ VOID InitScreen(VOID)
 
 VOID SetupScreen(VOID)
 {
-    if ((GlobalConfig.RequestedScreenWidth > 0) && (GlobalConfig.RequestedScreenHeight > 0) &&
-        egSetScreenSize(GlobalConfig.RequestedScreenWidth, GlobalConfig.RequestedScreenHeight)) {
+    GlobalConfig.RequestedTextMode = egSetTextMode(GlobalConfig.RequestedTextMode);
+
+    if ((GlobalConfig.RequestedScreenWidth > 0) &&
+        (egSetScreenSize(&GlobalConfig.RequestedScreenWidth, &GlobalConfig.RequestedScreenHeight))) {
           UGAWidth = GlobalConfig.RequestedScreenWidth;
           UGAHeight = GlobalConfig.RequestedScreenHeight;
     } // if user requested a particular screen resolution
@@ -136,6 +153,7 @@ VOID SwitchToText(IN BOOLEAN CursorEnabled)
         ConWidth = 80;
         ConHeight = 25;
     }
+    PrepareBlankLine();
 }
 
 VOID SwitchToGraphics(VOID)
@@ -172,8 +190,6 @@ VOID FinishTextScreen(IN BOOLEAN WaitAlways)
 
 VOID BeginExternalScreen(IN BOOLEAN UseGraphicsMode, IN CHAR16 *Title)
 {
-    EG_PIXEL DarkBackgroundPixel  = { 0x0, 0x0, 0x0, 0 };
-
     if (!AllowGraphicsMode)
         UseGraphicsMode = FALSE;
 
@@ -184,9 +200,6 @@ VOID BeginExternalScreen(IN BOOLEAN UseGraphicsMode, IN CHAR16 *Title)
        egClearScreen(&DarkBackgroundPixel);
        DrawScreenHeader(Title);
     } // if/else
-
-    // show the header
-//    DrawScreenHeader(Title);
 
     if (!UseGraphicsMode)
         SwitchToText(TRUE);
@@ -204,6 +217,9 @@ VOID FinishExternalScreen(VOID)
         SwitchToText(FALSE);
         PauseForKey();
     }
+
+    // Reset the screen resolution, in case external program changed it....
+    SetupScreen();
 
     // reset error flag
     haveError = FALSE;
@@ -224,8 +240,9 @@ static VOID DrawScreenHeader(IN CHAR16 *Title)
     UINTN y;
 
     // clear to black background
+    egClearScreen(&DarkBackgroundPixel); // first clear in graphics mode
     refit_call2_wrapper(ST->ConOut->SetAttribute, ST->ConOut, ATTR_BASIC);
-    refit_call1_wrapper(ST->ConOut->ClearScreen, ST->ConOut);
+    refit_call1_wrapper(ST->ConOut->ClearScreen, ST->ConOut); // then clear in text mode
 
     // paint header background
     refit_call2_wrapper(ST->ConOut->SetAttribute, ST->ConOut, ATTR_BANNER);
@@ -523,15 +540,21 @@ static void cursor_right(UINTN *cursor, UINTN *first, UINTN x_max, UINTN len)
       (*first)++;
 }
 
-BOOLEAN line_edit(CHAR16 *line_in, CHAR16 **line_out, UINTN x_max, UINTN y_pos) {
+BOOLEAN line_edit(CHAR16 *line_in, CHAR16 **line_out, UINTN x_max) {
    CHAR16 *line;
    UINTN size;
    UINTN len;
    UINTN first;
+   UINTN y_pos = 3;
    CHAR16 *print;
    UINTN cursor;
    BOOLEAN exit;
    BOOLEAN enter;
+
+   DrawScreenHeader(L"Line Editor");
+   refit_call3_wrapper(ST->ConOut->SetCursorPosition, ST->ConOut, (ConWidth - 71) / 2, ConHeight - 1);
+   refit_call2_wrapper(ST->ConOut->OutputString, ST->ConOut,
+                       L"Use cursor keys to edit, Esc to exit, Enter to boot with edited options");
 
    if (!line_in)
       line_in = L"";

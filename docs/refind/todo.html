@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 3/14/2012; last Web page update:
-12/6/2012, referencing rEFInd 0.5.0</p>
+12/16/2012, referencing rEFInd 0.6.0</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -165,6 +165,13 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 	from the partition data is harder than extracting the volume's
 	label or counting up the filesystem numbers.</li>
 
+    <li>Currently, if a filesystem's label comes up empty, rEFInd
+	substitutes the size, so you get displays like <tt>boot
+	EFI\foo\bar.efi from 90 GiB volume</tt>. I'd like to add more
+	checks to substitute the GPT <i>partition</i> label if the
+	<i>filesystem</i> label comes up empty, or add a filesystem type
+	identifier to the size.</li>
+
     <li>The default_selection option in refind.conf could be improved by
 	supporting a list of default options, so that if the first item
 	isn't found, rEFInd will try to boot the second one in the list,
@@ -208,10 +215,6 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 	this is likely to be tedious to do&mdash;see
 	<tt>/usr/local/UDK2010/MyWorkSpace/MdeModulePkg/Core/Dxe/Image/Image.c</tt>
 	for the reference UEFI implementation. --> </li>
-
-    <li>When launching ELILO in Secure Boot mode, ELILO can't find its
-	configuration file. It's possible that a similar problem exists for
-	other boot loaders, too.</li>
 
     <li>When setting a resolution higher than about 800x600 (or maybe even
 	640x480) in text mode, the text displayed by rEFInd, and on some
@@ -270,14 +273,6 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
     <ul>
 
-    <li>With the arrival of PCs preloaded with Windows 8 and with Secure
-	Boot enabled, some way to cope is in order. I'm thinking of adding
-	code to limit or prohibit booting of unsigned boot loaders if
-	rEFInd detects that Secure Boot is active, and link with the <a
-	href="http://mjg59.dreamwidth.org/18945.html">Shim</a>
-	pre-bootloader to help handle signing and authentication. I need to
-	research the technical details more, though.</li>
-
     <li>EFI supports network boots. rEFInd doesn't, but it would be nice if
 	it would.</li>
 
@@ -313,9 +308,6 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 	boot. Perhaps this could be done via a separate tool that could be
 	launched much like the shell or <tt>gptsync</tt>.</li>
 
-    <li>I'd like to give the user the ability to set custom options on a
-	single-boot basis, similar to what's possible in GRUB.</li>
-
     <li>A way to set the color of the font would be useful for theming
         purposes.</li>
 
@@ -327,20 +319,15 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 	written in a cross-platform GUI toolkit, so that a single code base
 	can be used on any of the major OSes.</li>
 
-    <li>A way to "source" one configuration file from another one would be
-	helpful for some types of configuration scripts. (This would enable
-	overriding options in a secondary file without modifying the
-	default original file, for instance.)</li>
-
     </ul></li> <!-- New features -->
 
     <li><b>Improvements to the EFI drivers:</b>
 
     <ul>
 
-    <li>Drivers for additional filesystems are required. Given the recent
-	shift to ext4fs, that should be the priority; however, other Linux
-	filesystems, UDF, and perhaps others would all be welcome
+    <li>Drivers for additional filesystems are desirable. Given the talk of
+	shifting to Btrfs, that should be the priority; however, other
+	Linux filesystems, UDF, and perhaps others would all be welcome
 	additions. Also along these lines, adding drivers for Linux LVM and
 	RAID setups would be useful, too.</li>
 

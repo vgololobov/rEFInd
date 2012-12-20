@@ -5,7 +5,7 @@
 # Updated 11/8/2012 to do more things automatically
 # Updated 12/6/2012 to sign binaries with the rEFInd MOK
 #
-# Usage: ./mkdistrib version
+# Usage: ./mkdistrib version [--nosign]
 # where "version" is a version number
 # MUST be run from an x86-64 system, on which the TianoCore build
 # includes both X64 and IA32 build support ("TARGET_ARCH = IA32 X64"
@@ -13,25 +13,30 @@
 # partition to be mounted via /etc/fstab at /mnt/refind.
 
 
+if [[ $2 == "--nosign" ]] ; then
+   SignIt=0
+else
+   SignIt=1
+fi
+
 StartDir=`pwd`
 SBSign=`which sbsign 2> /dev/null`
 KeysDir=/mnt/refind
 
 KeysInfo=`df $KeysDir 2> /dev/null | grep $KeysDir`
 
-if [[ ! -n $SBSign ]] ; then
+if [[ ! -n $SBSign && $SignIt == 1 ]] ; then
    echo "Can't find sbsign binary! Aborting!"
    exit 1
 fi
 
-if [[ ! -n $KeysInfo ]] ; then
+if [[ ! -n $KeysInfo && $SignIt == 1 ]] ; then
    mount /mnt/refind
-fi
-
-if [[ $? -ne 0 ]] ; then
-   echo "Error mounting $KeysDir! Aborting!"
-   echo ""
-   exit 1
+   if [[ $? -ne 0 ]] ; then
+      echo "Error mounting $KeysDir! Aborting!"
+      echo ""
+      exit 1
+   fi
 fi
 
 # From here on, if there's an error, abort immediately.
@@ -42,8 +47,7 @@ make clean
 # Prepare a place and copy files there....
 mkdir -p ../snapshots/$1/refind-$1/icons
 cp --preserve=timestamps icons/*icns ../snapshots/$1/refind-$1/icons/
-cp -a docs images include EfiLib libeg refind filesystems install.sh CREDITS.txt NEWS.txt BUILDING.txt COPYING.txt LICENSE.txt README.txt refind.inf Make.tiano Make.common Makefile refind.conf-sample ../snapshots/$1/refind-$1
-cp $KeysDir/refind.cer $KeysDir/refind.crt ../snapshots/$1/refind-$1/
+cp -a docs images keys include EfiLib libeg refind filesystems install.sh mkrlconf.sh CREDITS.txt NEWS.txt BUILDING.txt COPYING.txt LICENSE.txt README.txt refind.inf Make.tiano Make.common Makefile refind.conf-sample ../snapshots/$1/refind-$1
 
 # Go there and prepare a souce code zip file....
 cd ../snapshots/$1/
@@ -65,19 +69,28 @@ make
 make fs
 mkdir -p refind-bin-$1/refind/drivers_x64
 cp -a icons refind-bin-$1/refind/
-for File in `ls drivers_x64/*_x64.efi` ; do
-   $SBSign --key $KeysDir/refind.key --cert $KeysDir/refind.crt --output refind-bin-$1/refind/$File $File
-done
+if [[ $SignIt == 1 ]] ; then
+   for File in `ls drivers_x64/*_x64.efi` ; do
+      $SBSign --key $KeysDir/refind.key --cert $KeysDir/refind.crt --output refind-bin-$1/refind/$File $File
+   done
+else
+   cp --preserve=timestamps drivers_x64/*_x64.efi refind-bin-$1/refind/drivers_x64/
+fi
 cp --preserve=timestamps filesystems/LICENSE*txt refind-bin-$1/refind/drivers_x64/
 cp --preserve=timestamps refind.conf-sample refind-bin-$1/refind/
-$SBSign --key $KeysDir/refind.key --cert $KeysDir/refind.crt --output refind-bin-$1/refind/refind_x64.efi refind/refind_x64.efi
+if [[ $SignIt == 1 ]] ; then
+   $SBSign --key $KeysDir/refind.key --cert $KeysDir/refind.crt --output refind-bin-$1/refind/refind_x64.efi refind/refind_x64.efi
+else
+   cp refind/refind_x64.efi refind-bin-$1/refind/refind_x64.efi
+fi
 cp refind-bin-$1/refind/refind_x64.efi $StartDir
-cp -a COPYING.txt LICENSE.txt README.txt docs CREDITS.txt install.sh refind-bin-$1
+cp -a docs keys COPYING.txt LICENSE.txt README.txt CREDITS.txt install.sh mkrlconf.sh refind-bin-$1
 
 # Prepare the final .zip file and clean up
-cp $KeysDir/refind.cer $KeysDir/refind.crt refind-bin-$1/
+if [[ $SignIt == 1 ]] ; then
+   umount $KeysDir
+fi
 zip -9r ../refind-bin-$1.zip refind-bin-$1
 cd ..
 rm -r refind-$1
 cd $StartDir
-umount $KeysDir

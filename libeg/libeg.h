@@ -123,7 +123,8 @@ VOID egDrawImageArea(IN EG_IMAGE *Image,
                      IN UINTN ScreenPosX, IN UINTN ScreenPosY);
 VOID egDisplayMessage(IN CHAR16 *Text, EG_PIXEL *BGColor);
 VOID egScreenShot(VOID);
-
+//UINT32 egGetGraphicsMode(VOID);
+UINT32 egSetTextMode(UINT32 RequestedMode);
 
 #endif /* __LIBEG_LIBEG_H__ */
 

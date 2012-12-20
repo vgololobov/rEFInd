@@ -310,7 +310,8 @@ To build all the drivers, you can type "make fs" from the main directory,
 which builds the drivers and places copies in both the filesystems and
 drivers_{arch} subdirectories. If you want to build just one driver, you
 can change into the "filesystems" directory and type "make {fsname}", where
-{fsname} is a filesystem name -- "ext2", "reiserfs", "iso9660", or "hfs".
+{fsname} is a filesystem name -- "ext2", "ext4", "reiserfs", "iso9660",
+or "hfs".
 
 To install drivers, you can type "make install" in the "filesystems"
 directory. This copies all the drivers to the

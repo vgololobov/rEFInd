@@ -64,7 +64,11 @@ VOID egRenderText(IN CHAR16 *Text, IN OUT EG_IMAGE *CompImage, IN UINTN PosX, IN
     UINTN           i, c;
 
     // clip the text
-    TextLength = StrLen(Text);
+    if (Text)
+       TextLength = StrLen(Text);
+    else
+       TextLength = 0;
+
     if (TextLength * FONT_CELL_WIDTH + PosX > CompImage->Width)
         TextLength = (CompImage->Width - PosX) / FONT_CELL_WIDTH;
 

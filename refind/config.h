@@ -67,17 +67,22 @@ typedef struct {
     CHAR16  *End16Ptr;
 } REFIT_FILE;
 
+#define HIDEUI_FLAG_NONE       (0x0000)
 #define HIDEUI_FLAG_BANNER     (0x0001)
 #define HIDEUI_FLAG_LABEL      (0x0002)
 #define HIDEUI_FLAG_SINGLEUSER (0x0004)
 #define HIDEUI_FLAG_HWTEST     (0x0008)
 #define HIDEUI_FLAG_ARROWS     (0x0010)
-#define HIDEUI_ALL             ((0xffff))
+#define HIDEUI_FLAG_HINTS      (0x0020)
+#define HIDEUI_FLAG_EDITOR     (0x0040)
+#define HIDEUI_FLAG_ALL       ((0xffff))
 
+#define CONFIG_FILE_NAME         L"refind.conf"
 #define DONT_SCAN_FILES L"shim.efi,MokManager.efi,TextMode.efi,ebounce.efi,GraphicsConsole.efi"
+#define ALSO_SCAN_DIRS L"boot"
 
 EFI_STATUS ReadFile(IN EFI_FILE_HANDLE BaseDir, CHAR16 *FileName, REFIT_FILE *File, UINTN *size);
-VOID ReadConfig(VOID);
+VOID ReadConfig(CHAR16 *FileName);
 VOID ScanUserConfigured(VOID);
 UINTN ReadTokenLine(IN REFIT_FILE *File, OUT CHAR16 ***TokenList);
 VOID FreeTokenLine(IN OUT CHAR16 ***TokenList, IN OUT UINTN *TokenCount);

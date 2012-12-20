@@ -35,11 +35,11 @@
  */
 /*
  * Modifications copyright (c) 2012 Roderick W. Smith
- * 
+ *
  * Modifications distributed under the terms of the GNU General Public
  * License (GPL) version 3 (GPLv3), a copy of which must be distributed
  * with this source code or binaries made from it.
- * 
+ *
  */
 
 #ifndef __GLOBAL_H_
@@ -110,8 +110,15 @@
 #define DEVICE_TYPE_BIOS       0x05 /* returned by legacy (BIOS) boot loaders */
 #define DEVICE_TYPE_END        0x75 /* end of path */
 
-//TODO: may want to make this configurable via config file
-//static UINT16 SupportedLegacyDevices[] = {BBS_HARDDISK, BBS_CDROM, BBS_USB};
+// Filesystem type identifiers. Not all are yet used....
+#define FS_TYPE_UNKNOWN        0
+#define FS_TYPE_FAT            1
+#define FS_TYPE_EXT2           2
+#define FS_TYPE_EXT3           3
+#define FS_TYPE_EXT4           4
+#define FS_TYPE_HFSPLUS        5
+#define FS_TYPE_REISERFS       6
+#define FS_TYPE_ISO9660        7
 
 //
 // global definitions
@@ -152,6 +159,7 @@ typedef struct {
    EFI_DEVICE_PATH     *WholeDiskDevicePath;
    MBR_PARTITION_INFO  *MbrPartitionTable;
    BOOLEAN             IsReadable;
+   UINT32              FSType;
 } REFIT_VOLUME;
 
 typedef struct _refit_menu_entry {
@@ -174,6 +182,8 @@ typedef struct _refit_menu_screen {
    REFIT_MENU_ENTRY **Entries;
    UINTN       TimeoutSeconds;
    CHAR16      *TimeoutText;
+   CHAR16      *Hint1;
+   CHAR16      *Hint2;
 } REFIT_MENU_SCREEN;
 
 typedef struct {
@@ -204,6 +214,7 @@ typedef struct {
    BOOLEAN     ScanAllLinux;
    UINTN       RequestedScreenWidth;
    UINTN       RequestedScreenHeight;
+   UINTN       RequestedTextMode;
    UINTN       Timeout;
    UINTN       HideUIFlags;
    UINTN       MaxTags;     // max. number of OS entries to show simultaneously in graphics mode
@@ -215,6 +226,7 @@ typedef struct {
    CHAR16      *SelectionBigFileName;
    CHAR16      *DefaultSelection;
    CHAR16      *AlsoScan;
+   CHAR16      *DontScanVolumes;
    CHAR16      *DontScanDirs;
    CHAR16      *DontScanFiles;
    CHAR16      *DriverDirs;

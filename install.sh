@@ -12,7 +12,9 @@
 #    "--usedefault {devicefile}" to install as default
 #           (/EFI/BOOT/BOOTX64.EFI and similar) to the specified device
 #           (/dev/sdd1 or whatever) without registering with the NVRAM.
-#    "--drivers" to install drivers along with regular files
+#    "--alldrivers" to install all drivers along with regular files
+#    "--nodrivers" to suppress driver installation (default in Linux is
+#           driver used on /boot; --nodrivers is OS X default)
 #    "--shim {shimfile}" to install a shim.efi file for Secure Boot
 #    "--localkeys" to re-sign x86-64 binaries with a locally-generated key
 #
@@ -27,7 +29,13 @@
 #
 # Revision history:
 #
-# 0.5.1   -- Added --shim & --localkeys options
+# 0.6.0   -- Changed --drivers to --alldrivers and added --nodrivers option;
+#            changed default driver installation behavior in Linux to install
+#            the driver needed to read /boot (if available)
+# 0.5.1.2 -- Fixed bug that caused failure to generate refind_linux.conf file
+# 0.5.1.1 -- Fixed bug that caused script failure under OS X
+# 0.5.1   -- Added --shim & --localkeys options & create sample refind_linux.conf
+#            in /boot
 # 0.5.0   -- Added --usedefault & --drivers options & changed "esp" option to "--esp"
 # 0.4.5   -- Fixed check for rEFItBlesser in OS X
 # 0.4.2   -- Added notice about BIOS-based OSes & made NVRAM changes in Linux smarter
@@ -42,6 +50,7 @@
 TargetDir=/EFI/refind
 EtcKeysDir=/etc/refind.d/keys
 LocalKeysBase="refind_local"
+RLConfFile="/boot/refind_linux.conf"
 ShimSource="none"
 TargetX64="refind_x64.efi"
 TargetIA32="refind_ia32.efi"
@@ -54,7 +63,12 @@ DeleteRefindDir=0
 
 GetParams() {
    InstallToEspOnMac=0
-   InstallDrivers=0
+   if [[ $OSName == "Linux" ]] ; then
+      # Install the driver required to read /boot, if it's available
+      InstallDrivers="boot"
+   else
+      InstallDrivers="none"
+   fi
    while [[ $# -gt 0 ]]; do
       case $1 in
          --esp | --ESP) InstallToEspOnMac=1
@@ -65,16 +79,17 @@ GetParams() {
               TargetIA32="bootia32.efi"
               shift
               ;;
+         --localkeys) LocalKeys=1
+              ;;
          --shim) ShimSource=$2
               shift
               ;;
-         --drivers) InstallDrivers=1
+         --drivers | --alldrivers) InstallDrivers="all"
               ;;
-         --localkeys) LocalKeys=1
+         --nodrivers) InstallDrivers="none"
               ;;
-         * ) echo "Usage: $0 [--esp | --usedefault {device-file}] [--drivers] "
-             echo "         [--localkeys] [--shim {shim-filename}]"
-             echo "Aborting!"
+         * ) echo "Usage: $0 [--esp | --usedefault {device-file}] [--nodrivers | --alldrivers] "
+             echo "                [--shim {shim-filename}] [--localkeys]"
              exit 1
       esac
       shift
@@ -148,13 +163,43 @@ CopyShimFiles() {
 # Copy the public keys to the installation medium
 CopyKeys() {
    if [[ $LocalKeys == 1 ]] ; then
-      cp $EtcKeysDir/$LocalKeysBase.cer $InstallDir/$TargetDir
-      cp $EtcKeysDir/$LocalKeysBase.crt $InstallDir/$TargetDir
-   else
-      cp $ThisDir/refind.cer $InstallDir/$TargetDir
-      cp $ThisDir/refind.crt $InstallDir/$TargetDir
+      mkdir -p $InstallDir/$TargetDir/keys/
+      cp $EtcKeysDir/$LocalKeysBase.cer $InstallDir/$TargetDir/keys/
+      cp $EtcKeysDir/$LocalKeysBase.crt $InstallDir/$TargetDir/keys/
+#    else
+#       cp $ThisDir/refind.cer $InstallDir/$TargetDir/keys/
+#       cp $ThisDir/refind.crt $InstallDir/$TargetDir/keys/
    fi
 } # CopyKeys()
+
+# Copy drivers from $RefindDir/drivers_$1 to $InstallDir/$TargetDir/drivers_$1,
+# honoring the $InstallDrivers condition. Must be passed a suitable
+# architecture code (ia32 or x64).
+CopyDrivers() {
+   if [[ $InstallDrivers == "all" ]] ; then
+      mkdir -p $InstallDir/$TargetDir/drivers_$1
+      cp $RefindDir/drivers_$1/*_$1.efi $InstallDir/$TargetDir/drivers_$1/ 2> /dev/null
+      cp $ThisDir/drivers_$1/*_$1.efi $InstallDir/$TargetDir/drivers_$1/ 2> /dev/null
+   elif [[ $InstallDrivers == "boot" && -x `which blkid` ]] ; then
+      BootPart=`df /boot | grep dev | cut -f 1 -d " "`
+      BootFS=`blkid -o export $BootPart 2> /dev/null | grep TYPE= | cut -f 2 -d =`
+      DriverType=""
+      case $BootFS in
+         ext2 | ext3 | ext4) DriverType="ext4"
+              ;;
+         reiserfs) DriverType="reiserfs"
+              ;;
+         hfsplus) DriverType="hfs"
+              ;;
+      esac
+      if [[ -n $BootFS ]] ; then
+         echo "Installing driver for $BootFS (${DriverType}_$1.efi)"
+         mkdir -p $InstallDir/$TargetDir/drivers_$1
+         cp $RefindDir/drivers_$1/${DriverType}_$1.efi $InstallDir/$TargetDir/drivers_$1/ 2> /dev/null
+         cp $ThisDir/drivers_$1/${DriverType}_$1.efi $InstallDir/$TargetDir/drivers_$1/ 2> /dev/null
+      fi
+   fi
+}
 
 # Copy the rEFInd files to the ESP or OS X root partition.
 # Sets Problems=1 if any critical commands fail.
@@ -173,7 +218,7 @@ CopyRefindFiles() {
          TargetShim="bootx64.efi"
          CopyShimFiles
       fi
-      if [[ $InstallDrivers == 1 ]] ; then
+      if [[ $InstallDrivers == "all" ]] ; then
          cp -r $RefindDir/drivers_* $InstallDir/$TargetDir/ 2> /dev/null
          cp -r $ThisDir/drivers_* $InstallDir/$TargetDir/ 2> /dev/null
       fi
@@ -184,22 +229,14 @@ CopyRefindFiles() {
       if [[ $? != 0 ]] ; then
          Problems=1
       fi
-      if [[ $InstallDrivers == 1 ]] ; then
-         mkdir -p $InstallDir/$TargetDir/drivers_ia32
-         cp $RefindDir/drivers_ia32/*_ia32.efi $InstallDir/$TargetDir/drivers_ia32/ 2> /dev/null
-         cp $ThisDir/drivers_ia32/*_ia32.efi $InstallDir/$TargetDir/drivers_ia32/ 2> /dev/null
-      fi
+      CopyDrivers ia32
       Refind="refind_ia32.efi"
    elif [[ $Platform == 'EFI64' ]] ; then
       cp $RefindDir/refind_x64.efi $InstallDir/$TargetDir/$TargetX64
       if [[ $? != 0 ]] ; then
          Problems=1
       fi
-      if [[ $InstallDrivers == 1 ]] ; then
-         mkdir -p $InstallDir/$TargetDir/drivers_x64
-         cp $RefindDir/drivers_x64/*_x64.efi $InstallDir/$TargetDir/drivers_x64/ 2> /dev/null
-         cp $ThisDir/drivers_x64/*_x64.efi $InstallDir/$TargetDir/drivers_x64/ 2> /dev/null
-      fi
+      CopyDrivers x64
       Refind="refind_x64.efi"
       CopyKeys
       if [[ $ShimSource != "none" ]] ; then
@@ -209,8 +246,8 @@ CopyRefindFiles() {
          if [[ $LocalKeys == 0 ]] ; then
             echo "Storing copies of rEFInd Secure Boot public keys in $EtcKeysDir"
             mkdir -p $EtcKeysDir
-            cp $ThisDir/refind.cer $EtcKeysDir
-            cp $ThisDir/refind.crt $EtcKeysDir
+            cp $ThisDir/keys/refind.cer $EtcKeysDir
+            cp $ThisDir/keys/refind.crt $EtcKeysDir
          fi
       fi
    else
@@ -228,6 +265,7 @@ CopyRefindFiles() {
    if [[ $? != 0 ]] ; then
       Problems=1
    fi
+   cp -rf $ThisDir/keys $InstallDir/$TargetDir/
    if [[ -f $InstallDir/$TargetDir/refind.conf ]] ; then
       echo "Existing refind.conf file found; copying sample file as refind.conf-sample"
       echo "to avoid overwriting your customizations."
@@ -478,7 +516,7 @@ ReSignBinaries() {
    cp $RefindDir/refind_ia32.efi $TempDir
    cp -a $RefindDir/drivers_ia32 $TempDir 2> /dev/null
    cp -a $ThisDir/drivers_ia32 $TempDir 2> /dev/null
-   SignOneBinary $RefindDir/refind_x64.efi $ThisDir/refind_x64.efi
+   SignOneBinary $RefindDir/refind_x64.efi $TempDir/refind_x64.efi
    for Driver in `ls $RefindDir/drivers_x64/*.efi $ThisDir/drivers_x64/*.efi 2> /dev/null` ; do
       TempName=`basename $Driver`
       SignOneBinary $Driver $TempDir/drivers_x64/$TempName
@@ -553,6 +591,29 @@ AddBootEntry() {
    fi
 } # AddBootEntry()
 
+# Create a minimal/sample refind_linux.conf file in /boot.
+GenerateRefindLinuxConf() {
+   if [[ ! -f $RLConfFile ]] ; then
+      if [[ -f /etc/default/grub ]] ; then
+         # We want the default options used by the distribution, stored here....
+         source /etc/default/grub
+      fi
+      RootFS=`df / | grep dev | cut -f 1 -d " "`
+      StartOfDevname=`echo $RootFS | cut -b 1-7`
+      if [[ $StartOfDevname == "/dev/sd" || $StartOfDevName == "/dev/hd" ]] ; then
+         # Identify root filesystem by UUID rather than by device node, if possible
+         Uuid=`blkid -o export $RootFS 2> /dev/null | grep UUID=`
+         if [[ -n $Uuid ]] ; then
+            RootFS=$Uuid
+         fi
+      fi
+      DefaultOptions="$GRUB_CMDLINE_LINUX $GRUB_CMDLINE_LINUX_DEFAULT"
+      echo "\"Boot with standard options\" \"ro root=$RootFS $DefaultOptions \"" > $RLConfFile
+      echo "\"Boot to single-user mode\"   \"ro root=$RootFS $DefaultOptions single\"" >> $RLConfFile
+      echo "\"Boot with minimal options\"  \"ro root=$RootFS\"" >> $RLConfFile
+   fi
+}
+
 # Controls rEFInd installation under Linux.
 # Sets Problems=1 if something goes wrong.
 InstallOnLinux() {
@@ -600,6 +661,7 @@ InstallOnLinux() {
    CopyRefindFiles
    if [[ $TargetDir != "/EFI/BOOT" ]] ; then
       AddBootEntry
+      GenerateRefindLinuxConf
    fi
 } # InstallOnLinux()
 
@@ -609,14 +671,14 @@ InstallOnLinux() {
 # install under OS X or Linux, depending on the detected platform.
 #
 
-GetParams $@
 OSName=`uname -s`
+GetParams $@
 ThisDir="$( cd -P "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 RefindDir="$ThisDir/refind"
 ThisScript="$ThisDir/`basename $0`"
 if [[ `whoami` != "root" ]] ; then
    echo "Not running as root; attempting to elevate privileges via sudo...."
-   sudo $ThisScript $1 $2 $3 $4 $5 $6
+   sudo $ThisScript "$@"
    if [[ $? != 0 ]] ; then
       echo "This script must be run as root (or using sudo). Exiting!"
       exit 1
@@ -626,7 +688,7 @@ if [[ `whoami` != "root" ]] ; then
 fi
 CheckForFiles
 if [[ $OSName == 'Darwin' ]] ; then
-   if [[ $ShimDir != "none" ]] ; then
+   if [[ $ShimSource != "none" ]] ; then
       echo "The --shim option is not supported on OS X! Exiting!"
       exit 1
    fi

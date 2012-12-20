@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 11/13/2012; last Web page update:
-12/8/2012, referencing rEFInd 0.5.0.1</p>
+12/16/2012, referencing rEFInd 0.6.0</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -232,7 +232,7 @@ described on this page currently supports only <i>x</i>86-64, not
 
 <p>At this point the computer may boot into its default OS, reboot, or perhaps even hang. When you reboot it, though, rEFInd should start up in Secure Boot mode. (You can verify this by selecting the <i>About rEFInd</i> tool in the main menu. Check the <i>Platform</i> item in the resulting screen; it should verify that Secure Boot is active.) You should now be able to launch any boot loader signed with a key recognized by the firmware or by shim (including any MOKs you've enrolled). If you want to manage keys in the future, rEFInd displays a new icon in the second (tools) row you can use to launch MokManager. (This icon appears by default if MokManager is installed, but if you edit <tt>showtools</tt> in <tt>refind.conf</tt>, you must be sure to include <tt>mok_tool</tt> as an option in order to gain access to it.)</p>
 
-<p>If you're using Ubuntu 12.10, you can't use its version of shim, but you can replace it with Garrett's shim. The problem is that Ubuntu's GRUB and kernel will then be signed by an unknown key. Unfortunately, I haven't found a suitable public key file on Ubuntu's distribution medium, so you may need to sign GRUB and/or your kernels with your own MOK. In principle, you should be able to use shim 0.2 or later from future distributions that include it; but you must be sure that whatever you use supports MokManager.</p>
+<p>If you're using Ubuntu 12.10, you can't use its version of shim, but you can replace it with Garrett's shim. If you do so, though, you'll have to add Ubuntu's public key as a MOK, at least if you intend to launch Ubuntu's version of GRUB or launch Ubuntu-provided signed kernels. Ubuntu's public key is available in the <a href="http://archive.ubuntu.com/ubuntu/pool/main/s/shim/shim_0~20120906.bcd0a4e8-0ubuntu4.debian.tar.gz">shim_0~20120906.bcd0a4e8-0ubuntu4.debian.tar.gz</a> tarball, as <tt>canonical-uefi-ca.der</tt>. (The filename extensions <tt>.cer</tt> and <tt>.der</tt> are interchangeable for most purposes.) I've also included this key with rEFInd, in the <tt>refind/keys</tt> subdirectory of its package file. To use this key, copy it to your ESP and enroll it with MokManager. See <a href="http://falstaff.agner.ch/2012/12/12/secure-boot-implementation-of-ubuntu-12-10-quantal-quetzal/">this blog post</a> for further details on Ubuntu 12.10's handling of Secure Boot. In principle, you should be able to use shim 0.2 or later from future distributions that include it; but you must be sure that whatever you use supports MokManager.</p>
 
 <a name="mok">
 <h2>Managing Your MOKs</h2>

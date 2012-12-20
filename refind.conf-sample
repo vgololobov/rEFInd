@@ -11,12 +11,15 @@ timeout 20
 # Hide user interface elements for personal preference or to increase
 # security:
 #  banner      - the rEFInd title banner
-#  label       - text label in the menu
+#  label       - boot option text label in the menu
 #  singleuser  - remove the submenu options to boot Mac OS X in single-user
 #                or verbose modes; affects ONLY MacOS X
 #  hwtest      - the submenu option to run Apple's hardware test
 #  arrows      - scroll arrows on the OS selection tag line
+#  hints       - brief command summary in the menu
+#  editor      - the options editor (+, F2, or Insert on boot options menu)
 #  all         - all of the above
+# Default is none of these (all elements active)
 #
 #hideui singleuser
 #hideui all
@@ -52,20 +55,38 @@ timeout 20
 #selection_small selection-small.bmp
 
 # Use text mode only. When enabled, this option forces rEFInd into text mode.
+# Passing this option a "0" value causes graphics mode to be used. Pasing
+# it no value or any non-0 value causes text mode to be used.
+# Default is to use graphics mode.
 #
 #textonly
 
-# Set the screen's video resolution. Pass this option two values,
-# corresponding to the X and Y resolutions. Note that not all resolutions
-# are supported. On UEFI systems, passing an incorrect value results in a
-# message being shown on the screen to that effect, along with a list of
-# supported modes. On EFI 1.x systems (e.g., Macintoshes), setting an
-# incorrect mode silently fails. On both types of systems, setting an
-# incorrect resolution results in the default resolution being used.
-# A resolution of 1024x768 usually works, but higher values often don't.
+# Set the EFI text mode to be used for textual displays. This option
+# takes a single digit that refers to a mode number. The default is 0
+# (80x25), 1 is sometimes 80x50, and higher numbers are system-specific
+# modes. If you specify an invalid mode, rEFInd pauses during boot to
+# inform you of valid modes.
+# CAUTION: On VirtualBox, and perhaps on some real computers, specifying
+# a text mode and uncommenting the "textonly" option while NOT specifying
+# a resolution can result in an unusable display in the booted OS.
+# Default is 0
+#
+#textmode 2
+
+# Set the screen's video resolution. Pass this option either:
+#  * two values, corresponding to the X and Y resolutions
+#  * one value, corresponding to a GOP (UEFI) video mode
+# Note that not all resolutions are supported. On UEFI systems, passing
+# an incorrect value results in a message being shown on the screen to
+# that effect, along with a list of supported modes. On EFI 1.x systems
+# (e.g., Macintoshes), setting an incorrect mode silently fails. On both
+# types of systems, setting an incorrect resolution results in the default
+# resolution being used. A resolution of 1024x768 usually works, but higher
+# values often don't.
 # Default is "0 0" (use the system default resolution, usually 800x600).
 #
 #resolution 1024 768
+#resolution 3
 
 # Launch specified OSes in graphics mode. By default, rEFInd switches
 # to text mode and displays basic pre-launch information when launching
@@ -146,9 +167,18 @@ timeout 20
 # Directories are specified relative to the volume's root directory. This
 # option applies to ALL the volumes that rEFInd scans. If a specified
 # directory doesn't exist, it's ignored (no error condition results).
-# The default is to scan no additional directories.
+# The default is to scan the "boot" directory in addition to various
+# hard-coded directories.
 #
 #also_scan_dirs boot,EFI/linux/kernels
+
+# Partitions to omit from scans. You must specify a volume by its
+# label, which you can obtain in an EFI shell by typing "vol", from
+# Linux by typing "blkid /dev/{devicename}", or by examining the
+# disk's label in various OSes' file browsers.
+# The default is an empty list (all volumes are scanned).
+#
+#dont_scan_volumes
 
 # Directories that should NOT be scanned for boot loaders. By default,
 # rEFInd doesn't scan its own directory or the EFI/tools directory.
@@ -188,6 +218,9 @@ timeout 20
 # want to give a kernel a custom icon by placing an icon with the kernel's
 # filename but a ".icns" extension in the same directory as the kernel, this
 # option will cause the icon file to show up as a non-functional loader tag.
+# Passing this option a "0" value causes kernels without ".efi" extensions
+# to NOT be scanned; passing it alone or with any other value causes all
+# kernels to be scanned.
 # Default is to NOT scan for kernels without ".efi" extensions.
 #
 scan_all_linux_kernels
@@ -210,6 +243,14 @@ scan_all_linux_kernels
 #    (usually the OS's name or boot loader's path).
 #
 #default_selection 1
+
+# Include a secondary configuration file within this one. This secondary
+# file is loaded as if its options appeared at the point of the "include"
+# token itself, so if you want to override a setting in the main file,
+# the secondary file must be referenced AFTER the setting you want to
+# override. Note that the secondary file may NOT load a tertiary file.
+#
+#include manual.conf
 
 # Sample manual configuration stanzas. Each begins with the "menuentry"
 # keyword followed by a name that's to appear in the menu (use quotes

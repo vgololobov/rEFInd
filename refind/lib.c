@@ -64,6 +64,15 @@ EFI_DEVICE_PATH EndDevicePath[] = {
 //#define EndDevicePath DevicePath
 #endif
 
+// "Magic" signatures for various filesystems
+#define FAT_MAGIC                        0xAA55
+#define EXT2_SUPER_MAGIC                 0xEF53
+#define HFSPLUS_MAGIC1                   0x2B48
+#define HFSPLUS_MAGIC2                   0x5848
+#define REISERFS_SUPER_MAGIC_STRING      "ReIsErFs"
+#define REISER2FS_SUPER_MAGIC_STRING     "ReIsEr2Fs"
+#define REISER2FS_JR_SUPER_MAGIC_STRING  "ReIsEr3Fs"
+
 // variables
 
 EFI_HANDLE       SelfImageHandle;
@@ -78,6 +87,10 @@ UINTN            VolumesCount = 0;
 
 // Maximum size for disk sectors
 #define SECTOR_SIZE 4096
+
+// Number of bytes to read from a partition to determine its filesystem type
+// and identify its boot loader, and hence probable BIOS-mode OS installation
+#define SAMPLE_SIZE 69632 /* 68 KiB -- ReiserFS superblock begins at 64 KiB */
 
 // Default names for volume badges (mini-icon to define disk type) and icons
 #define VOLUME_BADGE_NAME L".VolumeBadge.icns"
@@ -94,7 +107,7 @@ static VOID UninitVolumes(VOID);
 //
 
 // Converts forward slashes to backslashes, removes duplicate slashes, and
-// removes slashes from the end of the pathname.
+// removes slashes from both the start and end of the pathname.
 // Necessary because some (buggy?) EFI implementations produce "\/" strings
 // in pathnames, because some user inputs can produce duplicate directory
 // separators, and because we want consistent start and end slashes for
@@ -106,23 +119,20 @@ VOID CleanUpPathNameSlashes(IN OUT CHAR16 *PathName) {
    UINTN    i, FinalChar = 0;
    BOOLEAN  LastWasSlash = FALSE;
 
-   NewName = AllocateZeroPool(sizeof(CHAR16) * (StrLen(PathName) + 4));
+   NewName = AllocateZeroPool(sizeof(CHAR16) * (StrLen(PathName) + 2));
    if (NewName != NULL) {
       for (i = 0; i < StrLen(PathName); i++) {
          if ((PathName[i] == L'/') || (PathName[i] == L'\\')) {
-            if ((!LastWasSlash) /* && (FinalChar != 0) */)
+            if ((!LastWasSlash) && (FinalChar != 0))
                NewName[FinalChar++] = L'\\';
             LastWasSlash = TRUE;
          } else {
-            if (FinalChar == 0) {
-               NewName[FinalChar++] = L'\\';
-            }
             NewName[FinalChar++] = PathName[i];
             LastWasSlash = FALSE;
          } // if/else
       } // for
       NewName[FinalChar] = 0;
-      if ((FinalChar > 1) && (NewName[FinalChar - 1] == L'\\'))
+      if ((FinalChar > 0) && (NewName[FinalChar - 1] == L'\\'))
          NewName[--FinalChar] = 0;
       if (FinalChar == 0) {
          NewName[0] = L'\\';
@@ -372,10 +382,97 @@ VOID ExtractLegacyLoaderPaths(EFI_DEVICE_PATH **PathList, UINTN MaxPaths, EFI_DE
 // volume functions
 //
 
-static VOID ScanVolumeBootcode(IN OUT REFIT_VOLUME *Volume, OUT BOOLEAN *Bootable)
+// Return a pointer to a string containing a filesystem type name. If the
+// filesystem type is unknown, a blank (but non-null) string is returned.
+// The returned variable is a constant that should NOT be freed.
+static CHAR16 *FSTypeName(IN UINT32 TypeCode) {
+   CHAR16 *retval = NULL;
+
+   switch (TypeCode) {
+      case FS_TYPE_FAT:
+         retval = L" FAT";
+         break;
+      case FS_TYPE_HFSPLUS:
+         retval = L" HFS+";
+         break;
+      case FS_TYPE_EXT2:
+         retval = L" ext2";
+         break;
+      case FS_TYPE_EXT3:
+         retval = L" ext3";
+         break;
+      case FS_TYPE_EXT4:
+         retval = L" ext4";
+         break;
+      case FS_TYPE_REISERFS:
+         retval = L" ReiserFS";
+         break;
+      case FS_TYPE_ISO9660:
+         retval = L" ISO-9660";
+         break;
+      default:
+         retval = L"";
+         break;
+   } // switch
+   return retval;
+} // CHAR16 *FSTypeName()
+
+// Identify the filesystem type, if possible. Expects a Buffer containing
+// the first few (normally 4096) bytes of the filesystem, and outputs a
+// code representing the identified filesystem type.
+static UINT32 IdentifyFilesystemType(IN UINT8 *Buffer, IN UINTN BufferSize) {
+   UINT32       FoundType = FS_TYPE_UNKNOWN;
+   UINT32       *Ext2Incompat, *Ext2Compat;
+   UINT16       *Magic16;
+   char         *MagicString;
+
+   if (Buffer != NULL) {
+
+      if (BufferSize >= 512) {
+         Magic16 = (UINT16*) (Buffer + 510);
+         if (*Magic16 == FAT_MAGIC)
+            return FS_TYPE_FAT;
+      } // search for FAT magic
+
+      if (BufferSize >= (1024 + 100)) {
+         Magic16 = (UINT16*) (Buffer + 1024 + 56);
+         if (*Magic16 == EXT2_SUPER_MAGIC) { // ext2/3/4
+            Ext2Compat = (UINT32*) (Buffer + 1024 + 92);
+            Ext2Incompat = (UINT32*) (Buffer + 1024 + 96);
+            if ((*Ext2Incompat & 0x0040) || (*Ext2Incompat & 0x0200)) { // check for extents or flex_bg
+               return FS_TYPE_EXT4;
+            } else if (*Ext2Compat & 0x0004) { // check for journal
+               return FS_TYPE_EXT3;
+            } else { // none of these features; presume it's ext2...
+               return FS_TYPE_EXT2;
+            }
+         }
+      } // search for ext2/3/4 magic
+
+      if (BufferSize >= (65536 + 62)) {
+         MagicString = (char*) (Buffer + 65536 + 52);
+         if ((CompareMem(MagicString, REISERFS_SUPER_MAGIC_STRING, 8) == 0) ||
+             (CompareMem(MagicString, REISER2FS_SUPER_MAGIC_STRING, 9) == 0) ||
+             (CompareMem(MagicString, REISER2FS_JR_SUPER_MAGIC_STRING, 9) == 0)) {
+            return FS_TYPE_REISERFS;
+         } // if
+      } // search for ReiserFS magic
+
+      if (BufferSize >= (1024 + 2)) {
+         Magic16 = (UINT16*) (Buffer + 1024);
+         if ((*Magic16 == HFSPLUS_MAGIC1) || (*Magic16 == HFSPLUS_MAGIC2)) {
+            return FS_TYPE_HFSPLUS;
+         }
+      } // search for HFS+ magic
+   } // if (Buffer != NULL)
+
+   return FoundType;
+}
+
+static VOID ScanVolumeBootcode(REFIT_VOLUME *Volume, BOOLEAN *Bootable)
 {
     EFI_STATUS              Status;
-    UINT8                   SectorBuffer[SECTOR_SIZE];
+    UINT8                   Buffer[SAMPLE_SIZE];
     UINTN                   i;
     MBR_PARTITION_INFO      *MbrTable;
     BOOLEAN                 MbrTableFound;
@@ -387,97 +484,98 @@ static VOID ScanVolumeBootcode(IN OUT REFIT_VOLUME *Volume, OUT BOOLEAN *Bootabl
 
     if (Volume->BlockIO == NULL)
         return;
-    if (Volume->BlockIO->Media->BlockSize > SECTOR_SIZE)
+    if (Volume->BlockIO->Media->BlockSize > SAMPLE_SIZE)
         return;   // our buffer is too small...
 
     // look at the boot sector (this is used for both hard disks and El Torito images!)
     Status = refit_call5_wrapper(Volume->BlockIO->ReadBlocks,
                                  Volume->BlockIO, Volume->BlockIO->Media->MediaId,
-                                 Volume->BlockIOOffset, SECTOR_SIZE, SectorBuffer);
+                                 Volume->BlockIOOffset, SAMPLE_SIZE, Buffer);
     if (!EFI_ERROR(Status)) {
 
-        if (*((UINT16 *)(SectorBuffer + 510)) == 0xaa55 && SectorBuffer[0] != 0) {
+        Volume->FSType = IdentifyFilesystemType(Buffer, SAMPLE_SIZE);
+        if (*((UINT16 *)(Buffer + 510)) == 0xaa55 && Buffer[0] != 0) {
             *Bootable = TRUE;
             Volume->HasBootCode = TRUE;
         }
 
         // detect specific boot codes
-        if (CompareMem(SectorBuffer + 2, "LILO", 4) == 0 ||
-            CompareMem(SectorBuffer + 6, "LILO", 4) == 0 ||
-            CompareMem(SectorBuffer + 3, "SYSLINUX", 8) == 0 ||
-            FindMem(SectorBuffer, SECTOR_SIZE, "ISOLINUX", 8) >= 0) {
+        if (CompareMem(Buffer + 2, "LILO", 4) == 0 ||
+            CompareMem(Buffer + 6, "LILO", 4) == 0 ||
+            CompareMem(Buffer + 3, "SYSLINUX", 8) == 0 ||
+            FindMem(Buffer, SECTOR_SIZE, "ISOLINUX", 8) >= 0) {
             Volume->HasBootCode = TRUE;
             Volume->OSIconName = L"linux";
             Volume->OSName = L"Linux";
 
-        } else if (FindMem(SectorBuffer, 512, "Geom\0Hard Disk\0Read\0 Error", 26) >= 0) {   // GRUB
+        } else if (FindMem(Buffer, 512, "Geom\0Hard Disk\0Read\0 Error", 26) >= 0) {   // GRUB
             Volume->HasBootCode = TRUE;
             Volume->OSIconName = L"grub,linux";
             Volume->OSName = L"Linux";
 
 //         // Below doesn't produce a bootable entry, so commented out for the moment....
 //         // GRUB in BIOS boot partition:
-//         } else if (FindMem(SectorBuffer, 512, "Geom\0Read\0 Error", 16) >= 0) {
+//         } else if (FindMem(Buffer, 512, "Geom\0Read\0 Error", 16) >= 0) {
 //             Volume->HasBootCode = TRUE;
 //             Volume->OSIconName = L"grub,linux";
 //             Volume->OSName = L"Linux";
 //             Volume->VolName = L"BIOS Boot Partition";
 //             *Bootable = TRUE;
 
-        } else if ((*((UINT32 *)(SectorBuffer + 502)) == 0 &&
-                    *((UINT32 *)(SectorBuffer + 506)) == 50000 &&
-                    *((UINT16 *)(SectorBuffer + 510)) == 0xaa55) ||
-                    FindMem(SectorBuffer, SECTOR_SIZE, "Starting the BTX loader", 23) >= 0) {
+        } else if ((*((UINT32 *)(Buffer + 502)) == 0 &&
+                    *((UINT32 *)(Buffer + 506)) == 50000 &&
+                    *((UINT16 *)(Buffer + 510)) == 0xaa55) ||
+                    FindMem(Buffer, SECTOR_SIZE, "Starting the BTX loader", 23) >= 0) {
             Volume->HasBootCode = TRUE;
             Volume->OSIconName = L"freebsd";
             Volume->OSName = L"FreeBSD";
 
-        } else if (FindMem(SectorBuffer, 512, "!Loading", 8) >= 0 ||
-                   FindMem(SectorBuffer, SECTOR_SIZE, "/cdboot\0/CDBOOT\0", 16) >= 0) {
+        } else if (FindMem(Buffer, 512, "!Loading", 8) >= 0 ||
+                   FindMem(Buffer, SECTOR_SIZE, "/cdboot\0/CDBOOT\0", 16) >= 0) {
             Volume->HasBootCode = TRUE;
             Volume->OSIconName = L"openbsd";
             Volume->OSName = L"OpenBSD";
 
-        } else if (FindMem(SectorBuffer, 512, "Not a bootxx image", 18) >= 0 ||
-                   *((UINT32 *)(SectorBuffer + 1028)) == 0x7886b6d1) {
+        } else if (FindMem(Buffer, 512, "Not a bootxx image", 18) >= 0 ||
+                   *((UINT32 *)(Buffer + 1028)) == 0x7886b6d1) {
             Volume->HasBootCode = TRUE;
             Volume->OSIconName = L"netbsd";
             Volume->OSName = L"NetBSD";
 
-        } else if (FindMem(SectorBuffer, SECTOR_SIZE, "NTLDR", 5) >= 0) {
+        } else if (FindMem(Buffer, SECTOR_SIZE, "NTLDR", 5) >= 0) {
             Volume->HasBootCode = TRUE;
             Volume->OSIconName = L"win";
             Volume->OSName = L"Windows";
 
-        } else if (FindMem(SectorBuffer, SECTOR_SIZE, "BOOTMGR", 7) >= 0) {
+        } else if (FindMem(Buffer, SECTOR_SIZE, "BOOTMGR", 7) >= 0) {
             Volume->HasBootCode = TRUE;
             Volume->OSIconName = L"winvista,win";
             Volume->OSName = L"Windows";
 
-        } else if (FindMem(SectorBuffer, 512, "CPUBOOT SYS", 11) >= 0 ||
-                   FindMem(SectorBuffer, 512, "KERNEL  SYS", 11) >= 0) {
+        } else if (FindMem(Buffer, 512, "CPUBOOT SYS", 11) >= 0 ||
+                   FindMem(Buffer, 512, "KERNEL  SYS", 11) >= 0) {
             Volume->HasBootCode = TRUE;
             Volume->OSIconName = L"freedos";
             Volume->OSName = L"FreeDOS";
 
-        } else if (FindMem(SectorBuffer, 512, "OS2LDR", 6) >= 0 ||
-                   FindMem(SectorBuffer, 512, "OS2BOOT", 7) >= 0) {
+        } else if (FindMem(Buffer, 512, "OS2LDR", 6) >= 0 ||
+                   FindMem(Buffer, 512, "OS2BOOT", 7) >= 0) {
             Volume->HasBootCode = TRUE;
             Volume->OSIconName = L"ecomstation";
             Volume->OSName = L"eComStation";
 
-        } else if (FindMem(SectorBuffer, 512, "Be Boot Loader", 14) >= 0) {
+        } else if (FindMem(Buffer, 512, "Be Boot Loader", 14) >= 0) {
             Volume->HasBootCode = TRUE;
             Volume->OSIconName = L"beos";
             Volume->OSName = L"BeOS";
 
-        } else if (FindMem(SectorBuffer, 512, "yT Boot Loader", 14) >= 0) {
+        } else if (FindMem(Buffer, 512, "yT Boot Loader", 14) >= 0) {
             Volume->HasBootCode = TRUE;
             Volume->OSIconName = L"zeta,beos";
             Volume->OSName = L"ZETA";
 
-        } else if (FindMem(SectorBuffer, 512, "\x04" "beos\x06" "system\x05" "zbeos", 18) >= 0 ||
-                   FindMem(SectorBuffer, 512, "\x06" "system\x0c" "haiku_loader", 20) >= 0) {
+        } else if (FindMem(Buffer, 512, "\x04" "beos\x06" "system\x05" "zbeos", 18) >= 0 ||
+                   FindMem(Buffer, 512, "\x06" "system\x0c" "haiku_loader", 20) >= 0) {
             Volume->HasBootCode = TRUE;
             Volume->OSIconName = L"haiku,beos";
             Volume->OSName = L"Haiku";
@@ -494,21 +592,21 @@ static VOID ScanVolumeBootcode(IN OUT REFIT_VOLUME *Volume, OUT BOOLEAN *Bootabl
 #endif
 
         // dummy FAT boot sector (created by OS X's newfs_msdos)
-        if (FindMem(SectorBuffer, 512, "Non-system disk", 15) >= 0)
+        if (FindMem(Buffer, 512, "Non-system disk", 15) >= 0)
             Volume->HasBootCode = FALSE;
 
         // dummy FAT boot sector (created by Linux's mkdosfs)
-        if (FindMem(SectorBuffer, 512, "This is not a bootable disk", 27) >= 0)
+        if (FindMem(Buffer, 512, "This is not a bootable disk", 27) >= 0)
             Volume->HasBootCode = FALSE;
 
         // dummy FAT boot sector (created by Windows)
-        if (FindMem(SectorBuffer, 512, "Press any key to restart", 24) >= 0)
+        if (FindMem(Buffer, 512, "Press any key to restart", 24) >= 0)
             Volume->HasBootCode = FALSE;
 
         // check for MBR partition table
-        if (*((UINT16 *)(SectorBuffer + 510)) == 0xaa55) {
+        if (*((UINT16 *)(Buffer + 510)) == 0xaa55) {
             MbrTableFound = FALSE;
-            MbrTable = (MBR_PARTITION_INFO *)(SectorBuffer + 446);
+            MbrTable = (MBR_PARTITION_INFO *)(Buffer + 446);
             for (i = 0; i < 4; i++)
                 if (MbrTable[i].StartLBA && MbrTable[i].Size)
                     MbrTableFound = TRUE;
@@ -526,7 +624,7 @@ static VOID ScanVolumeBootcode(IN OUT REFIT_VOLUME *Volume, OUT BOOLEAN *Bootabl
         CheckError(Status, L"while reading boot sector");
 #endif
     }
-}
+} /* VOID ScanVolumeBootcode() */
 
 // default volume badge icon based on disk kind
 static VOID ScanVolumeDefaultIcon(IN OUT REFIT_VOLUME *Volume)
@@ -544,14 +642,98 @@ static VOID ScanVolumeDefaultIcon(IN OUT REFIT_VOLUME *Volume)
     } // switch()
 }
 
-VOID ScanVolume(IN OUT REFIT_VOLUME *Volume)
+// Return a string representing the input size in IEEE-1541 units.
+// The calling function is responsible for freeing the allocated memory.
+static CHAR16 *SizeInIEEEUnits(UINT64 SizeInBytes) {
+   UINT64 SizeInIeee;
+   UINTN Index = 0, NumPrefixes;
+   CHAR16 *Units, *Prefixes = L" KMGTPEZ";
+   CHAR16 *TheValue;
+
+   TheValue = AllocateZeroPool(sizeof(CHAR16) * 256);
+   if (TheValue != NULL) {
+      NumPrefixes = StrLen(Prefixes);
+      SizeInIeee = SizeInBytes;
+      while ((SizeInIeee > 1024) && (Index < (NumPrefixes - 1))) {
+         Index++;
+         SizeInIeee /= 1024;
+      } // while
+      if (Prefixes[Index] == ' ') {
+         Units = StrDuplicate(L"-byte");
+      } else {
+         Units = StrDuplicate(L"  iB");
+         Units[1] = Prefixes[Index];
+      } // if/else
+      SPrint(TheValue, 255, L"%ld%s", SizeInIeee, Units);
+   } // if
+   return TheValue;
+} // CHAR16 *SizeInSIUnits()
+
+// Return a name for the volume. Ideally this should be the label for the
+// filesystem it contains, but this function falls back to describing the
+// filesystem by size (200 MiB, etc.) and/or type (ext2, HFS+, etc.), if
+// this information can be extracted.
+// The calling function is responsible for freeing the memory allocated
+// for the name string.
+static CHAR16 *GetVolumeName(IN REFIT_VOLUME *Volume) {
+   EFI_FILE_SYSTEM_INFO    *FileSystemInfoPtr;
+   CHAR16                  *FoundName = NULL;
+   CHAR16                  *SISize, *TypeName;
+
+   FileSystemInfoPtr = LibFileSystemInfo(Volume->RootDir);
+   if (FileSystemInfoPtr != NULL) { // we have filesystem information (size, label)....
+       if ((FileSystemInfoPtr->VolumeLabel != NULL) && (StrLen(FileSystemInfoPtr->VolumeLabel) > 0)) {
+          FoundName = StrDuplicate(FileSystemInfoPtr->VolumeLabel);
+       }
+
+       // Special case: rEFInd HFS+ driver always returns label of "HFS+ volume", so wipe
+       // this so that we can build a new name that includes the size....
+       if ((FoundName != NULL) && (StrCmp(FoundName, L"HFS+ volume") == 0) && (Volume->FSType == FS_TYPE_HFSPLUS)) {
+          MyFreePool(FoundName);
+          FoundName = NULL;
+       } // if rEFInd HFS+ driver suspected
+
+       if (FoundName == NULL) { // filesystem has no name, so use fs type and size
+          FoundName = AllocateZeroPool(sizeof(CHAR16) * 256);
+          if (FoundName != NULL) {
+             SISize = SizeInIEEEUnits(FileSystemInfoPtr->VolumeSize);
+             SPrint(FoundName, 255, L"%s%s volume", SISize, FSTypeName(Volume->FSType));
+             MyFreePool(SISize);
+          } // if allocated memory OK
+       } // if (FoundName == NULL)
+
+       FreePool(FileSystemInfoPtr);
+
+   } else { // fs driver not returning info; fall back on our own information....
+      FoundName = AllocateZeroPool(sizeof(CHAR16) * 256);
+      if (FoundName != NULL) {
+         TypeName = FSTypeName(Volume->FSType); // NOTE: Don't free TypeName; function returns constant
+         if (StrLen(TypeName) > 0)
+            SPrint(FoundName, 255, L"%s volume", FSTypeName(Volume->FSType));
+         else
+            SPrint(FoundName, 255, L"unknown volume");
+      } // if allocated memory OK
+   } // if
+
+   // TODO: Above could be improved/extended, in case filesystem name is not found,
+   // such as:
+   //  - use partition label
+   //  - use or add disk/partition number (e.g., "(hd0,2)")
+
+   // Desperate fallback name....
+   if (FoundName == NULL) {
+      FoundName = StrDuplicate(L"unknown volume");
+   }
+   return FoundName;
+} // static CHAR16 *GetVolumeName()
+
+VOID ScanVolume(REFIT_VOLUME *Volume)
 {
     EFI_STATUS              Status;
     EFI_DEVICE_PATH         *DevicePath, *NextDevicePath;
     EFI_DEVICE_PATH         *DiskDevicePath, *RemainingDevicePath;
     EFI_HANDLE              WholeDiskHandle;
     UINTN                   PartialLength;
-    EFI_FILE_SYSTEM_INFO    *FileSystemInfoPtr;
     BOOLEAN                 Bootable;
 
     // get device path
@@ -664,20 +846,7 @@ VOID ScanVolume(IN OUT REFIT_VOLUME *Volume)
         Volume->IsReadable = TRUE;
     }
 
-    // get volume name
-    FileSystemInfoPtr = LibFileSystemInfo(Volume->RootDir);
-    if (FileSystemInfoPtr != NULL) {
-        Volume->VolName = StrDuplicate(FileSystemInfoPtr->VolumeLabel);
-        FreePool(FileSystemInfoPtr);
-    }
-
-    if (Volume->VolName == NULL) {
-       Volume->VolName = StrDuplicate(L"Unknown");
-    }
-    // TODO: if no official volume name is found or it is empty, use something else, e.g.:
-    //   - name from bytes 3 to 10 of the boot sector
-    //   - partition number
-    //   - name derived from file system type or partition type
+    Volume->VolName = GetVolumeName(Volume);
 
     // get custom volume icon if present
     if (FileExists(Volume->RootDir, VOLUME_BADGE_NAME))
@@ -747,7 +916,7 @@ static VOID ScanExtendedPartition(REFIT_VOLUME *WholeDiskVolume, MBR_PARTITION_I
             }
         }
     }
-}
+} /* VOID ScanExtendedPartition() */
 
 VOID ScanVolumes(VOID)
 {
@@ -862,7 +1031,7 @@ VOID ScanVolumes(VOID)
             MyFreePool(SectorBuffer2);
         }
 
-    }
+    } // for
 } /* VOID ScanVolumes() */
 
 static VOID UninitVolumes(VOID)
@@ -1207,8 +1376,8 @@ BOOLEAN StriSubCmp(IN CHAR16 *SmallStr, IN CHAR16 *BigStr) {
 
 // Merges two strings, creating a new one and returning a pointer to it.
 // If AddChar != 0, the specified character is placed between the two original
-// strings (unless the first string is NULL). The original input string
-// *First is de-allocated and replaced by the new merged string.
+// strings (unless the first string is NULL or empty). The original input
+// string *First is de-allocated and replaced by the new merged string.
 // This is similar to StrCat, but safer and more flexible because
 // MergeStrings allocates memory that's the correct size for the
 // new merged string, so it can take a NULL *First and it cleans
@@ -1224,12 +1393,16 @@ VOID MergeStrings(IN OUT CHAR16 **First, IN CHAR16 *Second, CHAR16 AddChar) {
       Length2 = StrLen(Second);
    NewString = AllocatePool(sizeof(CHAR16) * (Length1 + Length2 + 2));
    if (NewString != NULL) {
+      if ((*First != NULL) && (StrLen(*First) == 0)) {
+         MyFreePool(*First);
+         *First = NULL;
+      }
       NewString[0] = L'\0';
       if (*First != NULL) {
          StrCat(NewString, *First);
          if (AddChar) {
             NewString[Length1] = AddChar;
-            NewString[Length1 + 1] = 0;
+            NewString[Length1 + 1] = '\0';
          } // if (AddChar)
       } // if (*First != NULL)
       if (Second != NULL)
@@ -1463,18 +1636,18 @@ BOOLEAN EjectMedia(VOID) {
 } // VOID EjectMedia()
 
 
-// Return the GUID as a string, suitable for display to the user. Note that the calling
-// function is responsible for freeing the allocated memory.
-CHAR16 * GuidAsString(EFI_GUID *GuidData) {
-   CHAR16 *TheString;
-
-   TheString = AllocateZeroPool(42 * sizeof(CHAR16));
-   if (TheString != 0) {
-      SPrint (TheString, 82, L"%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
-              (UINTN)GuidData->Data1, (UINTN)GuidData->Data2, (UINTN)GuidData->Data3,
-              (UINTN)GuidData->Data4[0], (UINTN)GuidData->Data4[1], (UINTN)GuidData->Data4[2],
-              (UINTN)GuidData->Data4[3], (UINTN)GuidData->Data4[4], (UINTN)GuidData->Data4[5],
-              (UINTN)GuidData->Data4[6], (UINTN)GuidData->Data4[7]);
-   }
-   return TheString;
-} // GuidAsString(EFI_GUID *GuidData)
+// // Return the GUID as a string, suitable for display to the user. Note that the calling
+// // function is responsible for freeing the allocated memory.
+// CHAR16 * GuidAsString(EFI_GUID *GuidData) {
+//    CHAR16 *TheString;
+// 
+//    TheString = AllocateZeroPool(42 * sizeof(CHAR16));
+//    if (TheString != 0) {
+//       SPrint (TheString, 82, L"%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+//               (UINTN)GuidData->Data1, (UINTN)GuidData->Data2, (UINTN)GuidData->Data3,
+//               (UINTN)GuidData->Data4[0], (UINTN)GuidData->Data4[1], (UINTN)GuidData->Data4[2],
+//               (UINTN)GuidData->Data4[3], (UINTN)GuidData->Data4[4], (UINTN)GuidData->Data4[5],
+//               (UINTN)GuidData->Data4[6], (UINTN)GuidData->Data4[7]);
+//    }
+//    return TheString;
+// } // GuidAsString(EFI_GUID *GuidData)

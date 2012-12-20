@@ -35,11 +35,11 @@
  */
 /*
  * Modifications copyright (c) 2012 Roderick W. Smith
- * 
+ *
  * Modifications distributed under the terms of the GNU General Public
  * License (GPL) version 3 (GPLv3), a copy of which must be distributed
  * with this source code or binaries made from it.
- * 
+ *
  */
 
 #include "global.h"
@@ -61,6 +61,7 @@
 #define MENU_FUNCTION_PAINT_ALL       (2)
 #define MENU_FUNCTION_PAINT_SELECTION (3)
 #define MENU_FUNCTION_PAINT_TIMEOUT   (4)
+#define MENU_FUNCTION_PAINT_HINTS     (5)
 
 typedef VOID (*MENU_STYLE_FUNC)(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, IN UINTN Function, IN CHAR16 *ParamText);
 
@@ -357,7 +358,8 @@ static VOID IdentifyRows(IN SCROLL_STATE *State, IN REFIT_MENU_SCREEN *Screen) {
 //
 // generic menu function
 //
-static UINTN RunGenericMenu(IN REFIT_MENU_SCREEN *Screen, IN MENU_STYLE_FUNC StyleFunc, IN INTN DefaultEntryIndex, OUT REFIT_MENU_ENTRY **ChosenEntry)
+static UINTN RunGenericMenu(IN REFIT_MENU_SCREEN *Screen, IN MENU_STYLE_FUNC StyleFunc, IN OUT INTN *DefaultEntryIndex,
+                            OUT REFIT_MENU_ENTRY **ChosenEntry)
 {
     SCROLL_STATE State;
     EFI_STATUS Status;
@@ -379,10 +381,11 @@ static UINTN RunGenericMenu(IN REFIT_MENU_SCREEN *Screen, IN MENU_STYLE_FUNC Sty
     StyleFunc(Screen, &State, MENU_FUNCTION_INIT, NULL);
     IdentifyRows(&State, Screen);
     // override the starting selection with the default index, if any
-    if (DefaultEntryIndex >= 0 && DefaultEntryIndex <= State.MaxIndex) {
-        State.CurrentSelection = DefaultEntryIndex;
+    if (*DefaultEntryIndex >= 0 && *DefaultEntryIndex <= State.MaxIndex) {
+        State.CurrentSelection = *DefaultEntryIndex;
         UpdateScroll(&State, SCROLL_NONE);
     }
+    State.PaintAll = TRUE;
 
     while (!MenuExit) {
         // update the screen
@@ -485,6 +488,7 @@ static UINTN RunGenericMenu(IN REFIT_MENU_SCREEN *Screen, IN MENU_STYLE_FUNC Sty
 
     if (ChosenEntry)
         *ChosenEntry = Screen->Entries[State.CurrentSelection];
+    *DefaultEntryIndex = State.CurrentSelection;
     return MenuExit;
 } /* static UINTN RunGenericMenu() */
 
@@ -508,7 +512,7 @@ static VOID TextMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, 
             MenuPosY = 4;
             if (Screen->InfoLineCount > 0)
                 MenuPosY += Screen->InfoLineCount + 1;
-            MenuHeight = ConHeight - MenuPosY;
+            MenuHeight = ConHeight - MenuPosY - 3;
             if (Screen->TimeoutSeconds > 0)
                 MenuHeight -= 2;
             InitScroll(State, Screen->EntryCount, MenuHeight);
@@ -520,8 +524,9 @@ static VOID TextMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, 
                 if (MenuWidth < ItemWidth)
                     MenuWidth = ItemWidth;
             }
-            if (MenuWidth > ConWidth - 6)
-                MenuWidth = ConWidth - 6;
+            MenuWidth += 2;
+            if (MenuWidth > ConWidth - 3)
+                MenuWidth = ConWidth - 3;
 
             // prepare strings for display
             DisplayStrings = AllocatePool(sizeof(CHAR16 *) * Screen->EntryCount);
@@ -589,14 +594,26 @@ static VOID TextMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, 
                refit_call2_wrapper(ST->ConOut->OutputString, ST->ConOut, ArrowDown);
             else
                refit_call2_wrapper(ST->ConOut->OutputString, ST->ConOut, L" ");
+            if (!(GlobalConfig.HideUIFlags & HIDEUI_FLAG_HINTS)) {
+               if (Screen->Hint1 != NULL) {
+                  refit_call3_wrapper(ST->ConOut->SetCursorPosition, ST->ConOut, 0, ConHeight - 2);
+                  refit_call2_wrapper(ST->ConOut->OutputString, ST->ConOut, Screen->Hint1);
+               }
+               if (Screen->Hint2 != NULL) {
+                  refit_call3_wrapper(ST->ConOut->SetCursorPosition, ST->ConOut, 0, ConHeight - 1);
+                  refit_call2_wrapper(ST->ConOut->OutputString, ST->ConOut, Screen->Hint2);
+               }
+            }
             break;
 
         case MENU_FUNCTION_PAINT_SELECTION:
             // redraw selection cursor
-            refit_call3_wrapper(ST->ConOut->SetCursorPosition, ST->ConOut, 2, MenuPosY + (State->PreviousSelection - State->FirstVisible));
+            refit_call3_wrapper(ST->ConOut->SetCursorPosition, ST->ConOut, 2,
+                                MenuPosY + (State->PreviousSelection - State->FirstVisible));
             refit_call2_wrapper(ST->ConOut->SetAttribute, ST->ConOut, ATTR_CHOICE_BASIC);
             refit_call2_wrapper(ST->ConOut->OutputString, ST->ConOut, DisplayStrings[State->PreviousSelection]);
-            refit_call3_wrapper(ST->ConOut->SetCursorPosition, ST->ConOut, 2, MenuPosY + (State->CurrentSelection - State->FirstVisible));
+            refit_call3_wrapper(ST->ConOut->SetCursorPosition, ST->ConOut, 2,
+                                MenuPosY + (State->CurrentSelection - State->FirstVisible));
             refit_call2_wrapper(ST->ConOut->SetAttribute, ST->ConOut, ATTR_CHOICE_CURRENT);
             refit_call2_wrapper(ST->ConOut->OutputString, ST->ConOut, DisplayStrings[State->CurrentSelection]);
             break;
@@ -605,12 +622,12 @@ static VOID TextMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, 
             if (ParamText[0] == 0) {
                 // clear message
                 refit_call2_wrapper(ST->ConOut->SetAttribute, ST->ConOut, ATTR_BASIC);
-                refit_call3_wrapper(ST->ConOut->SetCursorPosition, ST->ConOut, 0, ConHeight - 1);
+                refit_call3_wrapper(ST->ConOut->SetCursorPosition, ST->ConOut, 0, ConHeight - 3);
                 refit_call2_wrapper(ST->ConOut->OutputString, ST->ConOut, BlankLine + 1);
             } else {
                 // paint or update message
                 refit_call2_wrapper(ST->ConOut->SetAttribute, ST->ConOut, ATTR_ERROR);
-                refit_call3_wrapper(ST->ConOut->SetCursorPosition, ST->ConOut, 3, ConHeight - 1);
+                refit_call3_wrapper(ST->ConOut->SetCursorPosition, ST->ConOut, 3, ConHeight - 3);
                 SPrint(TimeoutMessage, 255, L"%s  ", ParamText);
                 refit_call2_wrapper(ST->ConOut->OutputString, ST->ConOut, TimeoutMessage);
             }
@@ -704,6 +721,16 @@ static VOID GraphicsMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *Sta
                 DrawMenuText(Screen->Entries[i]->Title, (i == State->CurrentSelection) ? MenuWidth : 0,
                              EntriesPosX, EntriesPosY + i * TEXT_LINE_HEIGHT);
             }
+            if (!(GlobalConfig.HideUIFlags & HIDEUI_FLAG_HINTS)) {
+               if ((Screen->Hint1 != NULL) && (StrLen(Screen->Hint1) > 0)) {
+                  DrawMenuText(Screen->Hint1, 0, (UGAWidth - (StrLen(Screen->Hint1) * FONT_CELL_WIDTH)) / 2,
+                               UGAHeight - (FONT_CELL_HEIGHT * 3));
+               }
+               if ((Screen->Hint2 != NULL) && (StrLen(Screen->Hint2) > 0)) {
+                  DrawMenuText(Screen->Hint2, 0, (UGAWidth - (StrLen(Screen->Hint2) * FONT_CELL_WIDTH)) / 2,
+                               UGAHeight - (FONT_CELL_HEIGHT * 2));
+               } // if
+            } // if
             break;
 
         case MENU_FUNCTION_PAINT_SELECTION:
@@ -774,6 +801,11 @@ static VOID PaintAll(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, UINTN
    if (!(GlobalConfig.HideUIFlags & HIDEUI_FLAG_LABEL))
       DrawMainMenuText(Screen->Entries[State->CurrentSelection]->Title,
                        (UGAWidth - LAYOUT_TEXT_WIDTH) >> 1, textPosY);
+
+   if (!(GlobalConfig.HideUIFlags & HIDEUI_FLAG_HINTS)) {
+      DrawMainMenuText(Screen->Hint1, (UGAWidth - LAYOUT_TEXT_WIDTH) / 2, UGAHeight - (FONT_CELL_HEIGHT * 3));
+      DrawMainMenuText(Screen->Hint2, (UGAWidth - LAYOUT_TEXT_WIDTH) / 2, UGAHeight - (FONT_CELL_HEIGHT * 2));
+   } // if
 } // static VOID PaintAll()
 
 // Move the selection to State->CurrentSelection, adjusting icon row if necessary...
@@ -923,21 +955,18 @@ VOID MainMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, IN UINT
 static BOOLEAN EditOptions(LOADER_ENTRY *MenuEntry) {
    UINTN x_max, y_max;
    CHAR16 *EditedOptions;
-   EG_PIXEL DarkBackgroundPixel  = { 0x0, 0x0, 0x0, 0 };
    BOOLEAN retval = FALSE;
+
+   if (GlobalConfig.HideUIFlags & HIDEUI_FLAG_EDITOR) {
+      return FALSE;
+   }
 
    refit_call4_wrapper(ST->ConOut->QueryMode, ST->ConOut, ST->ConOut->Mode->Mode, &x_max, &y_max);
 
    if (!GlobalConfig.TextOnly)
       SwitchToText(TRUE);
 
-   egClearScreen(&DarkBackgroundPixel);
-
-   refit_call3_wrapper(ST->ConOut->SetCursorPosition, ST->ConOut, 0, y_max - 1);
-   refit_call2_wrapper(ST->ConOut->OutputString, ST->ConOut,
-                       L"Use cursor keys to edit, Esc to exit, Enter to boot with edited options");
-
-   if (line_edit(MenuEntry->LoadOptions, &EditedOptions, x_max, 1)) {
+   if (line_edit(MenuEntry->LoadOptions, &EditedOptions, x_max)) {
       MyFreePool(MenuEntry->LoadOptions);
       MenuEntry->LoadOptions = EditedOptions;
       retval = TRUE;
@@ -953,12 +982,13 @@ static BOOLEAN EditOptions(LOADER_ENTRY *MenuEntry) {
 
 UINTN RunMenu(IN REFIT_MENU_SCREEN *Screen, OUT REFIT_MENU_ENTRY **ChosenEntry)
 {
+    INTN            DefaultEntry = -1;
     MENU_STYLE_FUNC Style = TextMenuStyle;
 
     if (AllowGraphicsMode)
         Style = GraphicsMenuStyle;
 
-    return RunGenericMenu(Screen, Style, -1, ChosenEntry);
+    return RunGenericMenu(Screen, Style, &DefaultEntry, ChosenEntry);
 }
 
 UINTN RunMainMenu(IN REFIT_MENU_SCREEN *Screen, IN CHAR16* DefaultSelection, OUT REFIT_MENU_ENTRY **ChosenEntry)
@@ -967,12 +997,12 @@ UINTN RunMainMenu(IN REFIT_MENU_SCREEN *Screen, IN CHAR16* DefaultSelection, OUT
     MENU_STYLE_FUNC MainStyle = TextMenuStyle;
     REFIT_MENU_ENTRY *TempChosenEntry;
     UINTN MenuExit = 0;
-    UINTN DefaultEntryIndex = -1;
+    INTN DefaultEntryIndex = -1;
+    INTN DefaultSubmenuIndex = -1;
 
     if (DefaultSelection != NULL) {
         // Find a menu entry that includes *DefaultSelection as a substring
         DefaultEntryIndex = FindMenuShortcutEntry(Screen, DefaultSelection);
-        // If that didn't work, should we scan more characters?  For now, no.
     }
 
     if (AllowGraphicsMode) {
@@ -981,18 +1011,22 @@ UINTN RunMainMenu(IN REFIT_MENU_SCREEN *Screen, IN CHAR16* DefaultSelection, OUT
     }
 
     while (!MenuExit) {
-        MenuExit = RunGenericMenu(Screen, MainStyle, DefaultEntryIndex, &TempChosenEntry);
+        MenuExit = RunGenericMenu(Screen, MainStyle, &DefaultEntryIndex, &TempChosenEntry);
         Screen->TimeoutSeconds = 0;
 
-        if (MenuExit == MENU_EXIT_DETAILS && TempChosenEntry->SubScreen != NULL) {
-            MenuExit = RunGenericMenu(TempChosenEntry->SubScreen, Style, -1, &TempChosenEntry);
-            if (MenuExit == MENU_EXIT_ESCAPE || TempChosenEntry->Tag == TAG_RETURN)
-                MenuExit = 0;
-            if (MenuExit == MENU_EXIT_DETAILS) {
-               if (!EditOptions((LOADER_ENTRY *) TempChosenEntry))
-                  MenuExit = 0;
-            } // if
-        }
+        if (MenuExit == MENU_EXIT_DETAILS) {
+            if (TempChosenEntry->SubScreen != NULL) {
+               MenuExit = RunGenericMenu(TempChosenEntry->SubScreen, Style, &DefaultSubmenuIndex, &TempChosenEntry);
+               if (MenuExit == MENU_EXIT_ESCAPE || TempChosenEntry->Tag == TAG_RETURN)
+                   MenuExit = 0;
+               if (MenuExit == MENU_EXIT_DETAILS) {
+                  if (!EditOptions((LOADER_ENTRY *) TempChosenEntry))
+                     MenuExit = 0;
+               } // if
+            } else { // no sub-screen; ignore keypress
+               MenuExit = 0;
+            }
+        } // Enter sub-screen
     }
 
     if (ChosenEntry)

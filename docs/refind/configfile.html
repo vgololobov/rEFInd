@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 3/14/2012; last Web page update:
-12/6/2012, referencing rEFInd 0.5.0</p>
+12/16/2012, referencing rEFInd 0.6.0</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -104,21 +104,25 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Another way to hide a boot loader is to move it into rEFInd's own directory. In order to keep rEFInd from showing up in its own menu, it ignores boot loaders in its own directory. This obviously includes the rEFInd binary file itself, but also anything else you might store there.</p>
 
-<p>In addition to hiding boot loaders, you can adjust their icons. You can do this in any of three ways for auto-detected boot loaders:</p>
+<p>In addition to hiding boot loaders, you can adjust their icons. You can do this in any of five ways for auto-detected boot loaders:</p>
 
 <ul>
 
+<li>You can name an icon file after your boot loader, but with an extension of <tt>.icns</tt>. For instance, if you're using <tt class="variable">loader</tt><tt>.efi</tt>, you would name the icon file <tt class="variable">loader</tt><tt>.icns</tt>. (If you use the <tt>scan_all_linux_kernels</tt> option, you can give an icon for a Linux kernel without a <tt>.efi</tt> extension a name based on the kernel name but with a <tt>.icns</tt> extension&mdash;for instance, <tt>bzImage-3.3.2.icns</tt> will serve as the icon for the <tt>bzImage-3.3.2</tt> kernel.) These icon files should be 128x128 images in <a href="http://en.wikipedia.org/wiki/Apple_Icon_Image_format">Apple's ICNS format.</a> You can create such files easily in OS X or convert PNG files to ICNS format with <a href="http://icns.sourceforge.net/">libicns.</a></li>
+
 <li>You can place a boot loader in a directory with a name that matches one of rEFInd's standard icons, which take names of the form <tt>os_<tt class="variable">name</tt>.icns</tt>. To use this icon, you would place the boot loader in the directory called <tt class="variable">name</tt>.</li>
 
-<li>You can name an icon file after your boot loader, but with an extension of <tt>.icns</tt>. For instance, if you're using <tt class="variable">loader</tt><tt>.efi</tt>, you would name the icon file <tt class="variable">loader</tt><tt>.icns</tt>. (If you use the <tt>scan_all_linux_kernels</tt> option, you can give an icon for a Linux kernel without a <tt>.efi</tt> extension a name based on the kernel name but with a <tt>.icns</tt> extension&mdash;for instance, <tt>bzImage-3.3.2.icns</tt> will serve as the icon for the <tt>bzImage-3.3.2</tt> kernel.) These icon files should be 128x128 images in <a href="http://en.wikipedia.org/wiki/Apple_Icon_Image_format">Apple's ICNS format.</a> You can create such files easily in OS X or convert PNG files to ICNS format with <a href="http://icns.sourceforge.net/">libicns.</a></li>
+<li>You can give the filesystem from which the boot loader is loaded a name that matches the OS name component of the icon filename. For instance, if you call your boot filesystem <tt>CentOS</tt>, it matches the <tt>os_centos.icns</tt> icon. This match is performed on a word-by-word basis within the name, with "words" being delimited by spaces, dashes (<tt>-</tt>), and underscores (<tt>_</tt>). Thus, a volume called <tt>Debian-boot</tt> will match <tt>os_debian.icns</tt> or <tt>os_boot.icns</tt>.</li>
 
 <li>If you're booting OS X from its standard boot loader, or if you place a boot loader file in the root directory of a partition, you can create a file called <tt>.VolumeIcon.icns</tt> that holds an icon file. OS X uses this file for its volume icons, so rEFInd picks up these icons automatically, provided they include 128x128 bitmaps.</li>
 
+<li>Certain boot loaders have hard-coded icons associated with them. For instance, filenames beginning with <tt>vmlinuz</tt> or <tt>bzImage</tt> acquire Linux "Tux" icons and the <tt>bootmgfw.efi</tt> loader acquires a Windows icon. For the most part, these are the associations you want to overcome with the preceding rules, but sometimes renaming a boot loader to a more conventional name is the better approach.</li>
+
 </ul>
 
-<p>As a special case, rEFInd assigns icons to the Windows and OS X boot loaders based on their conventional locations, so they get suitable icons even though they don't follow these rules.</p>
+<p>As a special case, rEFInd assigns icons to the Windows and OS X boot loaders based on their conventional locations, so they get suitable icons even if they don't follow these rules.</p>
 
-<p>In addition to the main OS tag icon, you can set the <i>badge</i> icon for a volume by creating a file called <tt>.VolumeBadge.icns</tt> in the root directory of a partition. This icon file must include a 32x32 bitmap. If present, it replaces the disk-type icons that are overlaid on the main OS icon. If you use this feature, the badge is applied to all the boot loaders read from the disk, not just those stored in the root directory or the Apple boot loader location. You could use this feature to set a custom badge for different specific disks or to help differentiate multiple OS X installations on one computer.</p>
+<p>In addition to the main OS tag icon, you can set the <i>badge</i> icon for a volume by creating a file called <tt>.VolumeBadge.icns</tt> in the root directory of a partition. This icon file must include a 32x32 bitmap. If present, it replaces the disk-type icons that are overlaid on the main OS icon. If you use this feature, the badge is applied to all the boot loaders read from the disk, not just those stored in the root directory or the Apple boot loader location. You could use this feature to set a custom badge for different specific disks or to help differentiate multiple OS X installations on one computer. If you don't want any badges, you can replace the three badge icons in the rEFInd <tt>icons</tt> subdirectory (<tt>vol_external.icns</tt>, <tt>vol_internal.icns</tt>, and <tt>vol_optical.icns</tt>) with a completely transparent badge. The <tt>transparent.icns</tt> file in the rEFInd <tt>icons</tt> directory may be used for this purpose.</p>
 
 <h2>Adjusting the Global Configuration</h2>
 
@@ -145,8 +149,8 @@ timeout 20
 </tr>
 <tr>
    <td><tt>hideui</tt></td>
-   <td><tt>banner</tt>, <tt>label</tt>, <tt>singleuser</tt>, <tt>hwtest</tt>, <tt>arrows</tt>, or <tt>all</tt></td>
-   <td>Removes the specified user interface features. <tt>banner</tt> removes the banner graphic, <tt>label</tt> removes the text description of each tag and the countdown timer, <tt>singleuser</tt> removes the single-user option from the Mac OS sub-menu, <tt>hwtest</tt> removes the Mac OS hardware test option, <tt>arrows</tt> removes the arrows to the right or left of the OS tags when rEFInd finds too many OSes to display simultaneously, and <tt>all</tt> removes all of these options. You can specify multiple parameters with this option. The default is to set none of these values.</td>
+   <td><tt>banner</tt>, <tt>label</tt>, <tt>singleuser</tt>, <tt>hwtest</tt>, <tt>arrows</tt>, <tt>hints</tt>, <tt>editor</tt>, or <tt>all</tt></td>
+   <td>Removes the specified user interface features. <tt>banner</tt> removes the banner graphic, <tt>label</tt> removes the text description of each tag and the countdown timer, <tt>singleuser</tt> removes the single-user option from the Mac OS sub-menu, <tt>hwtest</tt> removes the Mac OS hardware test option, <tt>arrows</tt> removes the arrows to the right or left of the OS tags when rEFInd finds too many OSes to display simultaneously, <tt>hints</tt> removes the brief description of what basic keypressed do, <tt>editor</tt> disables the options editor, and <tt>all</tt> removes all of these options. You can specify multiple parameters with this option. The default is to set none of these values.</td>
 </tr>
 <tr>
    <td><tt>icons_dir</tt></td>
@@ -175,13 +179,18 @@ timeout 20
 </tr>
 <tr>
    <td><tt>textonly</tt></td>
-   <td>None</td>
-   <td>rEFInd defaults to a graphical mode; however, if you prefer to do without the flashy graphics, you can run it in text mode by including this option.</td>
+   <td>None or <tt>0</tt></td>
+   <td>rEFInd defaults to a graphical mode; however, if you prefer to do without the flashy graphics, you can run it in text mode by including this option. Passing any option but <tt>0</tt> causes text mode to be used; passing a <tt>0</tt> causes graphics mode to be used. (This could be useful if you want to override a text-mode setting in an included secondary configuration file.)</td>
+</tr>
+<tr>
+   <td><tt>textmode</tt></td>
+   <td>text mode number</td>
+   <td>Sets the text-mode video resolution to be used in conjunction with <tt>textonly</tt> or for the line editor and program-launch screens. This option takes a single-digit code. Mode <tt>0</tt> is guaranteed to be present and should be 80x25. Mode <tt>1</tt> is supposed to be either invalid or 80x50, but some systems use this number for something else. Higher values are system-specific. If you set this option to an invalid value, rEFInd pauses during startup to tell you of that fact. Note that on some computers, setting this value without also using <tt>textonly</tt> results in an incorrect graphics video mode being set. Pressing the Esc key corrects the problem.</td>
 </tr>
 <tr>
    <td><tt>resolution</tt></td>
-   <td>Two integer values</td>
-   <td>Sets the video resolution used by rEFInd; takes a width and a height as options. For instance, <tt>resolution 1024 768</tt> sets the resolution to 1024x768. If you set a resolution that doesn't work on a UEFI-based system, rEFInd displays a message along with a list of valid modes. On an system built around EFI 1.<i>x</i> (such as a Mac), setting an incorrect resolution fails silently; you'll get the system's default resolution. You'll also get the system's default resolution if you set either resolution value to <tt>0</tt> or if you pass anything but two numbers. (Note that passing a resolution with an <tt>x</tt>, as in <tt>1024x768</tt>, will be interpreted as <i>one</i> option and so will cause the default resolution to be used.) Also, be aware that it is possible to set a valid resolution for your video card that's invalid for your monitor. If you do this, your monitor will go blank until you've booted an OS that resets the video mode.</td>
+   <td>one or two integer values</td>
+   <td>Sets the video resolution used by rEFInd; takes <i>either</i> a width and a height <i>or</i> a single UEFI video mode number as options. For instance, <tt>resolution 1024 768</tt> sets the resolution to 1024x768. On UEFI systems, <tt>resolution 1</tt> sets video mode 1, the resolution of which varies from system to system. If you set a resolution that doesn't work on a UEFI-based system, rEFInd displays a message along with a list of valid modes. On an system built around EFI 1.<i>x</i> (such as a Mac), setting an incorrect resolution fails silently; you'll get the system's default resolution. You'll also get the system's default resolution if you set both resolution values to <tt>0</tt> or if you pass anything but two numbers. (Note that passing a resolution with an <tt>x</tt>, as in <tt>1024x768</tt>, will be interpreted as <i>one</i> option and so will cause the default resolution to be used.) Also, be aware that it is possible to set a valid resolution for your video card that's invalid for your monitor. If you do this, your monitor will go blank until you've booted an OS that resets the video mode.</td>
 </tr>
 <tr>
    <td><tt>use_graphics_for</tt></td>
@@ -200,13 +209,18 @@ timeout 20
 </tr>
 <tr>
    <td><tt>scan_delay</tt></td>
-   <td>Numeric (integer) value</td>
+   <td>numeric (integer) value</td>
    <td>Imposes a delay before rEFInd scans for disk devices. Ordinarily this is not necessary, but on some systems, some disks (particularly external drives and optical discs) can take a few seconds to become available. If some of your disks don't appear when rEFInd starts but they <i>do</i> appear when you press the Esc key to re-scan, try uncommenting this option and setting it to a modest value, such as <tt>2</tt>, <tt>5</tt>, or even <tt>10</tt>. The default is <tt>0</tt>.</td>
 </tr>
 <tr>
    <td><tt>also_scan_dirs</tt></td>
    <td>directory path(s)</td>
-   <td>Adds the specified directory or directories to the directory list that rEFInd scans for EFI boot loaders when <tt>scanfor</tt> includes the <tt>internal</tt>, <tt>external</tt>, or <tt>optical</tt> options. Directories are specified relative to the filesystem's root directory. If this option is used, it's applied to <i>all</i> the filesystems that rEFInd scans. If a specified directory doesn't exist, rEFInd ignores it (no error results).</td>
+   <td>Adds the specified directory or directories to the directory list that rEFInd scans for EFI boot loaders when <tt>scanfor</tt> includes the <tt>internal</tt>, <tt>external</tt>, or <tt>optical</tt> options. Directories are specified relative to the filesystem's root directory. If this option is used, it's applied to <i>all</i> the filesystems that rEFInd scans. If a specified directory doesn't exist, rEFInd ignores it (no error results). The default value is <tt>boot</tt>, which is useful for locating Linux kernels when you have an EFI driver for your Linux root (<tt>/</tt>) filesystem.</td>
+</tr>
+<tr>
+   <td><tt>dont_scan_volumes</tt> or <tt>don't_scan_volumes</tt></td>
+   <td>filesystem label(s)</td>
+   <td>Adds the specified volume or volumes to a volume "blacklist"&mdash;these filesystems are <i>not</i> scanned for EFI boot loaders. This may be useful to keep unwanted EFI boot entries, such as for a Macintosh recovery partition, from appearing on the main list of boot loaders.</td>
 </tr>
 <tr>
    <td><tt>dont_scan_dirs</tt> or <tt>don't_scan_dirs</tt></td>
@@ -220,13 +234,18 @@ timeout 20
 </tr>
 <tr>
    <td><tt>scan_all_linux_kernels</tt></td>
-   <td>None</td>
-   <td>When set, causes rEFInd to add Linux kernels (files with names that begin with <tt>vmlinuz</tt> or <tt>bzImage</tt>) to the list of EFI boot loaders, even if they lack <tt>.efi</tt> filename extensions. The hope is that this will simplify use of rEFInd on distributions that provide kernels with EFI stub loader support but that don't give those kernels names that end in <tt>.efi</tt>. Of course, the kernels must still be stored on a filesystem that rEFInd can read, and in a directory that it scans. (<a href="drivers.html">Drivers</a> and the <tt>also_scan_dirs</tt> options can help with those issues.) Note that this option can cause unwanted files to be improperly detected and given loader tags, such as older kernels without EFI stub loader support. Versions of rEFInd prior to 0.5.0 left this option commented out in the <tt>refind.conf-sample</tt> file, but as of version 0.5.0, this option is enabled in the default configuration file. The program default remains to not scan for such kernels, though, so you can delete or uncomment this option to keep them from appearing in your boot menu.</td>
+   <td>None or <tt>0</tt></td>
+   <td>When set, causes rEFInd to add Linux kernels (files with names that begin with <tt>vmlinuz</tt> or <tt>bzImage</tt>) to the list of EFI boot loaders, even if they lack <tt>.efi</tt> filename extensions. The hope is that this will simplify use of rEFInd on distributions that provide kernels with EFI stub loader support but that don't give those kernels names that end in <tt>.efi</tt>. Of course, the kernels must still be stored on a filesystem that rEFInd can read, and in a directory that it scans. (<a href="drivers.html">Drivers</a> and the <tt>also_scan_dirs</tt> options can help with those issues.) Note that this option can cause unwanted files to be improperly detected and given loader tags, such as older kernels without EFI stub loader support. Versions of rEFInd prior to 0.5.0 left this option commented out in the <tt>refind.conf-sample</tt> file, but as of version 0.5.0, this option is enabled in the default configuration file. The program default remains to not scan for such kernels, though, so you can delete or uncomment this option to keep them from appearing in your boot menu. Passing any option but <tt>0</tt> causes scans for all kernels to occur; passing a <tt>0</tt> causes these kernels to not be scanned. (This could be useful if you want to override a setting of <tt>scan_all_linux_kernels</tt> in an included secondary configuration file.)</td>
 </tr>
 <tr>
    <td><tt>default_selection</tt></td>
    <td>A substring of a boot loader's title; or a numeric position</td>
    <td>Sets the default boot OS based on the loader's title, which appears in the main menu beneath the icons when you select the loader. You can enter any substring of the title as the <tt>default_selection</tt>, so long as it's two or more characters in length. It's best to use a unique substring, since rEFInd stops searching when it finds the first match. Because rEFInd sorts entries within a directory in descending order by file modification time, if you specify a directory (or volume name, for loaders in a partition's root directory) as the <tt>default_selection</tt>, the most recent loader in that directory will be the default. One-character entries are matched against the first character of the title, except for digits, which refer to the numeric order of the boot loader entries.</td>
+</tr>
+<tr>
+   <td><tt>include</tt></td>
+   <td>filename</td>
+   <td>Includes the specified file into the current configuration file. Essentially, the included file replaces the <tt>include</tt> line, so positioning of this token is important if the included file includes options that contradict those in the main file. The included file must reside in the same directory as the rEFInd binary and the main configuration file. This option is valid only in the main configuration file; included files may not include third-tier configuration files.</td>
 </tr>
 </table>
 

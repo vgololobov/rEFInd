@@ -53,7 +53,6 @@
 
 // constants
 
-#define CONFIG_FILE_NAME         L"refind.conf"
 #define LINUX_OPTIONS_FILENAMES  L"refind_linux.conf,refind-linux.conf"
 #define MAXCONFIGFILESIZE        (128*1024)
 
@@ -336,7 +335,7 @@ static VOID HandleStrings(IN CHAR16 **TokenList, IN UINTN TokenCount, OUT CHAR16
 } // static VOID HandleStrings()
 
 // read config file
-VOID ReadConfig(VOID)
+VOID ReadConfig(CHAR16 *FileName)
 {
     EFI_STATUS      Status;
     REFIT_FILE      File;
@@ -344,19 +343,26 @@ VOID ReadConfig(VOID)
     CHAR16          *FlagName;
     UINTN           TokenCount, i;
 
-    if (!FileExists(SelfDir, CONFIG_FILE_NAME)) {
-        Print(L"Configuration file missing!\n");
+    // Set a few defaults only if we're loading the default file.
+    if (StriCmp(FileName, CONFIG_FILE_NAME) == 0) {
+       MyFreePool(GlobalConfig.AlsoScan);
+       GlobalConfig.AlsoScan = StrDuplicate(ALSO_SCAN_DIRS);
+//        MyFreePool(GlobalConfig.DontScanVolumes);
+//        GlobalConfig.DontScanVolumes = StrDuplicate(L" ");
+       MyFreePool(GlobalConfig.DontScanDirs);
+       GlobalConfig.DontScanDirs = StrDuplicate(SelfDirPath);
+       MyFreePool(GlobalConfig.DontScanFiles);
+       GlobalConfig.DontScanFiles = StrDuplicate(DONT_SCAN_FILES);
+    }
+
+    if (!FileExists(SelfDir, FileName)) {
+        Print(L"Configuration file '%s' missing!\n", FileName);
         return;
     }
 
-    Status = ReadFile(SelfDir, CONFIG_FILE_NAME, &File, &i);
+    Status = ReadFile(SelfDir, FileName, &File, &i);
     if (EFI_ERROR(Status))
         return;
-
-    MyFreePool(GlobalConfig.DontScanDirs);
-    GlobalConfig.DontScanDirs = StrDuplicate(SelfDirPath);
-    MyFreePool(GlobalConfig.DontScanFiles);
-    GlobalConfig.DontScanFiles = StrDuplicate(DONT_SCAN_FILES);
 
     for (;;) {
         TokenCount = ReadTokenLine(&File, &TokenList);
@@ -374,13 +380,17 @@ VOID ReadConfig(VOID)
                 } else if (StriCmp(FlagName, L"label") == 0) {
                    GlobalConfig.HideUIFlags |= HIDEUI_FLAG_LABEL;
                 } else if (StriCmp(FlagName, L"singleuser") == 0) {
-                    GlobalConfig.HideUIFlags |= HIDEUI_FLAG_SINGLEUSER;
+                   GlobalConfig.HideUIFlags |= HIDEUI_FLAG_SINGLEUSER;
                 } else if (StriCmp(FlagName, L"hwtest") == 0) {
-                    GlobalConfig.HideUIFlags |= HIDEUI_FLAG_HWTEST;
+                   GlobalConfig.HideUIFlags |= HIDEUI_FLAG_HWTEST;
                 } else if (StriCmp(FlagName, L"arrows") == 0) {
                    GlobalConfig.HideUIFlags |= HIDEUI_FLAG_ARROWS;
+                } else if (StriCmp(FlagName, L"hints") == 0) {
+                   GlobalConfig.HideUIFlags |= HIDEUI_FLAG_HINTS;
+                } else if (StriCmp(FlagName, L"editor") == 0) {
+                   GlobalConfig.HideUIFlags |= HIDEUI_FLAG_EDITOR;
                 } else if (StriCmp(FlagName, L"all") == 0) {
-                    GlobalConfig.HideUIFlags = HIDEUI_ALL;
+                   GlobalConfig.HideUIFlags = HIDEUI_FLAG_ALL;
                 } else {
                     Print(L" unknown hideui flag: '%s'\n", FlagName);
                 }
@@ -402,6 +412,15 @@ VOID ReadConfig(VOID)
 
         } else if (StriCmp(TokenList[0], L"also_scan_dirs") == 0) {
             HandleStrings(TokenList, TokenCount, &(GlobalConfig.AlsoScan));
+
+        } else if ((StriCmp(TokenList[0], L"don't_scan_volumes") == 0) || (StriCmp(TokenList[0], L"dont_scan_volumes") == 0)) {
+           HandleStrings(TokenList, TokenCount, &(GlobalConfig.AlsoScan));
+           // Note: Don't use HandleStrings() because it modifies slashes, which might be present in volume name
+            MyFreePool(GlobalConfig.DontScanVolumes);
+            GlobalConfig.DontScanVolumes = NULL;
+            for (i = 1; i < TokenCount; i++) {
+               MergeStrings(&GlobalConfig.DontScanVolumes, TokenList[i], L',');
+            }
 
         } else if ((StriCmp(TokenList[0], L"don't_scan_dirs") == 0) || (StriCmp(TokenList[0], L"dont_scan_dirs") == 0)) {
             HandleStrings(TokenList, TokenCount, &(GlobalConfig.DontScanDirs));
@@ -450,11 +469,21 @@ VOID ReadConfig(VOID)
            HandleString(TokenList, TokenCount, &(GlobalConfig.DefaultSelection));
 
         } else if (StriCmp(TokenList[0], L"textonly") == 0) {
-            GlobalConfig.TextOnly = TRUE;
+           if ((TokenCount >= 2) && (StriCmp(TokenList[1], L"0") == 0)) {
+              GlobalConfig.TextOnly = FALSE;
+           } else {
+              GlobalConfig.TextOnly = TRUE;
+           }
 
-        } else if ((StriCmp(TokenList[0], L"resolution") == 0) && (TokenCount == 3)) {
+        } else if (StriCmp(TokenList[0], L"textmode") == 0) {
+           HandleInt(TokenList, TokenCount, &(GlobalConfig.RequestedTextMode));
+
+        } else if ((StriCmp(TokenList[0], L"resolution") == 0) && ((TokenCount == 2) || (TokenCount == 3))) {
            GlobalConfig.RequestedScreenWidth = Atoi(TokenList[1]);
-           GlobalConfig.RequestedScreenHeight = Atoi(TokenList[2]);
+           if (TokenCount == 3)
+              GlobalConfig.RequestedScreenHeight = Atoi(TokenList[2]);
+           else
+              GlobalConfig.RequestedScreenHeight = 0;
 
         } else if (StriCmp(TokenList[0], L"use_graphics_for") == 0) {
            GlobalConfig.GraphicsFor = 0;
@@ -473,10 +502,19 @@ VOID ReadConfig(VOID)
            } // for (graphics_on tokens)
 
         } else if (StriCmp(TokenList[0], L"scan_all_linux_kernels") == 0) {
-           GlobalConfig.ScanAllLinux = TRUE;
+           if ((TokenCount >= 2) && (StriCmp(TokenList[1], L"0") == 0)) {
+              GlobalConfig.ScanAllLinux = FALSE;
+           } else {
+              GlobalConfig.ScanAllLinux = TRUE;
+           }
 
         } else if (StriCmp(TokenList[0], L"max_tags") == 0) {
            HandleInt(TokenList, TokenCount, &(GlobalConfig.MaxTags));
+
+        } else if ((StriCmp(TokenList[0], L"include") == 0) && (TokenCount == 2) && (StriCmp(FileName, CONFIG_FILE_NAME) == 0)) {
+           if (StriCmp(TokenList[1], FileName) != 0) {
+              ReadConfig(TokenList[1]);
+           }
 
         }
 
@@ -691,7 +729,6 @@ VOID ScanUserConfigured(VOID)
    CHAR16            *Title = NULL;
    UINTN             TokenCount, size;
    LOADER_ENTRY      *Entry;
-//   REFIT_MENU_SCREEN  *SubScreen;
 
    if (FileExists(SelfDir, CONFIG_FILE_NAME)) {
       Status = ReadFile(SelfDir, CONFIG_FILE_NAME, &File, &size);

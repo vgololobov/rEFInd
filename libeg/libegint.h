@@ -52,7 +52,7 @@ typedef EG_IMAGE * (*EG_DECODE_FUNC)(IN UINT8 *FileData, IN UINTN FileDataLength
 
 /* functions */
 
-BOOLEAN egSetScreenSize(IN UINTN ScreenWidth, IN UINTN ScreenHeight);
+BOOLEAN egSetScreenSize(IN OUT UINTN *ScreenWidth, IN OUT UINTN *ScreenHeight);
 
 VOID egRestrictImageArea(IN EG_IMAGE *Image,
                          IN UINTN AreaPosX, IN UINTN AreaPosY,

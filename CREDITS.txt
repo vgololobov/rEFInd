@@ -52,3 +52,6 @@ I've incorporated into the current version. Specifically:
 
 * The code for editing boot options (cursor_left(), cursor_right(), and
   line_edit() in screen.c) is taken from gummiboot.
+
+* Stefan Agner (stefan@agner.ch) turned the original ext2fs/ext3fs driver
+  into one that can read ext4fs.
