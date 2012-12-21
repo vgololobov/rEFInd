@@ -116,18 +116,37 @@ VOID InitScreen(VOID)
 
     PrepareBlankLine();
 
-    // show the banner (even when in graphics mode)
-    DrawScreenHeader(L"Initializing...");
+    // show the banner if in text mode
+    if (GlobalConfig.TextOnly)
+       DrawScreenHeader(L"Initializing...");
 }
 
 VOID SetupScreen(VOID)
 {
-    GlobalConfig.RequestedTextMode = egSetTextMode(GlobalConfig.RequestedTextMode);
+    UINTN NewWidth, NewHeight;
 
-    if ((GlobalConfig.RequestedScreenWidth > 0) &&
-        (egSetScreenSize(&GlobalConfig.RequestedScreenWidth, &GlobalConfig.RequestedScreenHeight))) {
-          UGAWidth = GlobalConfig.RequestedScreenWidth;
-          UGAHeight = GlobalConfig.RequestedScreenHeight;
+    if ((GlobalConfig.RequestedScreenWidth > 0) && (GlobalConfig.RequestedScreenHeight > 0)) {
+       UGAWidth = (UGAWidth < GlobalConfig.RequestedScreenWidth) ? UGAWidth : GlobalConfig.RequestedScreenWidth;
+       UGAHeight = (UGAHeight < GlobalConfig.RequestedScreenHeight) ? UGAHeight : GlobalConfig.RequestedScreenHeight;
+    }
+    if (egSetTextMode(GlobalConfig.RequestedTextMode)) {
+       egGetScreenSize(&NewWidth, &NewHeight);
+       if ((NewWidth > UGAWidth) || (NewHeight > UGAHeight)) {
+          UGAWidth = NewWidth;
+          UGAHeight = NewHeight;
+       }
+       if (UGAWidth > GlobalConfig.RequestedScreenWidth) {
+           // Requested text mode forces us to use a bigger graphics mode
+           // TODO: Convert single mode # to width & height to check it
+           GlobalConfig.RequestedScreenWidth = UGAWidth;
+           GlobalConfig.RequestedScreenHeight = UGAHeight;
+       } // if
+    }
+
+    if (GlobalConfig.RequestedScreenWidth > 0) {
+       if (!egSetScreenSize(&GlobalConfig.RequestedScreenWidth, &GlobalConfig.RequestedScreenHeight))
+          Print(L"Error setting screen size!\n");
+       egGetScreenSize(&UGAWidth, &UGAHeight);
     } // if user requested a particular screen resolution
 
     if (GlobalConfig.TextOnly) {
@@ -141,7 +160,7 @@ VOID SetupScreen(VOID)
         SwitchToGraphics();
         BltClearScreen(TRUE);
     }
-}
+} // VOID SetupScreen()
 
 VOID SwitchToText(IN BOOLEAN CursorEnabled)
 {
@@ -197,12 +216,10 @@ VOID BeginExternalScreen(IN BOOLEAN UseGraphicsMode, IN CHAR16 *Title)
         SwitchToGraphics();
         BltClearScreen(FALSE);
     } else {
-       egClearScreen(&DarkBackgroundPixel);
-       DrawScreenHeader(Title);
-    } // if/else
-
-    if (!UseGraphicsMode)
+        egClearScreen(&DarkBackgroundPixel);
+        DrawScreenHeader(Title);
         SwitchToText(TRUE);
+    }
 
     // reset error flag
     haveError = FALSE;

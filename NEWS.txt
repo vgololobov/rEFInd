@@ -1,6 +1,8 @@
 0.6.1 (12/??/2012):
 -------------------
 
+- Fixed some screen resolution-setting bugs.
+
 - Added the "words" that make up a filesystem's label (delimited by spaces,
   dashes, or underscores) to the list of bases used to search for OS icons.
   For instance, if the filesystem's label is "Arch", rEFInd searches for
