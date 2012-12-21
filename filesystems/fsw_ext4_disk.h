@@ -384,6 +384,7 @@ struct ext4_super_block {
 /*
  * Feature set definitions (only the once we need for read support)
  */
+#define EXT4_FEATURE_RO_COMPAT_SPARSE_SUPER     0x0001
 
 #define EXT4_FEATURE_INCOMPAT_COMPRESSION	0x0001
 #define EXT4_FEATURE_INCOMPAT_FILETYPE		0x0002
