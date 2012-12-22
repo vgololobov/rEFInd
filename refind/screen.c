@@ -100,6 +100,7 @@ VOID InitScreen(VOID)
         AllowGraphicsMode = TRUE;
     } else {
         AllowGraphicsMode = FALSE;
+        egSetTextMode(GlobalConfig.RequestedTextMode);
         egSetGraphicsModeEnabled(FALSE);   // just to be sure we are in text mode
     }
     GraphicsScreenDirty = TRUE;
@@ -125,27 +126,34 @@ VOID SetupScreen(VOID)
 {
     UINTN NewWidth, NewHeight;
 
+    // Convert mode number to horizontal & vertical resolution values
+    if ((GlobalConfig.RequestedScreenWidth > 0) && (GlobalConfig.RequestedScreenHeight == 0))
+       egGetResFromMode(&(GlobalConfig.RequestedScreenWidth), &(GlobalConfig.RequestedScreenHeight));
+
+    // Set the believed-to-be current resolution to the LOWER of the current
+    // believed-to-be resolution and the requested resolution. This is done to
+    // enable setting a lower-than-default resolution.
     if ((GlobalConfig.RequestedScreenWidth > 0) && (GlobalConfig.RequestedScreenHeight > 0)) {
        UGAWidth = (UGAWidth < GlobalConfig.RequestedScreenWidth) ? UGAWidth : GlobalConfig.RequestedScreenWidth;
        UGAHeight = (UGAHeight < GlobalConfig.RequestedScreenHeight) ? UGAHeight : GlobalConfig.RequestedScreenHeight;
     }
+
+    // Set text mode. If this requires increasing the size of the graphics mode, do so.
     if (egSetTextMode(GlobalConfig.RequestedTextMode)) {
        egGetScreenSize(&NewWidth, &NewHeight);
        if ((NewWidth > UGAWidth) || (NewHeight > UGAHeight)) {
           UGAWidth = NewWidth;
           UGAHeight = NewHeight;
        }
-       if (UGAWidth > GlobalConfig.RequestedScreenWidth) {
+       if ((UGAWidth > GlobalConfig.RequestedScreenWidth) || (UGAHeight > GlobalConfig.RequestedScreenHeight)) {
            // Requested text mode forces us to use a bigger graphics mode
-           // TODO: Convert single mode # to width & height to check it
            GlobalConfig.RequestedScreenWidth = UGAWidth;
            GlobalConfig.RequestedScreenHeight = UGAHeight;
        } // if
     }
 
     if (GlobalConfig.RequestedScreenWidth > 0) {
-       if (!egSetScreenSize(&GlobalConfig.RequestedScreenWidth, &GlobalConfig.RequestedScreenHeight))
-          Print(L"Error setting screen size!\n");
+       egSetScreenSize(&GlobalConfig.RequestedScreenWidth, &GlobalConfig.RequestedScreenHeight);
        egGetScreenSize(&UGAWidth, &UGAHeight);
     } // if user requested a particular screen resolution
 
@@ -164,7 +172,7 @@ VOID SetupScreen(VOID)
 
 VOID SwitchToText(IN BOOLEAN CursorEnabled)
 {
-    egSetGraphicsModeEnabled(FALSE);
+   egSetGraphicsModeEnabled(FALSE);
     refit_call2_wrapper(ST->ConOut->EnableCursor, ST->ConOut, CursorEnabled);
     // get size of text console
     if (refit_call4_wrapper(ST->ConOut->QueryMode, ST->ConOut, ST->ConOut->Mode->Mode, &ConWidth, &ConHeight) != EFI_SUCCESS) {

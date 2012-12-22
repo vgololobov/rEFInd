@@ -353,8 +353,6 @@ VOID ReadConfig(CHAR16 *FileName)
        GlobalConfig.DontScanDirs = StrDuplicate(SelfDirPath);
        MyFreePool(GlobalConfig.DontScanFiles);
        GlobalConfig.DontScanFiles = StrDuplicate(DONT_SCAN_FILES);
-//        egGetScreenSize(&GlobalConfig.RequestedScreenWidth, &GlobalConfig.RequestedScreenHeight);
-//       GlobalConfig.RequestedTextMode = ST->ConOut->Mode->Mode;
     }
 
     if (!FileExists(SelfDir, FileName)) {

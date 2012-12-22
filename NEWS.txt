@@ -1,6 +1,16 @@
 0.6.1 (12/??/2012):
 -------------------
 
+- Thanks to Stefan Agner, the ext4fs driver now supports the "meta_bg"
+  filesystem feature, which distributes metadata throughout the disk. This
+  feature isn't used by default, but can be set at filesystem creation time
+  by passing the "-O meta_bg,^resize_inode" option to mke2fs. (Using
+  "^resize_inode" is necessary because meta_bg is incompatible with
+  resize_inode, which IS used by default.) This feature can be used on
+  ext3fs and ext2fs as well as on ext4fs, so the ext4fs driver can now
+  handle some ext3fs and ext2fs partitions that the ext2fs driver can't
+  handle.
+
 - Fixed some screen resolution-setting bugs.
 
 - Added the "words" that make up a filesystem's label (delimited by spaces,

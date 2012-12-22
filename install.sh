@@ -29,6 +29,7 @@
 #
 # Revision history:
 #
+# 0.6.1   -- Added --root option; minor bug fixes
 # 0.6.0   -- Changed --drivers to --alldrivers and added --nodrivers option;
 #            changed default driver installation behavior in Linux to install
 #            the driver needed to read /boot (if available)
@@ -47,10 +48,9 @@
 # Note: install.sh version numbers match those of the rEFInd package
 # with which they first appeared.
 
+RootDir="/"
 TargetDir=/EFI/refind
-EtcKeysDir=/etc/refind.d/keys
 LocalKeysBase="refind_local"
-RLConfFile="/boot/refind_linux.conf"
 ShimSource="none"
 TargetX64="refind_x64.efi"
 TargetIA32="refind_ia32.efi"
@@ -79,6 +79,9 @@ GetParams() {
               TargetIA32="bootia32.efi"
               shift
               ;;
+         --root) RootDir=$2
+              shift
+              ;;
          --localkeys) LocalKeys=1
               ;;
          --shim) ShimSource=$2
@@ -88,17 +91,29 @@ GetParams() {
               ;;
          --nodrivers) InstallDrivers="none"
               ;;
-         * ) echo "Usage: $0 [--esp | --usedefault {device-file}] [--nodrivers | --alldrivers] "
-             echo "                [--shim {shim-filename}] [--localkeys]"
+         * ) echo "Usage: $0 [--esp | --usedefault {device-file} | --root {directory} ]"
+             echo "                  [--nodrivers | --alldrivers] [--shim {shim-filename}]"
+             echo "                  [--localkeys]"
              exit 1
       esac
       shift
    done
+
    if [[ $InstallToEspOnMac == 1 && $TargetDir == '/EFI/BOOT' ]] ; then
       echo "You may use --esp OR --usedefault, but not both! Aborting!"
       exit 1
    fi
-#   exit 1
+   if [[ $RootDir != '/' && $TargetDir == '/EFI/BOOT' ]] ; then
+      echo "You may use --usedefault OR --root, but not both! Aborting!"
+      exit 1
+   fi
+   if [[ $RootDir != '/' && $InstallToEspOnMac == 1 ]] ; then
+      echo "You may use --root OR --esp, but not both! Aborting!"
+      exit 1
+   fi
+
+   RLConfFile="$RootDir/boot/refind_linux.conf"
+   EtcKeysDir="$RootDir/etc/refind.d/keys"
 } # GetParams()
 
 # Abort if the rEFInd files can't be found.
@@ -343,7 +358,7 @@ InstallOnOSX() {
    elif [[ $InstallToEspOnMac == "1" ]] ; then
       MountOSXESP
    else
-      InstallDir="/"
+      InstallDir="$RootDir/"
    fi
    echo "Installing rEFInd to the partition mounted at '$InstallDir'"
    Platform=`ioreg -l -p IODeviceTree | grep firmware-abi | cut -d "\"" -f 4`
@@ -385,15 +400,21 @@ InstallOnOSX() {
 # appropriate options haven't been set, warn the user and offer to abort.
 # If we're NOT in Secure Boot mode but the user HAS specified the --shim
 # or --localkeys option, warn the user and offer to abort.
+#
+# FIXME: Although I checked the presence (and lack thereof) of the
+# /sys/firmware/efi/vars/SecureBoot* files on my Secure Boot test system
+# before releasing this script, I've since found that they are at least
+# sometimes present when Secure Boot is absent. This means that the first
+# test can produce false alarms. A better test is highly desirable.
 CheckSecureBoot() {
    VarFile=`ls -d /sys/firmware/efi/vars/SecureBoot* 2> /dev/null`
    if [[ -n $VarFile  && $TargetDir != '/EFI/BOOT' && $ShimSource == "none" ]] ; then
       echo ""
-      echo "CAUTION: The computer seems to have been booted with Secure Boot active, but"
-      echo "you haven't specified a valid shim.efi file source. The resulting installation"
-      echo "will not boot unless you disable Secure Boot. You may continue, but you should"
-      echo "consider using --shim to specify a working shim.efi file. You can read more"
-      echo "about this topic at http://www.rodsbooks.com/refind/secureboot.html."
+      echo "CAUTION: Your computer appears to support Secure Boot, but you haven't"
+      echo "specified a valid shim.efi file source. If you've disabled Secure Boot and"
+      echo "intend to leave it disabled, this is fine; but if Secure Boot is active, the"
+      echo "resulting installation won't boot. You can read more about this topic at"
+      echo "http://www.rodsbooks.com/refind/secureboot.html."
       echo ""
       echo -n "Do you want to proceed with installation (Y/N)? "
       read ContYN
@@ -525,16 +546,22 @@ ReSignBinaries() {
    DeleteRefindDir=1
 }
 
-# Identifies the ESP's location (/boot or /boot/efi); aborts if
-# the ESP isn't mounted at either location.
+# Identifies the ESP's location (/boot or /boot/efi, or these locations under
+# the directory specified by --root); aborts if the ESP isn't mounted at
+# either location.
 # Sets InstallDir to the ESP mount point.
 FindLinuxESP() {
-   EspLine=`df /boot/efi | grep boot`
+   EspLine=`df $RootDir/boot/efi 2> /dev/null | grep boot/efi`
+   if [[ ! -n $EspLine ]] ; then
+      EspLine=`df $RootDir/boot | grep boot`
+   fi
    InstallDir=`echo $EspLine | cut -d " " -f 6`
-   EspFilesystem=`grep $InstallDir /etc/mtab | cut -d " " -f 3`
+   if [[ -n $InstallDir ]] ; then
+      EspFilesystem=`grep $InstallDir /etc/mtab | cut -d " " -f 3`
+   fi
    if [[ $EspFilesystem != 'vfat' ]] ; then
-      echo "/boot/efi doesn't seem to be on a VFAT filesystem. The ESP must be mounted at"
-      echo "/boot or /boot/efi and it must be VFAT! Aborting!"
+      echo "$RootDir/boot/efi doesn't seem to be on a VFAT filesystem. The ESP must be"
+      echo "mounted at $RootDir/boot or $RootDir/boot/efi and it must be VFAT! Aborting!"
       exit 1
    fi
    echo "ESP was found at $InstallDir using $EspFilesystem"
@@ -598,7 +625,7 @@ GenerateRefindLinuxConf() {
          # We want the default options used by the distribution, stored here....
          source /etc/default/grub
       fi
-      RootFS=`df / | grep dev | cut -f 1 -d " "`
+      RootFS=`df $RootDir | grep dev | cut -f 1 -d " "`
       StartOfDevname=`echo $RootFS | cut -b 1-7`
       if [[ $StartOfDevname == "/dev/sd" || $StartOfDevName == "/dev/hd" ]] ; then
          # Identify root filesystem by UUID rather than by device node, if possible
