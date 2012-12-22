@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 3/14/2012; last Web page update:
-12/16/2012, referencing rEFInd 0.6.0</p>
+12/21/2012, referencing rEFInd 0.6.1</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -108,13 +108,13 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <ul>
 
-<li>You can name an icon file after your boot loader, but with an extension of <tt>.icns</tt>. For instance, if you're using <tt class="variable">loader</tt><tt>.efi</tt>, you would name the icon file <tt class="variable">loader</tt><tt>.icns</tt>. (If you use the <tt>scan_all_linux_kernels</tt> option, you can give an icon for a Linux kernel without a <tt>.efi</tt> extension a name based on the kernel name but with a <tt>.icns</tt> extension&mdash;for instance, <tt>bzImage-3.3.2.icns</tt> will serve as the icon for the <tt>bzImage-3.3.2</tt> kernel.) These icon files should be 128x128 images in <a href="http://en.wikipedia.org/wiki/Apple_Icon_Image_format">Apple's ICNS format.</a> You can create such files easily in OS X or convert PNG files to ICNS format with <a href="http://icns.sourceforge.net/">libicns.</a></li>
+<li>You can name an icon file after your boot loader, but with an extension of <tt>.icns</tt>. For instance, if you're using <tt class="variable">loader</tt><tt>.efi</tt>, you would name the icon file <tt class="variable">loader</tt><tt>.icns</tt>. (If you use the <tt>scan_all_linux_kernels</tt> option, you can give an icon for a Linux kernel without a <tt>.efi</tt> extension a name based on the kernel name but with a <tt>.icns</tt> extension&mdash;for instance, <tt>bzImage-3.6.9.icns</tt> will serve as the icon for the <tt>bzImage-3.6.9</tt> kernel.) These icon files should be 128x128 images in <a href="http://en.wikipedia.org/wiki/Apple_Icon_Image_format">Apple's ICNS format.</a> You can create such files easily in OS X or convert PNG files to ICNS format with <a href="http://icns.sourceforge.net/">libicns.</a></li>
+
+<li>If you're booting OS X from its standard boot loader, or if you place a boot loader file for any OS in the root directory of a partition, you can create a file called <tt>.VolumeIcon.icns</tt> that holds an icon file. OS X uses this file for its volume icons, so rEFInd picks up these icons automatically, provided they include 128x128 bitmaps.</li>
 
 <li>You can place a boot loader in a directory with a name that matches one of rEFInd's standard icons, which take names of the form <tt>os_<tt class="variable">name</tt>.icns</tt>. To use this icon, you would place the boot loader in the directory called <tt class="variable">name</tt>.</li>
 
 <li>You can give the filesystem from which the boot loader is loaded a name that matches the OS name component of the icon filename. For instance, if you call your boot filesystem <tt>CentOS</tt>, it matches the <tt>os_centos.icns</tt> icon. This match is performed on a word-by-word basis within the name, with "words" being delimited by spaces, dashes (<tt>-</tt>), and underscores (<tt>_</tt>). Thus, a volume called <tt>Debian-boot</tt> will match <tt>os_debian.icns</tt> or <tt>os_boot.icns</tt>.</li>
-
-<li>If you're booting OS X from its standard boot loader, or if you place a boot loader file in the root directory of a partition, you can create a file called <tt>.VolumeIcon.icns</tt> that holds an icon file. OS X uses this file for its volume icons, so rEFInd picks up these icons automatically, provided they include 128x128 bitmaps.</li>
 
 <li>Certain boot loaders have hard-coded icons associated with them. For instance, filenames beginning with <tt>vmlinuz</tt> or <tt>bzImage</tt> acquire Linux "Tux" icons and the <tt>bootmgfw.efi</tt> loader acquires a Windows icon. For the most part, these are the associations you want to overcome with the preceding rules, but sometimes renaming a boot loader to a more conventional name is the better approach.</li>
 

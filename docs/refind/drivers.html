@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 4/19/2012; last Web page update:
-12/16/2012, referencing rEFInd 0.6.0</p>
+12/21/2012, referencing rEFInd 0.6.1</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -136,17 +136,19 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
     used in the same way as the ReiserFS driver. Although it's called an
     "ext2fs" driver, it also works with ext3fs.</li>
 
-<li><b>Ext4fs</b>&mdash;Stefan Agner modified the rEFIt/rEFInd ext2fs
-    driver so that it could handle ext4fs. I'm including this as a separate
-    driver from the ext2fs driver, although the ext4fs version can handle
-    ext2fs and ext3fs, too. (I may eventually retire the original ext2fs
-    driver, but I want to be conservative about this in case there's an
-    undiscovered problem with the new driver.) This driver has some
-    limitations. Most notably, for various reasons it maxes out at 16TiB
-    and won't mount any ext4 filesystem that's larger than this. It also
-    doesn't support the <tt>meta_bg</tt> option flag; if your filesystem
-    uses this flag, this driver refuses to read it. You can learn about
-    your ext2/3/4 filesystem features by typing <tt
+<li><b>Ext4fs</b>&mdash;Stefan Agner <a
+    href="https://github.com/falstaff84/rEFInd">modified the rEFIt/rEFInd
+    ext2fs driver</a> so that it could handle ext4fs. I'm including this as
+    a separate driver from the ext2fs driver, although the ext4fs version
+    can handle ext2fs and ext3fs, too. (I may eventually retire the
+    original ext2fs driver, but I want to be conservative about this in
+    case there's an undiscovered problem with the new driver.) This driver
+    has some limitations. Most notably, for various reasons it maxes out at
+    16TiB and won't mount any ext4 filesystem that's larger than this. As
+    of version 0.6.1, this driver supports the <tt>meta_bg</tt> feature,
+    which can also be used on ext2fs and ext3fs. Thus, it can handle some
+    ext2fs and ext3fs partitions that the ext2fs driver can't handle. You
+    can learn about your ext2/3/4 filesystem features by typing <tt
     class="userinput">dumpe2fs <i>/dev/sda2</i> | grep features</tt>,
     changing <tt class="userinput"><i>/dev/sda2</i></tt> to your
     filesystem's device.</li>
@@ -177,7 +179,7 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p class="sidebar"><b>Note:</b> rEFInd's <tt>install.sh</tt> script does not install drivers by default on OS X, but on Linux, it installs the driver required to read the <tt>/boot</tt> directory, if one is available. The script installs all the available drivers if you pass it the <tt>--drivers</tt> option. See the <a href="installing.html">Installing rEFInd</a> page for details.</p>
 
-<p>If you want to use one or more of these drivers, you can install them from the rEFInd binary package from the <tt>refind/drivers_<tt class="variable">arch</tt></tt> directory, where <tt class="variable">arch</tt> is a CPU architecture code&mdash;<tt>x64</tt> or <tt>ia32</tt>. The files are named after the filesystems they handle, such as <tt>ext2_x64.efi</tt> for the 64-bit ext2fs driver. You should copy the files for the filesystems you want to use to the <tt>drivers</tt> or <tt>drivers_<tt class="variable">arch</tt></tt> subdirectory of the main rEFInd installation directory. (You may need to create this subdirectory.) Be careful to install drivers only for your own architecture. Attempting to load drivers for the wrong CPU type will cause a small delay at best, or may cause the computer to crash at worst. I've placed rEFInd's drivers in directories that are named to minimize this risk, but you should exercise care when copying driver files.</p>
+<p>If you want to use one or more of these drivers, you can install them from the rEFInd binary package from the <tt>refind/drivers_<tt class="variable">arch</tt></tt> directory, where <tt class="variable">arch</tt> is a CPU architecture code&mdash;<tt>x64</tt> or <tt>ia32</tt>. The files are named after the filesystems they handle, such as <tt>ext4_x64.efi</tt> for the 64-bit ext4fs driver. You should copy the files for the filesystems you want to use to the <tt>drivers</tt> or <tt>drivers_<tt class="variable">arch</tt></tt> subdirectory of the main rEFInd installation directory. (You may need to create this subdirectory.) Be careful to install drivers only for your own architecture. Attempting to load drivers for the wrong CPU type will cause a small delay at best, or may cause the computer to crash at worst. I've placed rEFInd's drivers in directories that are named to minimize this risk, but you should exercise care when copying driver files.</p>
 
 <p class="sidebar"><b>Warning:</b> <i>Do not</i> place EFI program files in your driver directories! Unfortunately, EFI uses the same <tt>.efi</tt> filename extension to identify both EFI program files and EFI drivers. Therefore, rEFInd can't distinguish between the two prior to loading them, and if you place program files in a drivers directory, rEFInd will run the EFI program file when it does its driver scan.</p>
 

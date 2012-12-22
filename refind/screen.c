@@ -122,6 +122,7 @@ VOID InitScreen(VOID)
        DrawScreenHeader(L"Initializing...");
 }
 
+// Set the screen resolution and mode (text vs. graphics).
 VOID SetupScreen(VOID)
 {
     UINTN NewWidth, NewHeight;
@@ -172,7 +173,7 @@ VOID SetupScreen(VOID)
 
 VOID SwitchToText(IN BOOLEAN CursorEnabled)
 {
-   egSetGraphicsModeEnabled(FALSE);
+    egSetGraphicsModeEnabled(FALSE);
     refit_call2_wrapper(ST->ConOut->EnableCursor, ST->ConOut, CursorEnabled);
     // get size of text console
     if (refit_call4_wrapper(ST->ConOut->QueryMode, ST->ConOut, ST->ConOut->Mode->Mode, &ConWidth, &ConHeight) != EFI_SUCCESS) {

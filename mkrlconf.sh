@@ -10,7 +10,7 @@
 
 # Usage:
 #
-# ./mkrlconf.sh [--overwrite]
+# ./mkrlconf.sh [--force]
 #
 # Options:
 #

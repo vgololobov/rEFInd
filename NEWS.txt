@@ -1,5 +1,9 @@
-0.6.1 (12/??/2012):
+0.6.1 (12/21/2012):
 -------------------
+
+- Added "--root" option to install.sh, to enable installation of rEFInd
+  to something other than the currently-running OS. This is intended for
+  use on emergency discs.
 
 - Thanks to Stefan Agner, the ext4fs driver now supports the "meta_bg"
   filesystem feature, which distributes metadata throughout the disk. This

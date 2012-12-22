@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 3/14/2012; last Web page update:
-12/16/2012, referencing rEFInd 0.6.0</p>
+12/21/2012, referencing rEFInd 0.6.1</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -103,7 +103,7 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <h3>Quick <tt>install.sh</tt> Instructions</h3>
 
-<p>Under Linux, the <tt>install.sh</tt> script installs rEFInd to your disk's ESP. Under Mac OS X, the script installs rEFInd to your current OS X boot partition by default; but you can install to your ESP instead by passing the script the <tt>--esp</tt> option.</p>
+<p>Under Linux, the <tt>install.sh</tt> script installs rEFInd to your disk's ESP. Under Mac OS X, the script installs rEFInd to your current OS X boot partition by default; but you can install to your ESP instead by passing the script the <tt>--esp</tt> option. Under either OS, you can install to something other than the currently-running OS by using the <tt>--root <tt class="variable">/mountpoint</tt></tt> option. (See <a href="#table1">Table 1</a> for details.)</p>
 
 <p>Before running this script under Linux, you should ensure that your ESP is mounted at <tt>/boot</tt> or <tt>/boot/efi</tt>, as described in more detail in the <a href="#linux">Installing rEFInd Manually Using Linux</a> section. (If you installed Linux in EFI mode, chances are your ESP is properly mounted.) This precaution isn't necessary under OS X.</p>
 
@@ -113,6 +113,7 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 # <tt class="userinput">./install.sh</tt>
 Installing rEFInd on Linux....
 ESP was found at /boot/efi using vfat
+Installing driver for ext4 (ext4_x64.efi)
 Copied rEFInd binary files
 
 Copying sample configuration file as refind.conf; edit this file to configure
@@ -225,11 +226,10 @@ Installation has completed successfully.</pre>
 
 <pre class="listing">
 install.sh [--esp | --usedefault <tt class="variable">device-file</tt> | --root <tt class="variable">mount-point</tt> ] \
-           [--nodrivers | --alldrivers] [--shim <tt class="variable">shim-filename</tt>] \
-           [--localkeys]
+           [--nodrivers | --alldrivers] [--shim <tt class="variable">shim-filename</tt>] [--localkeys]
 </pre>
 
-<p>The details of the options are summarized in <a href="#table1">Table 1.</a> Using some of these options in unusual conditions can generate warnings and prompts to confirm your actions. In particular, using <tt>--shim</tt> or <tt>--localkeys</tt> when you're <i>not</i> booted in Secure Boot mode, or failing to use <tt>--shim</tt> when you <i>are</i> booted in Secure Boot mode, will generate a query and a request to confirm your installation. Consult the <a href="secureboot.html">Managing Secure Boot</a> page for more on this topic.</p>
+<p>The details of the options are summarized in <a href="#table1">Table 1.</a> Broadly speaking, they come in three classes: installation location options (<tt>--esp</tt>, <tt>--usedefault</tt>, and <tt>--root</tt>), driver options (<tt>--nodrivers</tt> and <tt>--alldrivers</tt>), and Secure Boot options (<tt>--shim</tt> and <tt>--localkeys</tt>). Using some of these options in unusual conditions can generate warnings and prompts to confirm your actions. In particular, using <tt>--shim</tt> or <tt>--localkeys</tt> when you're <i>not</i> booted in Secure Boot mode, or failing to use <tt>--shim</tt> when you <i>are</i> booted in Secure Boot mode, will generate a query and a request to confirm your installation. Consult the <a href="secureboot.html">Managing Secure Boot</a> page for more on this topic.</p>
 
 <table border="1" cellpadding="1" cellspacing="2" summary="Table 1: Options to <tt>install.sh</tt>"><a name="table1"><caption><b>Table 1: Options to <tt>install.sh</tt></b></caption></a>
 <tr>
@@ -238,7 +238,7 @@ install.sh [--esp | --usedefault <tt class="variable">device-file</tt> | --root 
 </tr>
 <tr>
    <td><tt>--esp</tt></td>
-   <td>This option tells <tt>install.sh</tt> to install rEFInd to the ESP of your computer. This option is only useful on OS X; on Linux, installing to the ESP is the default, so <tt>--esp</tt> is implicit on Linux. Be aware that some users have reported sluggish boots when installing rEFInd to the ESP on Macs. Installing rEFInd anywhere but the ESP makes little sense on UEFI-based PCs, except for the partial exception of removable boot media, which you can prepare with <tt>--usedefault</tt>.</td>
+   <td>This option tells <tt>install.sh</tt> to install rEFInd to the ESP of your computer. This option is only useful on OS X; on Linux, installing to the ESP is a practical necessity, so <tt>--esp</tt> is implicit on Linux. Be aware that some users have reported sluggish boots when installing rEFInd to the ESP on Macs. Installing rEFInd anywhere but the ESP makes little sense on UEFI-based PCs, except for the partial exception of removable boot media, which you can prepare with <tt>--usedefault</tt>.</td>
 </tr>
 <tr>
    <td><tt>--usedefault <tt class="variable">device-file</tt></tt></td>
@@ -246,11 +246,11 @@ install.sh [--esp | --usedefault <tt class="variable">device-file</tt> | --root 
 </tr>
 <tr>
    <td><tt>--root <tt class="variable">/mount-point</tt></tt></td>
-   <td>This option is intended to help install rEFInd from a "live CD" or other emergency system. To use it, you should mount your regular Linux installation at <tt class="variable">/mount-point</tt>, including your <tt>/boot</tt> directory (if it's separate) at <tt class="variable">/mount-point</tt><tt>/boot</tt> and your ESP at that location or at <tt class="variable">/mount-point</tt><tt>/boot/efi</tt>. The <tt>install.sh</tt> script then installs rEFInd to the appropriate location&mdash;<tt class="variable">/mount-point</tt>/boot/EFI/refind</tt> or <tt class="variable">/mount-point</tt>/boot/efi/EFI/refind</tt>, depending on where you've mounted your ESP. The script also adds an entry to your NVRAM for rEFInd at this location. You cannot use this option with either <tt>--esp</tt> or <tt>--usedefault</tt>, except for implicit use of <tt>--esp</tt> on Linux.</td>
+   <td>This option is intended to help install rEFInd from a "live CD" or other emergency system. To use it, you should mount your regular installation at <tt class="variable">/mount-point</tt>, including your <tt>/boot</tt> directory (if it's separate) at <tt class="variable">/mount-point</tt><tt>/boot</tt> and (on Linux) your ESP at that location or at <tt class="variable">/mount-point</tt><tt>/boot/efi</tt>. The <tt>install.sh</tt> script then installs rEFInd to the appropriate location&mdash;on Linux, <tt class="variable">/mount-point</tt><tt>/boot/EFI/refind</tt> or <tt class="variable">/mount-point</tt><tt>/boot/efi/EFI/refind</tt>, depending on where you've mounted your ESP; or on OS X, to <tt class="variable">/mount-point</tt><tt>/EFI/refind</tt>. The script also adds an entry to your NVRAM for rEFInd at this location. You cannot use this option with either <tt>--esp</tt> or <tt>--usedefault</tt>, except for implicit use of <tt>--esp</tt> on Linux. Note that this option is <i>not</i> needed when doing a dual-boot Linux/OS X installation; just install normally in OS X.</td>
 </tr>
 <tr>
    <td><tt>--nodrivers</tt></td>
-   <td>Ordinarily <tt>install.sh</tt> attempts to install the driver required to read <tt>/boot</tt> on Linux. This attempt works only if you're using ext2fs, ext3fs, or ReiserFS on the relevant partition. If you want to forego this driver installation, pass the <tt>--nodrivers</tt> option. This option is the default on OS X or when you use <tt>--usedefault</tt>.</td>
+   <td>Ordinarily <tt>install.sh</tt> attempts to install the driver required to read <tt>/boot</tt> on Linux. This attempt works only if you're using ext2fs, ext3fs, ext4fs, or ReiserFS on the relevant partition. If you want to forego this driver installation, pass the <tt>--nodrivers</tt> option. This option is the default on OS X or when you use <tt>--usedefault</tt>.</td>
 </tr>
 <tr>
    <td><tt>--alldrivers</tt></td>
@@ -258,7 +258,7 @@ install.sh [--esp | --usedefault <tt class="variable">device-file</tt> | --root 
 </tr>
 <tr>
    <td><tt>--shim <tt class="variable">shim-filename</tt></tt></td>
-   <td>If you pass this option to <tt>install.sh</tt>, the script will copy the specified shim program file to the target directory, copy the <tt>MokManager.efi</tt> file from the shim program file's directory to the target directory, copy the 64-bit version of rEFInd as <tt>grubx64.efi</tt>, and register shim with the firmware. (If you also specify <tt>--usedefault</tt>, the NVRAM registration is skipped.) The intent is to simplify rEFInd installation on a computer that uses Secure Boot; when so set up, rEFInd will boot in Secure Boot mode, with one caveat: The first time you boot, MokManager will launch, and you must use it to locate and install a public key. This key file will be located in the rEFInd directory under the name <tt>refind.cer</tt>. Note that I'm not providing a shim binary myself, but you can download one from <a href="http://www.codon.org.uk/~mjg59/shim-signed/">here.</a> In the not-too-distant future, most distributions will provide their own shim programs, so you'll be able to point to them&mdash;for instance, in <tt>/boot/efi/EFI/redhat/shim.efi</tt>.</td>
+   <td>If you pass this option to <tt>install.sh</tt>, the script will copy the specified shim program file to the target directory, copy the <tt>MokManager.efi</tt> file from the shim program file's directory to the target directory, copy the 64-bit version of rEFInd as <tt>grubx64.efi</tt>, and register shim with the firmware. (If you also specify <tt>--usedefault</tt>, the NVRAM registration is skipped.) The intent is to simplify rEFInd installation on a computer that uses Secure Boot; when so set up, rEFInd will boot in Secure Boot mode, with one caveat: The first time you boot, MokManager will launch, and you must use it to locate and install a public key. This key file will be located in the rEFInd directory's <tt>keys</tt> subdirectory under the name <tt>refind.cer</tt>. Note that I'm not providing a shim binary myself, but you can download one from <a href="http://www.codon.org.uk/~mjg59/shim-signed/">here.</a> In the not-too-distant future, most distributions will provide their own shim programs, so you'll be able to point to them&mdash;for instance, in <tt>/boot/efi/EFI/fedora/shim.efi</tt>.</td>
 </tr>
 <tr>
    <td><tt>--localkeys</tt></td>

@@ -206,6 +206,7 @@ CopyDrivers() {
               ;;
          hfsplus) DriverType="hfs"
               ;;
+         *) BootFS=""
       esac
       if [[ -n $BootFS ]] ; then
          echo "Installing driver for $BootFS (${DriverType}_$1.efi)"
@@ -621,9 +622,9 @@ AddBootEntry() {
 # Create a minimal/sample refind_linux.conf file in /boot.
 GenerateRefindLinuxConf() {
    if [[ ! -f $RLConfFile ]] ; then
-      if [[ -f /etc/default/grub ]] ; then
+      if [[ -f "$RootDir/etc/default/grub" ]] ; then
          # We want the default options used by the distribution, stored here....
-         source /etc/default/grub
+         source "$RootDir/etc/default/grub"
       fi
       RootFS=`df $RootDir | grep dev | cut -f 1 -d " "`
       StartOfDevname=`echo $RootFS | cut -b 1-7`
