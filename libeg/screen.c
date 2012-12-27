@@ -200,7 +200,7 @@ BOOLEAN egSetScreenSize(IN OUT UINTN *ScreenWidth, IN OUT UINTN *ScreenHeight) {
          } while (++ModeNum < GraphicsOutput->Mode->MaxMode);
          PauseForKey();
          SwitchToGraphics();
-      } // if()
+      } // if GOP mode (UEFI)
 
    } else if (UgaDraw != NULL) { // UGA mode (EFI 1.x)
       // Try to use current color depth & refresh rate for new mode. Maybe not the best choice
@@ -217,7 +217,7 @@ BOOLEAN egSetScreenSize(IN OUT UINTN *ScreenWidth, IN OUT UINTN *ScreenHeight) {
          // This is just a placeholder until something better can be done....
          Print(L"Error setting graphics mode %d x %d; unsupported mode!\n");
       } // if/else
-   } // if/else if
+   } // if/else if UGA mode (EFI 1.x)
    return (ModeSet);
 } // BOOLEAN egSetScreenSize()
 
@@ -230,7 +230,7 @@ BOOLEAN egSetTextMode(UINT32 RequestedMode) {
    EFI_STATUS    Status;
    BOOLEAN       ChangedIt = FALSE;
 
-   if (RequestedMode != ST->ConOut->Mode->Mode) {
+   if ((RequestedMode != ST->ConOut->Mode->Mode) && (RequestedMode != DONT_CHANGE_TEXT_MODE)) {
 //      SwitchToGraphics();
       Status = refit_call2_wrapper(ST->ConOut->SetMode, ST->ConOut, RequestedMode);
       if (Status == EFI_SUCCESS) {

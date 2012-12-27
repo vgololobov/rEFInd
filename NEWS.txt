@@ -1,3 +1,9 @@
+0.6.2 (??/??/201?):
+-------------------
+
+- Altered default for "textmode" option to not adjust the text mode
+  at all. (Prior versions set it to mode 0 by default.)
+
 0.6.1 (12/21/2012):
 -------------------
 

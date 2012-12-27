@@ -50,6 +50,8 @@
 // screen module
 //
 
+#define DONT_CHANGE_TEXT_MODE 1024 /* textmode # that's a code to not change the text mode */
+
 #define ATTR_BASIC (EFI_LIGHTGRAY | EFI_BACKGROUND_BLACK)
 #define ATTR_ERROR (EFI_YELLOW | EFI_BACKGROUND_BLACK)
 #define ATTR_BANNER (EFI_WHITE | EFI_BACKGROUND_BLUE)

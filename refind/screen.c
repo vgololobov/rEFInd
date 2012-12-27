@@ -154,7 +154,7 @@ VOID SetupScreen(VOID)
     }
 
     if (GlobalConfig.RequestedScreenWidth > 0) {
-       egSetScreenSize(&GlobalConfig.RequestedScreenWidth, &GlobalConfig.RequestedScreenHeight);
+       egSetScreenSize(&(GlobalConfig.RequestedScreenWidth), &(GlobalConfig.RequestedScreenHeight));
        egGetScreenSize(&UGAWidth, &UGAHeight);
     } // if user requested a particular screen resolution
 
