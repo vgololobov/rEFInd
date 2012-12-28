@@ -1994,7 +1994,6 @@ efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
     MokProtocol = SecureBootSetup();
     ScanVolumes();
     LoadDrivers();
-    PauseForKey();
     ScanForBootloaders();
     ScanForTools();
 
