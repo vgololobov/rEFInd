@@ -18,15 +18,12 @@ typedef struct _SHIM_LOCK
 typedef struct _SHIM_LOCK
 {
    EFI_STATUS (*shim_verify) (VOID *buffer, UINT32 size);
-   EFI_STATUS (*generate_hash) (char *data, int datasize,
-                                GNUEFI_PE_COFF_LOADER_IMAGE_CONTEXT *context, UINT8 *sha256hash,
-                                UINT8 *sha1hash);
-   EFI_STATUS (*read_header) (void *data, unsigned int datasize,
-                              GNUEFI_PE_COFF_LOADER_IMAGE_CONTEXT *context);
+   EFI_STATUS (*generate_hash) (char *data, int datasize, GNUEFI_PE_COFF_LOADER_IMAGE_CONTEXT *context,
+                                UINT8 *sha256hash, UINT8 *sha1hash);
+   EFI_STATUS (*read_header) (void *data, unsigned int datasize, GNUEFI_PE_COFF_LOADER_IMAGE_CONTEXT *context);
 } SHIM_LOCK;
 #endif
 
 BOOLEAN ShimLoaded(void);
+BOOLEAN ShimValidate (VOID *data, UINT32 size);
 BOOLEAN secure_mode (VOID);
-EFI_STATUS start_image(EFI_HANDLE image_handle, CHAR16 *ImagePath, VOID *data, UINTN datasize,
-                       CHAR16 *Options, REFIT_VOLUME *DeviceVolume, IN EFI_DEVICE_PATH *DevicePath);

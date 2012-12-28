@@ -1,0 +1,17 @@
+#
+# mok/Make.tiano
+# Build control file for Secure Boot components of rEFInd, using TianoCore EDK2
+#
+
+include ../Make.tiano
+
+SOURCE_NAMES     = guid mok security_policy simple_file
+OBJS             = $(SOURCE_NAMES:=.obj)
+
+all: $(AR_TARGET)
+
+$(AR_TARGET): $(OBJS)
+	$(AR) -cr $(AR_TARGET).lib $(OBJS)
+
+clean:
+	make clean
