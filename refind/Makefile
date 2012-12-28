@@ -21,12 +21,12 @@ ifeq ($(ARCH),x86_64)
   TARGET = refind_x64.efi
 endif
 
-LOCAL_CPPFLAGS  = -I$(SRCDIR) -I$(SRCDIR)/../include -I$(SRCDIR)/../libeg
-#LOCAL_LDFLAGS   = -L$(SRCDIR)/../libeg/$(LIBEG)
-LOCAL_LDFLAGS   = -L$(SRCDIR)/../libeg/
-LOCAL_LIBS      = -leg
+LOCAL_CPPFLAGS  = -I$(SRCDIR) -I$(SRCDIR)/../include -I$(SRCDIR)/../libeg -I$(SRCDIR)/../mok
+LOCAL_LDFLAGS   = -L$(SRCDIR)/../libeg/ -L$(SRCDIR)/../mok/
+LOCAL_LIBS      = -leg -lmok
 
-OBJS            = main.o config.o menu.o screen.o icns.o lib.o mok.o driver_support.o
+OBJS            = main.o config.o menu.o screen.o icns.o lib.o driver_support.o
+#OBJS            = main.o config.o menu.o screen.o icns.o lib.o mok.o driver_support.o variables.o sha256.o pecoff.o simple_file.o security_policy.o guid.o
 
 all: $(TARGET)
 

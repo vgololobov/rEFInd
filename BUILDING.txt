@@ -15,9 +15,10 @@ rEFIt package (http://packages.debian.org/sid/refit) that includes
 extensive patches to enable the program to compile under Linux using the
 GNU-EFI package (http://sourceforge.net/projects/gnu-efi/). Although
 GNU-EFI is less sophisticated than recent versions of TianoCore's toolkit,
-GNU-EFI is my preferred environment because it's provided with many Linux
-distributions and it was easy to get started with rEFInd development by
-using GNU-EFI and the Debian rEFIt package as a starting point.
+GNU-EFI was initially my preferred environment because it's provided with
+many Linux distributions and it was easy to get started with rEFInd
+development by using GNU-EFI and the Debian rEFIt package as a starting
+point.
 
 Over time, though, I've found that the recent TianoCore EDK2 toolkit has
 its advantages. Two features, in particular, require the TianoCore EDK2
@@ -73,13 +74,17 @@ To compile rEFInd, you'll need the following:
     install this from a package called "gnu-efi"; however, rEFInd relies on
     features that were added in (I think) 3.0l to provide driver-loading
     capabilities. The versions I've used and that work are 3.0p and 3.0q.
-    As of 5/2012, most Linux distributions seem to deliver rather elderly
-    versions of GNU-EFI, so you may need to download the latest source
-    code, compile it, and install it locally. Since rEFInd version 0.2.7,
-    the Makefiles assume this (see below). The legacy BIOS boot support on
-    UEFI-based PCs doesn't work when GNU-EFI is compiled under GNU-EFI, so
-    as of rEFInd 0.4.6, GNU-EFI is no longer the primary build environment,
-    although it's easier to set up on a Linux system.
+    Through mid-to-late 2012, most Linux distributions delivered rather
+    elderly versions of GNU-EFI, but many are catching up by late 2012. You
+    should check your GNU-EFI version number; you may need to download the
+    latest source code, compile it, and install it locally. Between rEFInd
+    version 0.2.7 and 0.6.1, the Makefiles assumed a locally-compiled
+    GNU-EFI package, but older and more recent versions assume GNU-EFI
+    installation in typical locations for distribution-provided packages.
+    The legacy BIOS boot support on UEFI-based PCs doesn't work when
+    GNU-EFI is compiled under GNU-EFI, so as of rEFInd 0.4.6, GNU-EFI is no
+    longer the primary build environment, although it's easier to set up on
+    a Linux system.
 
 It's possible to use a non-Linux platform to compile rEFInd. To the best of
 my knowledge, the rEFInd code doesn't rely on anything Linux-specific in
@@ -232,19 +237,19 @@ You may also need to adjust the Makefile, Make.common file, or Make.tiano
 file for your system. (The main Makefile controls the process for both
 toolkits, while Make.common holds GNU-EFI options and Make.tiano holds
 TianoCore options.) The most likely thing you'll need to change is the path
-to the various GNU-EFI include files and libraries. Since rEFInd 0.2.7, the
+to the various GNU-EFI include files and libraries. Since rEFInd 0.6.2, the
 default Make.common file includes the following definitions:
 
-EFIINC          = /usr/local/include/efi
-GNUEFILIB       = /usr/local/lib
-EFILIB          = /usr/local/lib
-EFICRT0         = /usr/local/lib
+EFIINC          = /usr/include/efi
+GNUEFILIB       = /usr/lib
+EFILIB          = /usr/lib
+EFICRT0         = /usr/lib
 
-If you've installed GNU-EFI from a distribution's package, you may need to
-remove "local" from those paths, and perhaps change references to "lib" to
-"lib64". As noted earlier, though, as of 5/2012, most distributions provide
-out-of-date GNU-EFI implementations that will not work with rEFInd 0.2.7
-and later.
+If you've installed GNU-EFI from source code, you may need to add "local"
+to those paths, as in "/usr/local/include/efi". You might need to change
+references to "lib" to "lib64" on some systems. Recall that you need at
+least GNU-EFI version 3.0l to build rEFInd, and until very recently, most
+distributions provided out-of-date versions of this package.
 
 If you're using TianoCore's EDK2, as noted earlier, you may need to adjust
 the EDK2BASE variable in Make.tiano and filesystems/Make.tiano.

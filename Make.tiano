@@ -42,7 +42,8 @@ INCLUDE_DIRS    = -I $(EDK2BASE)/MdePkg \
                   -I $(EDK2BASE)/MdePkg/Include/$(ARCHDIR) \
 		  -I .. \
 		  -I ../refind \
-		  -I ../libeg
+		  -I ../libeg \
+		  -I ../mok
 
 OPTIMFLAGS      = -fno-strict-aliasing -mno-red-zone -Wno-address -Os
 DEBUGFLAGS      = -Wall -Wno-missing-braces -Wno-array-bounds -ffunction-sections -fdata-sections

@@ -179,7 +179,7 @@ timeout 20
 </tr>
 <tr>
    <td><tt>textonly</tt></td>
-   <td>None or <tt>0</tt></td>
+   <td>none or <tt>0</tt></td>
    <td>rEFInd defaults to a graphical mode; however, if you prefer to do without the flashy graphics, you can run it in text mode by including this option. Passing any option but <tt>0</tt> causes text mode to be used; passing a <tt>0</tt> causes graphics mode to be used. (This could be useful if you want to override a text-mode setting in an included secondary configuration file.)</td>
 </tr>
 <tr>
@@ -229,17 +229,17 @@ timeout 20
 </tr>
 <tr>
    <td><tt>dont_scan_files</tt> or <tt>don't_scan_files</tt></td>
-   <td>Filename(s)</td>
+   <td>filename(s)</td>
    <td>Adds the specified filename or filenames to a filename "blacklist"&mdash;these files are <i>not</i> included as boot loader options even if they're found on the disk. This is useful to exclude support programs (such as <tt>shim.efi</tt> and <tt>MokManager.efi</tt>) and drivers from your OS list. The default value is <tt>shim.efi, MokManager.efi, TextMode.efi, ebounce.efi, GraphicsConsole.efi</tt>.</td>
 </tr>
 <tr>
    <td><tt>scan_all_linux_kernels</tt></td>
-   <td>None or <tt>0</tt></td>
+   <td>none or <tt>0</tt></td>
    <td>When set, causes rEFInd to add Linux kernels (files with names that begin with <tt>vmlinuz</tt> or <tt>bzImage</tt>) to the list of EFI boot loaders, even if they lack <tt>.efi</tt> filename extensions. The hope is that this will simplify use of rEFInd on distributions that provide kernels with EFI stub loader support but that don't give those kernels names that end in <tt>.efi</tt>. Of course, the kernels must still be stored on a filesystem that rEFInd can read, and in a directory that it scans. (<a href="drivers.html">Drivers</a> and the <tt>also_scan_dirs</tt> options can help with those issues.) Note that this option can cause unwanted files to be improperly detected and given loader tags, such as older kernels without EFI stub loader support. Versions of rEFInd prior to 0.5.0 left this option commented out in the <tt>refind.conf-sample</tt> file, but as of version 0.5.0, this option is enabled in the default configuration file. The program default remains to not scan for such kernels, though, so you can delete or uncomment this option to keep them from appearing in your boot menu. Passing any option but <tt>0</tt> causes scans for all kernels to occur; passing a <tt>0</tt> causes these kernels to not be scanned. (This could be useful if you want to override a setting of <tt>scan_all_linux_kernels</tt> in an included secondary configuration file.)</td>
 </tr>
 <tr>
    <td><tt>default_selection</tt></td>
-   <td>A substring of a boot loader's title; or a numeric position</td>
+   <td>a substring of a boot loader's title; or a numeric position</td>
    <td>Sets the default boot OS based on the loader's title, which appears in the main menu beneath the icons when you select the loader. You can enter any substring of the title as the <tt>default_selection</tt>, so long as it's two or more characters in length. It's best to use a unique substring, since rEFInd stops searching when it finds the first match. Because rEFInd sorts entries within a directory in descending order by file modification time, if you specify a directory (or volume name, for loaders in a partition's root directory) as the <tt>default_selection</tt>, the most recent loader in that directory will be the default. One-character entries are matched against the first character of the title, except for digits, which refer to the numeric order of the boot loader entries.</td>
 </tr>
 <tr>
@@ -328,7 +328,7 @@ default_selection elilo
 </tr>
 <tr>
    <td><tt>disabled</tt></td>
-   <td>None</td>
+   <td>none</td>
    <td>Disable an entry. This is often easier than commenting out an entire entry if you want to temporarily disable it.</td>
 </tr>
 <tr>
@@ -420,7 +420,7 @@ fs0:\EFI\Microsoft\Boot\bootmgfw.efi</pre>
 </tr>
 <tr>
    <td><tt>disabled</tt></td>
-   <td>None</td>
+   <td>none</td>
    <td>Disable a submenu entry. This is often easier than commenting out an entire entry if you want to temporarily disable it.</td>
 </tr>
 </table>

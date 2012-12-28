@@ -3,15 +3,15 @@
 # Common make rules for building with gnu-efi
 #
 
-EFIINC          = /usr/local/include/efi
-GNUEFILIB       = /usr/local/lib
-EFILIB          = /usr/local/lib
-EFICRT0         = /usr/local/lib
+EFIINC          = /usr/include/efi
+GNUEFILIB       = /usr/lib
+EFILIB          = /usr/lib
+EFICRT0         = /usr/lib
 
 HOSTARCH        = $(shell uname -m | sed s,i[3456789]86,ia32,)
 ARCH            := $(HOSTARCH)
 OS		= $(shell uname -s)
-CPPFLAGS        = -I$(EFIINC) -I$(EFIINC)/$(ARCH) -I$(EFIINC)/protocol -DCONFIG_$(ARCH) -D__MAKEWITH_GNUEFI
+CPPFLAGS        = -I$(EFIINC) -I$(EFIINC)/$(ARCH) -I$(EFIINC)/protocol -I../include -I../refind -I../libeg -DCONFIG_$(ARCH) -D__MAKEWITH_GNUEFI
 
 OPTIMFLAGS      = -O2 -fno-strict-aliasing
 DEBUGFLAGS      = -Wall

@@ -137,11 +137,13 @@ BOOLEAN egGetResFromMode(UINTN *ModeWidth, UINTN *Height) {
    EFI_STATUS                            Status;
    EFI_GRAPHICS_OUTPUT_MODE_INFORMATION  *Info = NULL;
 
-   Status = refit_call4_wrapper(GraphicsOutput->QueryMode, GraphicsOutput, *ModeWidth, &Size, &Info);
-   if ((Status == EFI_SUCCESS) && (Info != NULL)) {
-      *ModeWidth = Info->HorizontalResolution;
-      *Height = Info->VerticalResolution;
-      return TRUE;
+   if ((ModeWidth != NULL) && (Height != NULL)) {
+      Status = refit_call4_wrapper(GraphicsOutput->QueryMode, GraphicsOutput, *ModeWidth, &Size, &Info);
+      if ((Status == EFI_SUCCESS) && (Info != NULL)) {
+         *ModeWidth = Info->HorizontalResolution;
+         *Height = Info->VerticalResolution;
+         return TRUE;
+      }
    }
    return FALSE;
 } // BOOLEAN egGetResFromMode()
@@ -158,10 +160,13 @@ BOOLEAN egGetResFromMode(UINTN *ModeWidth, UINTN *Height) {
 BOOLEAN egSetScreenSize(IN OUT UINTN *ScreenWidth, IN OUT UINTN *ScreenHeight) {
    EFI_STATUS                            Status = EFI_SUCCESS;
    EFI_GRAPHICS_OUTPUT_MODE_INFORMATION  *Info;
-   UINT32                                ModeNum = 0;
    UINTN                                 Size;
-   BOOLEAN                               ModeSet = FALSE;
+   UINT32                                ModeNum = 0;
    UINT32                                UGAWidth, UGAHeight, UGADepth, UGARefreshRate;
+   BOOLEAN                               ModeSet = FALSE;
+
+   if ((ScreenWidth == NULL) || (ScreenHeight == NULL))
+      return FALSE;
 
    if (GraphicsOutput != NULL) { // GOP mode (UEFI)
       if (*ScreenHeight == 0) { // User specified a mode number (stored in *ScreenWidth); use it directly
@@ -177,7 +182,7 @@ BOOLEAN egSetScreenSize(IN OUT UINTN *ScreenWidth, IN OUT UINTN *ScreenHeight) {
          // and if so, switch to it....
          do {
             Status = refit_call4_wrapper(GraphicsOutput->QueryMode, GraphicsOutput, ModeNum, &Size, &Info);
-            if ((Status == EFI_SUCCESS) && (Size >= sizeof(*Info)) &&
+            if ((Status == EFI_SUCCESS) && (Size >= sizeof(*Info) && (Info != NULL)) &&
                 (Info->HorizontalResolution == *ScreenWidth) && (Info->VerticalResolution == *ScreenHeight)) {
                Status = refit_call2_wrapper(GraphicsOutput->SetMode, GraphicsOutput, ModeNum);
                ModeSet = (Status == EFI_SUCCESS);
@@ -230,19 +235,20 @@ BOOLEAN egSetTextMode(UINT32 RequestedMode) {
    EFI_STATUS    Status;
    BOOLEAN       ChangedIt = FALSE;
 
-   if ((RequestedMode != ST->ConOut->Mode->Mode) && (RequestedMode != DONT_CHANGE_TEXT_MODE)) {
+   if ((RequestedMode != DONT_CHANGE_TEXT_MODE) && (RequestedMode != ST->ConOut->Mode->Mode)) {
 //      SwitchToGraphics();
       Status = refit_call2_wrapper(ST->ConOut->SetMode, ST->ConOut, RequestedMode);
       if (Status == EFI_SUCCESS) {
          ChangedIt = TRUE;
       } else {
          SwitchToText(FALSE);
-         Print(L"Error setting text mode %d; available modes are:\n", RequestedMode);
+         Print(L"\nError setting text mode %d; available modes are:\n", RequestedMode);
          do {
             Status = refit_call4_wrapper(ST->ConOut->QueryMode, ST->ConOut, i, &Width, &Height);
             if (Status == EFI_SUCCESS)
                Print(L"Mode %d: %d x %d\n", i, Width, Height);
          } while (++i < ST->ConOut->Mode->MaxMode);
+         Print(L"Mode %d: Use default mode\n", DONT_CHANGE_TEXT_MODE);
 
          PauseForKey();
          SwitchToGraphics();

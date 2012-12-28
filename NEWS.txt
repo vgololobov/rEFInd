@@ -1,5 +1,16 @@
-0.6.2 (??/??/201?):
+0.6.2 (12/??/2012):
 -------------------
+
+- Fixed bug that prevented Secure Boot launches from working when rEFInd
+  was built with GNU-EFI rather than the TianoCore EDK2.
+
+- Substantial reworking of Secure Boot code, based on James Bottomley's
+  PreLoader program. This new code eliminates the limitation of launching
+  just one driver in Secure Boot mode and is likely to be more reliable
+  with future or obscure boot loaders. The basic features are the same as
+  before, though -- rEFInd relies on shim for authentication functions and
+  will launch programs that are signed by Secure Boot keys, shim keys, or
+  MOKs.
 
 - Altered default for "textmode" option to not adjust the text mode
   at all. (Prior versions set it to mode 0 by default.)

@@ -49,6 +49,7 @@
 #include "icns.h"
 #include "menu.h"
 #include "mok.h"
+#include "security_policy.h"
 #include "../include/Handle.h"
 #include "../include/refit_call_wrapper.h"
 #include "driver_support.h"
@@ -127,7 +128,7 @@ static VOID AboutrEFInd(VOID)
 
     if (AboutMenu.EntryCount == 0) {
         AboutMenu.TitleImage = BuiltinIcon(BUILTIN_ICON_FUNC_ABOUT);
-        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.6.1.1");
+        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.6.1.3");
         AddMenuInfoLine(&AboutMenu, L"");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2006-2010 Christoph Pfisterer");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2012 Roderick W. Smith");
@@ -179,15 +180,9 @@ static EFI_STATUS StartEFIImageList(IN EFI_DEVICE_PATH **DevicePaths,
     EFI_STATUS              Status, ReturnStatus;
     EFI_HANDLE              ChildImageHandle;
     EFI_LOADED_IMAGE        *ChildLoadedImage = NULL;
-    REFIT_FILE              File;
-    VOID                    *ImageData = NULL;
-    UINTN                   ImageSize;
-    REFIT_VOLUME            *DeviceVolume = NULL;
     UINTN                   DevicePathIndex;
     CHAR16                  ErrorInfo[256];
     CHAR16                  *FullLoadOptions = NULL;
-    CHAR16                  *loader = NULL;
-    BOOLEAN                 UseMok = FALSE;
 
     if (ErrorInStep != NULL)
         *ErrorInStep = 0;
@@ -195,7 +190,6 @@ static EFI_STATUS StartEFIImageList(IN EFI_DEVICE_PATH **DevicePaths,
     // set load options
     if (LoadOptions != NULL) {
         if (LoadOptionsPrefix != NULL) {
-//            MergeStrings(&FullLoadOptions, LoadOptionsPrefix, 0);
             MergeStrings(&FullLoadOptions, LoadOptions, L' ');
             if (OSType == 'M') {
                MergeStrings(&FullLoadOptions, L" ", 0);
@@ -217,8 +211,8 @@ static EFI_STATUS StartEFIImageList(IN EFI_DEVICE_PATH **DevicePaths,
     // load the image into memory (and execute it, in the case of a shim/MOK image).
     ReturnStatus = Status = EFI_NOT_FOUND;  // in case the list is empty
     for (DevicePathIndex = 0; DevicePaths[DevicePathIndex] != NULL; DevicePathIndex++) {
-       // NOTE: Below commented-out line could be more efficient if the ReadFile() and
-       // FindVolumeAndFilename() calls were moved earlier, but it doesn't work on my
+       // NOTE: Below commented-out line could be more efficient iffile were read ahead of
+       // time and passed as a pre-loaded image to LoadImage(), but it doesn't work on my
        // 32-bit Mac Mini or my 64-bit Intel box when launching a Linux kernel; the
        // kernel returns a "Failed to handle fs_proto" error message.
        // TODO: Track down the cause of this error and fix it, if possible.
@@ -226,25 +220,6 @@ static EFI_STATUS StartEFIImageList(IN EFI_DEVICE_PATH **DevicePaths,
        //                                            ImageData, ImageSize, &ChildImageHandle);
        ReturnStatus = Status = refit_call6_wrapper(BS->LoadImage, FALSE, SelfImageHandle, DevicePaths[DevicePathIndex],
                                                    NULL, 0, &ChildImageHandle);
-       if (((Status == EFI_ACCESS_DENIED) || (Status == EFI_SECURITY_VIOLATION)) && (ShimLoaded())) {
-          FindVolumeAndFilename(DevicePaths[DevicePathIndex], &DeviceVolume, &loader);
-          if (DeviceVolume != NULL) {
-             Status = ReadFile(DeviceVolume->RootDir, loader, &File, &ImageSize);
-             ImageData = File.Buffer;
-          } else {
-             Status = EFI_NOT_FOUND;
-             Print(L"Error: device volume not found!\n");
-          } // if/else
-          if (Status != EFI_NOT_FOUND) {
-             ReturnStatus = Status = start_image(SelfImageHandle, loader, ImageData, ImageSize, FullLoadOptions,
-                                                 DeviceVolume, FileDevicePath(DeviceVolume->DeviceHandle, loader));
-//             ReturnStatus = Status = start_image(SelfImageHandle, loader, ImageData, ImageSize, FullLoadOptions,
-//                                                 DeviceVolume, DevicePaths[DevicePathIndex]);
-          }
-          if (ReturnStatus == EFI_SUCCESS) {
-             UseMok = TRUE;
-          } // if
-       } // if (UEFI SB failed; use shim)
        if (ReturnStatus != EFI_NOT_FOUND) {
           break;
        }
@@ -256,37 +231,35 @@ static EFI_STATUS StartEFIImageList(IN EFI_DEVICE_PATH **DevicePaths,
         goto bailout;
     }
 
-    if (!UseMok) {
-       ReturnStatus = Status = refit_call3_wrapper(BS->HandleProtocol, ChildImageHandle, &LoadedImageProtocol,
-                                                   (VOID **) &ChildLoadedImage);
-       if (CheckError(Status, L"while getting a LoadedImageProtocol handle")) {
-          if (ErrorInStep != NULL)
-             *ErrorInStep = 2;
-          goto bailout_unload;
-       }
-       ChildLoadedImage->LoadOptions = (VOID *)FullLoadOptions;
-       ChildLoadedImage->LoadOptionsSize = ((UINT32)StrLen(FullLoadOptions) + 1) * sizeof(CHAR16);
-       // turn control over to the image
-       // TODO: (optionally) re-enable the EFI watchdog timer!
+    ReturnStatus = Status = refit_call3_wrapper(BS->HandleProtocol, ChildImageHandle, &LoadedImageProtocol,
+                                                (VOID **) &ChildLoadedImage);
+    if (CheckError(Status, L"while getting a LoadedImageProtocol handle")) {
+       if (ErrorInStep != NULL)
+          *ErrorInStep = 2;
+       goto bailout_unload;
+    }
+    ChildLoadedImage->LoadOptions = (VOID *)FullLoadOptions;
+    ChildLoadedImage->LoadOptionsSize = ((UINT32)StrLen(FullLoadOptions) + 1) * sizeof(CHAR16);
+    // turn control over to the image
+    // TODO: (optionally) re-enable the EFI watchdog timer!
 
-       // close open file handles
-       UninitRefitLib();
-       ReturnStatus = Status = refit_call3_wrapper(BS->StartImage, ChildImageHandle, NULL, NULL);
-       // control returns here when the child image calls Exit()
-       SPrint(ErrorInfo, 255, L"returned from %s", ImageTitle);
-       if (CheckError(Status, ErrorInfo)) {
-           if (ErrorInStep != NULL)
-               *ErrorInStep = 3;
-       }
+    // close open file handles
+    UninitRefitLib();
+    ReturnStatus = Status = refit_call3_wrapper(BS->StartImage, ChildImageHandle, NULL, NULL);
 
-       // re-open file handles
-       ReinitRefitLib();
-    } // if
+    // control returns here when the child image calls Exit()
+    SPrint(ErrorInfo, 255, L"returned from %s", ImageTitle);
+    if (CheckError(Status, ErrorInfo)) {
+        if (ErrorInStep != NULL)
+            *ErrorInStep = 3;
+    }
+
+    // re-open file handles
+    ReinitRefitLib();
 
 bailout_unload:
     // unload the image, we don't care if it works or not...
-    if (!UseMok)
-       Status = refit_call1_wrapper(BS->UnloadImage, ChildImageHandle);
+    Status = refit_call1_wrapper(BS->UnloadImage, ChildImageHandle);
 
 bailout:
     MyFreePool(FullLoadOptions);
@@ -1944,6 +1917,43 @@ static VOID InitializeLib(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *System
 
 #endif
 
+// Set up our own Secure Boot extensions....
+// Returns TRUE on success, FALSE otherwise
+static BOOLEAN SecureBootSetup(VOID) {
+   EFI_STATUS Status;
+   BOOLEAN    Success = FALSE;
+
+   if (secure_mode()) {
+      Status = security_policy_install();
+      if (Status == EFI_SUCCESS) {
+         Success = TRUE;
+      } else {
+         Print(L"Failed to install MOK Secure Boot extensions");
+//         PauseForKey();
+      }
+   }
+   return Success;
+} // VOID SecureBootSetup()
+
+// Remove our own Secure Boot extensions....
+// Returns TRUE on success, FALSE otherwise
+static BOOLEAN SecureBootUninstall(VOID) {
+   EFI_STATUS Status;
+   BOOLEAN    Success = TRUE;
+
+   if (secure_mode()) {
+      Status = security_policy_uninstall();
+      if (Status != EFI_SUCCESS) {
+         Success = FALSE;
+         BeginTextScreen(L"Secure Boot Policy Failure");
+         Print(L"Failed to uninstall MOK Secure Boot extensions; forcing a reboot.");
+         PauseForKey();
+         refit_call4_wrapper(RT->ResetSystem, EfiResetCold, EFI_SUCCESS, 0, NULL);
+      }
+   }
+   return Success;
+} // VOID SecureBootUninstall
+
 //
 // main entry point
 //
@@ -1953,6 +1963,7 @@ efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
 {
     EFI_STATUS         Status;
     BOOLEAN            MainLoopRunning = TRUE;
+    BOOLEAN            MokProtocol;
     REFIT_MENU_ENTRY   *ChosenEntry;
     UINTN              MenuExit, i;
     CHAR16             *Selection;
@@ -1980,8 +1991,10 @@ efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
 
     // further bootstrap (now with config available)
     SetupScreen();
+    MokProtocol = SecureBootSetup();
     ScanVolumes();
     LoadDrivers();
+    PauseForKey();
     ScanForBootloaders();
     ScanForTools();
 
@@ -2043,8 +2056,12 @@ efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
                 break;
 
             case TAG_EXIT:    // Terminate rEFInd
-                BeginTextScreen(L" ");
-                return EFI_SUCCESS;
+                if ((MokProtocol) && !SecureBootUninstall()) {
+                   MainLoopRunning = FALSE;   // just in case we get this far
+                } else {
+                   BeginTextScreen(L" ");
+                   return EFI_SUCCESS;
+                }
                 break;
 
         } // switch()

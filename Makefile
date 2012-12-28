@@ -9,6 +9,7 @@ HEADERS=$(NAMES:=.h)
 LOADER_DIR=refind
 FS_DIR=filesystems
 LIBEG_DIR=libeg
+MOK_DIR=mok
 EFILIB_DIR=EfiLib
 
 # Build rEFInd, including libeg
@@ -16,6 +17,7 @@ all:	tiano
 
 gnuefi:
 	make -C $(LIBEG_DIR)
+	make -C $(MOK_DIR)
 	make -C $(LOADER_DIR)
 #	make -C $(FS_DIR)
 
@@ -25,10 +27,12 @@ fs:
 tiano:
 	make AR_TARGET=EfiLib -C $(EFILIB_DIR) -f Make.tiano
 	make AR_TARGET=libeg -C $(LIBEG_DIR) -f Make.tiano
+	make AR_TARGET=mok -C $(MOK_DIR) -f Make.tiano
 	make BUILDME=refind DLL_TARGET=refind -C $(LOADER_DIR) -f Make.tiano
 
 clean:
 	make -C $(LIBEG_DIR) clean
+	make -C $(MOK_DIR) clean
 	make -C $(LOADER_DIR) clean
 	make -C $(EFILIB_DIR) clean -f Make.tiano
 	make -C $(FS_DIR) clean

@@ -1,7 +1,7 @@
 #
 # refind/Make.tiano
 # Build control file for rEFInd, using TianoCore EDK2
-# Requires that EfiLib and libeg subdirectories be built before this
+# Requires that EfiLib, mok, and libeg subdirectories be built before this
 # file is used.
 #
 
@@ -34,7 +34,7 @@ ALL_EFILIBS     = $(EFILIB)/BaseDebugPrintErrorLevelLib/BaseDebugPrintErrorLevel
 #		  /usr/local/UDK2010/MyWorkSpace/Build/MdeModule/RELEASE_GCC46/X64/MdeModulePkg/Core/Dxe/DxeMain/OUTPUT/DxeMain/DxeMain.obj
 
 
-SOURCE_NAMES     = config driver_support icns lib main menu screen mok AutoGen
+SOURCE_NAMES     = config driver_support icns lib main menu screen AutoGen
 OBJS             = $(SOURCE_NAMES:=.obj)
 
 all: $(BUILDME)
@@ -42,8 +42,8 @@ all: $(BUILDME)
 $(AR_TARGET): $(OBJS)
 	$(AR) -cr $(AR_TARGET).lib $(OBJS)
 
-$(DLL_TARGET)_$(FILENAME_CODE).dll: $(OBJS) ../libeg/libeg.lib ../EfiLib/EfiLib.lib 
-	$(LD) -o $(DLL_TARGET)_$(FILENAME_CODE).dll $(LDFLAGS) --start-group $(ALL_EFILIBS) $(OBJS) ../libeg/libeg.lib ../EfiLib/EfiLib.lib --end-group
+$(DLL_TARGET)_$(FILENAME_CODE).dll: $(OBJS) ../libeg/libeg.lib ../EfiLib/EfiLib.lib ../mok/mok.lib
+	$(LD) -o $(DLL_TARGET)_$(FILENAME_CODE).dll $(LDFLAGS) --start-group $(ALL_EFILIBS) $(OBJS) ../libeg/libeg.lib ../EfiLib/EfiLib.lib ../mok/mok.lib --end-group
 
 $(BUILDME): $(DLL_TARGET)_$(FILENAME_CODE).dll
 	$(OBJCOPY) --strip-unneeded $(DLL_TARGET)_$(FILENAME_CODE).dll

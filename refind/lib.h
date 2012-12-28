@@ -116,6 +116,6 @@ VOID MyFreePool(IN OUT VOID *Pointer);
 
 BOOLEAN EjectMedia(VOID);
 
-//CHAR16 * GuidAsString(EFI_GUID *GuidData);
+CHAR16 * GuidAsString(EFI_GUID *GuidData);
 
 #endif

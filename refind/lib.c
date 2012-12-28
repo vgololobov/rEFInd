@@ -1636,18 +1636,18 @@ BOOLEAN EjectMedia(VOID) {
 } // VOID EjectMedia()
 
 
-// // Return the GUID as a string, suitable for display to the user. Note that the calling
-// // function is responsible for freeing the allocated memory.
-// CHAR16 * GuidAsString(EFI_GUID *GuidData) {
-//    CHAR16 *TheString;
-// 
-//    TheString = AllocateZeroPool(42 * sizeof(CHAR16));
-//    if (TheString != 0) {
-//       SPrint (TheString, 82, L"%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
-//               (UINTN)GuidData->Data1, (UINTN)GuidData->Data2, (UINTN)GuidData->Data3,
-//               (UINTN)GuidData->Data4[0], (UINTN)GuidData->Data4[1], (UINTN)GuidData->Data4[2],
-//               (UINTN)GuidData->Data4[3], (UINTN)GuidData->Data4[4], (UINTN)GuidData->Data4[5],
-//               (UINTN)GuidData->Data4[6], (UINTN)GuidData->Data4[7]);
-//    }
-//    return TheString;
-// } // GuidAsString(EFI_GUID *GuidData)
+// Return the GUID as a string, suitable for display to the user. Note that the calling
+// function is responsible for freeing the allocated memory.
+CHAR16 * GuidAsString(EFI_GUID *GuidData) {
+   CHAR16 *TheString;
+
+   TheString = AllocateZeroPool(42 * sizeof(CHAR16));
+   if (TheString != 0) {
+      SPrint (TheString, 82, L"%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+              (UINTN)GuidData->Data1, (UINTN)GuidData->Data2, (UINTN)GuidData->Data3,
+              (UINTN)GuidData->Data4[0], (UINTN)GuidData->Data4[1], (UINTN)GuidData->Data4[2],
+              (UINTN)GuidData->Data4[3], (UINTN)GuidData->Data4[4], (UINTN)GuidData->Data4[5],
+              (UINTN)GuidData->Data4[6], (UINTN)GuidData->Data4[7]);
+   }
+   return TheString;
+} // GuidAsString(EFI_GUID *GuidData)

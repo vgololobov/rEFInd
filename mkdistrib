@@ -47,7 +47,7 @@ make clean
 # Prepare a place and copy files there....
 mkdir -p ../snapshots/$1/refind-$1/icons
 cp --preserve=timestamps icons/*icns ../snapshots/$1/refind-$1/icons/
-cp -a docs images keys include EfiLib libeg refind filesystems install.sh mkrlconf.sh CREDITS.txt NEWS.txt BUILDING.txt COPYING.txt LICENSE.txt README.txt refind.inf Make.tiano Make.common Makefile refind.conf-sample ../snapshots/$1/refind-$1
+cp -a docs images keys include EfiLib libeg mok refind filesystems install.sh mkrlconf.sh CREDITS.txt NEWS.txt BUILDING.txt COPYING.txt LICENSE.txt README.txt refind.inf Make.tiano Make.common Makefile refind.conf-sample ../snapshots/$1/refind-$1
 
 # Go there and prepare a souce code zip file....
 cd ../snapshots/$1/
