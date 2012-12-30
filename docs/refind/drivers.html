@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 4/19/2012; last Web page update:
-12/21/2012, referencing rEFInd 0.6.1</p>
+12/30/2012, referencing rEFInd 0.6.2</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -189,8 +189,6 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 fs0: <tt class="userinput">load reiserfs_x64.efi</tt>
 fs0: <tt class="userinput">map -r</tt>
 </pre>
-
-<p>If you build rEFInd from source, you should be aware that the drivers rely on <a href="https://sourceforge.net/projects/tianocore/">TianoCore's development kit,</a> whereas rEFInd itself can use either TianoCore's kit or <a href="http://sourceforge.net/projects/gnu-efi/">GNU-EFI.</a> Thus, to compile both, you'll need to install TianoCore, with GNU-EFI being optional but providing no additional benefits. Unfortunately, the TianoCore kit is a bit unusual from a Linux developer's perspective, and you'll probably have to build it from source code. Consult the <tt>BUILDING.txt</tt> file in the source package for more information. None of this is important if you use a binary build of rEFInd, unless you've obtained it from a third party who hasn't built the drivers. If that's the case, you'll have to download rEFInd from Sourceforge (see the <a href="http://www.rodsbooks.com/refind/getting.html">Getting rEFInd page</a> for details) or use drivers from another source.</p>
 
 <h2>Finding Additional EFI Drivers</h2>
 

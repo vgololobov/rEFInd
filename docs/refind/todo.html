@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 3/14/2012; last Web page update:
-12/21/2012, referencing rEFInd 0.6.1</p>
+12/30/2012, referencing rEFInd 0.6.2</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -312,15 +312,6 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 	loader settings&mdash;say, to disable one specific boot loader or
 	change its icon.</li>
 
-    <li>A way to read boot options set via <tt>efibootmgr</tt>,
-	<tt>bless</tt>, or similar options from NVRAM to add to the boot
-	set would be useful.</li>
-
-    <li>A way to examine and change the NVRAM settings could be useful.
-	This would enable a CD-based boot of rEFInd to fix a broken disk
-	boot. Perhaps this could be done via a separate tool that could be
-	launched much like the shell or <tt>gptsync</tt>.</li>
-
     <li>A way to set the color of the font would be useful for theming
         purposes.</li>
 
@@ -358,6 +349,14 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
     <li>This may not be possible, or it may require a new driver, but a way
 	to have the drivers access files (like a Linux loopback mount) is
 	desirable.</li>
+
+    <li>When built with the GNU-EFI package, an attempt to load more than
+        one driver on my 32-bit Mac Mini causes the computer to hang. I do
+	<i>not</i> have this problem with 64-bit drivers on my UEFI-based
+	computers. I don't know if this is a 32-bit issue or a Mac issue.
+	This is <i>not</i> relevant if you're using my binary package,
+	since I build it with the TianoCore EDK2, and the drivers built in
+	that way don't exhibit this bug.</li>
 
     </ul></li> <!-- Drivers -->
 

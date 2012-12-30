@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 3/14/2012; last Web page update:
-12/21/2012, referencing rEFInd 0.6.1</p>
+12/30/2012, referencing rEFInd 0.6.2</p>
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
 
@@ -93,23 +93,21 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <h2>Getting rEFInd from Sourceforge</h2>
 
-<p>You can find the rEFInd source code and binary packages at <a href="http://www.sourceforge.net/projects/refind/">its SourceForge page.</a> Note that rEFInd is OS-independent&mdash;it runs before the OS, so you download the same binary package for any OS. You can obtain rEFInd in four different forms:</p>
+<p>You can find the rEFInd source code and binary packages at <a href="http://www.sourceforge.net/projects/refind/">its SourceForge page.</a> Note that rEFInd is OS-independent&mdash;it runs before the OS, so you download the same binary package for any OS. You can obtain rEFInd in several different forms:</p>
 
 <ul>
 
 <li><b><a
-    href="http://sourceforge.net/projects/refind/files/0.6.1/refind-src-0.6.1.zip/download">A
-    source code zip file</a></b>&mdash;This is useful if you want to
-    compile the software locally. Note that I use Linux with the <a
+    href="http://sourceforge.net/projects/refind/files/0.6.2/refind-src-0.6.2.zip/download">A
+    source code zip file</a></b>&mdash;This is useful if you want to compile
+    the software locally. Note that I use Linux with the <a
     href="https://sourceforge.net/projects/tianocore/">TianoCore EFI
-    Development Kit 2 (EDK2)</a> to build my binaries (below), although the
-    <a href="http://sourceforge.net/projects/gnu-efi">GNU-EFI</a>
-    development tools are also supported. rEFIt used an Intel/Microsoft
-    toolchain. Backporting rEFInd to that toolchain is theoretically
-    possible, but I've not attempted it.</li>
+    Development Kit 2 (EDK2)</a> to build my binary zip package (below),
+    although the <a href="http://sourceforge.net/projects/gnu-efi">GNU-EFI</a>
+    development tools are also supported.</li>
 
 <li><b><a
-    href="http://sourceforge.net/projects/refind/files/0.6.1/refind-bin-0.6.1.zip/download">A
+    href="http://sourceforge.net/projects/refind/files/0.6.2/refind-bin-0.6.2.zip/download">A
     binary zip file</a></b>&mdash;Download this if you want to install
     rEFInd and/or its filesystem drivers on an <i>x</i>86 or <i>x</i>86-64
     computer and have no need to test rEFInd first by booting it on an
@@ -134,7 +132,7 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 <p class="sidebar"><b>Tip:</b> If you want a bootable USB flash drive, download the binary zip file or CD-R image file, prepare a USB flash drive with a FAT32 partition, and then use the <tt>install.sh</tt> program's <tt>--usedefault</tt> option, and perhaps the <tt>--alldrivers</tt> option, as in <tt class="userinput">bash install.sh --usedefault /dev/sdd1 --alldrivers</tt> to install to the first partition on <tt>/dev/sdd</tt>. This procedure should work even on a BIOS-booted computer.</p>
 
 <li><b><a
-    href="http://sourceforge.net/projects/refind/files/0.6.1/refind-cd-0.6.1.zip/download">A
+    href="http://sourceforge.net/projects/refind/files/0.6.2/refind-cd-0.6.2.zip/download">A
     CD-R image file</a></b>&mdash;This download contains the same files as
     the binary zip file, but you can burn it to a CD-R to test rEFInd
     (and its filesystem drivers) without installing it first. (It boots on
@@ -147,6 +145,26 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
     don't have an EFI shell available from your regular hard disk. This can
     be an extremely valuable diagnostic tool if you know how to use an EFI
     shell.</li>
+
+<li><b><a
+    href="http://sourceforge.net/projects/refind/files/0.6.2/refind-0.6.2-1.src.rpm/download">Source</a>
+    and <a
+    href="http://sourceforge.net/projects/refind/files/0.6.2/refind-0.6.2-1.x86_64.rpm/download">binary</a>
+    RPM files</b>&mdash;These files are intended more as demonstrations than
+    as practical packages. If you use an RPM-based <i>x</i>86-64 Linux system,
+    though, you can install the binary RPM package. (I don't provide an
+    equivalent 32-bit package.) Note, however, that this package's files are
+    not signed for use with shim or Secure Boot, and it installs four
+    filesystem drivers, which can slow down the boot process. It was also
+    compiled with GNU-EFI, which means that it lacks the ability to boot
+    BIOS-based OSes. Thus, I recommend using the binary zip file instead. If
+    you do use the RPM file, be aware that it installs rEFInd directly to
+    <tt>/boot/efi/EFI/refind</tt>, so your ESP must be mounted at
+    <tt>/boot/efi</tt>. The post-installation script, which adds rEFInd to the
+    NVRAM entries, requires <tt>efibootmgr</tt> and is likely to fail if you
+    try to install from a live CD. Distribution maintainers can examine the
+    <tt>refind.spec</tt> file in the source package and tweak it to their
+    needs and to eliminate some or all of these deficiencies.</li>
 
 <li><b><a href="https://sourceforge.net/p/refind/code">Source code via
     git</a></b>&mdash;If you want to peruse the source code in your Web
@@ -197,9 +215,10 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
     as well download the rEFInd binary <tt>.zip</tt> file from Sourceforge
     instead.</li>
 
-<li><b>Slackware</b>&mdash;Although it doesn't seem to be an official build, <a
-    href="http://franck-barbenoire.fr/spip.php?article198">this site</a> has links to rEFInd
-    binary packages for Slackware 13.37 and 14.0.</li>
+<li><b>Slackware</b>&mdash;Although it doesn't seem to provide an official
+    build, <a href="http://franck-barbenoire.fr/spip.php?article198">this
+    site</a> has links to rEFInd binary packages for Slackware 13.37 and
+    14.0.</li>
 
 </ul>
 

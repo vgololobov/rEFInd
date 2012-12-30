@@ -35,6 +35,7 @@ include $(SRCDIR)/../Make.common
 $(TARGET): $(SHLIB_TARGET)
 	$(OBJCOPY) -j .text -j .sdata -j .data -j .dynamic -j .dynsym -j .rel \
 		   -j .rela -j .reloc --target=$(FORMAT) $< $@
+	chmod a-x $(TARGET)
 
 # EOF
 # DO NOT DELETE

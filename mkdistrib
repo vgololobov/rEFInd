@@ -47,7 +47,7 @@ make clean
 # Prepare a place and copy files there....
 mkdir -p ../snapshots/$1/refind-$1/icons
 cp --preserve=timestamps icons/*icns ../snapshots/$1/refind-$1/icons/
-cp -a docs images keys include EfiLib libeg mok refind filesystems install.sh mkrlconf.sh CREDITS.txt NEWS.txt BUILDING.txt COPYING.txt LICENSE.txt README.txt refind.inf Make.tiano Make.common Makefile refind.conf-sample ../snapshots/$1/refind-$1
+cp -a docs images keys include EfiLib libeg mok refind filesystems refind.spec install.sh mkrlconf.sh CREDITS.txt NEWS.txt BUILDING.txt COPYING.txt LICENSE.txt README.txt refind.inf Make.tiano Make.common Makefile refind.conf-sample ../snapshots/$1/refind-$1
 
 # Go there and prepare a souce code zip file....
 cd ../snapshots/$1/
@@ -55,8 +55,8 @@ zip -9r refind-src-$1.zip refind-$1
 
 # Build the IA32 binaries
 cd refind-$1
-ARCH=ia32 make
-ARCH=ia32 make fs
+ARCH=ia32 make -j4
+ARCH=ia32 make -j4 fs
 mkdir -p refind-bin-$1/refind/drivers_ia32
 cp --preserve=timestamps drivers_ia32/*_ia32.efi refind-bin-$1/refind/drivers_ia32/
 cp --preserve=timestamps filesystems/LICENSE*txt refind-bin-$1/refind/drivers_ia32/
@@ -65,8 +65,8 @@ cp refind/refind_ia32.efi $StartDir/
 
 # Build the X64 binaries
 make clean
-make
-make fs
+make -j4
+make -j4 fs
 mkdir -p refind-bin-$1/refind/drivers_x64
 cp -a icons refind-bin-$1/refind/
 if [[ $SignIt == 1 ]] ; then
@@ -93,4 +93,12 @@ fi
 zip -9r ../refind-bin-$1.zip refind-bin-$1
 cd ..
 rm -r refind-$1
+
+# Prepare the RPM files
+cp refind-src-$1.zip ~/rpmbuild/SOURCES/
+rpmbuild -ba $StartDir/refind.spec
+mv ~/rpmbuild/RPMS/*/refind-$1* ./
+mv ~/rpmbuild/SRPMS/refind-$1* ./
+
+# Finish
 cd $StartDir

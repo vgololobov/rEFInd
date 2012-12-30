@@ -22,8 +22,7 @@ ifeq ($(ARCH),ia32)
 endif
 
 ifeq ($(ARCH),x86_64)
-#  ARCH_C_FLAGS = "-DEFIAPI=__attribute__((ms_abi))" -mcmodel=large -m64
-  ARCH_C_FLAGS = "-DEFIAPI=__attribute__((ms_abi))" -m64
+  ARCH_C_FLAGS = "-DEFIAPI=__attribute__((ms_abi))" -mcmodel=large -m64
   ARCHDIR = X64
   UC_ARCH = X64
   FILENAME_CODE = x64

@@ -38,6 +38,8 @@ hfs:
 
 # Build the drivers with GNU-EFI....
 
+gnuefi: $(FILESYSTEMS_GNUEFI)
+
 all_gnuefi:	$(FILESYSTEMS_GNUEFI)
 
 ext2_gnuefi:
@@ -64,6 +66,7 @@ hfs_gnuefi:
 
 clean:
 	rm -f *~ *.bak *.o *.obj *.so *.efi *.dll err.txt $(TEXTFILES)
+	make -C test clean
 
 
 install:

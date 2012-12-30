@@ -58,21 +58,18 @@ rm -rf $RPM_BUILD_ROOT
 %doc /usr/share/doc/refind-%{version}/refind/*
 /usr/share/refind/install.sh
 /usr/sbin/mkrlconf.sh
-/boot/efi/EFI/refind/refind.efi
-/boot/efi/EFI/refind/drivers/*
-/boot/efi/EFI/refind/icons/*
-/boot/efi/EFI/refind/keys/*
-/boot/efi/EFI/refind/keys
-/boot/efi/EFI/refind/icons
-/boot/efi/EFI/refind/drivers
 /boot/efi/EFI/refind
 %config /boot/efi/EFI/refind/refind.conf
 
 %post
-InstallDisk=`grep /boot/efi /etc/mtab | cut -d " " -f 1 | cut -c 1-8`
-PartNum=`grep /boot/efi /etc/mtab | cut -d " " -f 1 | cut -c 9-10`
-efibootmgr -c -d $InstallDisk -p $PartNum -l \\EFI\\refind\\refind.efi -L "rEFInd Boot Manager"
+ExistingEntry=`efibootmgr | grep "rEFInd Boot Manager" | cut -c 5-8`
+if [[ ! -n $ExistingEntry ]] ; then
+   InstallDisk=`grep /boot/efi /etc/mtab | cut -d " " -f 1 | cut -c 1-8`
+   PartNum=`grep /boot/efi /etc/mtab | cut -d " " -f 1 | cut -c 9-10`
+   efibootmgr -c -d $InstallDisk -p $PartNum -l \\EFI\\refind\\refind.efi -L "rEFInd Boot Manager"
+fi
 /usr/sbin/mkrlconf.sh
+
 
 %changelog
 * Sun Dec 30 2012 R Smith <rodsmith@rodsbooks.com> - 0.6.2

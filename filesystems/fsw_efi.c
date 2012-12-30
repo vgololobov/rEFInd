@@ -73,6 +73,8 @@
 #define DBG(x...)
 #endif
 
+#ifdef __MAKEWITH_GNUEFI
+
 #define EFI_DISK_IO_PROTOCOL_GUID \
   { \
     0xce345171, 0xba0b, 0x11d2, {0x8e, 0x4f, 0x0, 0xa0, 0xc9, 0x69, 0x72, 0x3b } \
@@ -83,7 +85,6 @@
     0x964e5b21, 0x6459, 0x11d2, {0x8e, 0x39, 0x0, 0xa0, 0xc9, 0x69, 0x72, 0x3b } \
   }
 
-#ifdef __MAKEWITH_GNUEFI
 EFI_GUID gEfiDriverBindingProtocolGuid = EFI_DRIVER_BINDING_PROTOCOL_GUID;
 EFI_GUID gEfiComponentNameProtocolGuid = EFI_COMPONENT_NAME_PROTOCOL_GUID;
 EFI_GUID gEfiDiskIoProtocolGuid = EFI_DISK_IO_PROTOCOL_GUID;

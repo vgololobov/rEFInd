@@ -385,9 +385,8 @@ static fsw_status_t fsw_ext4_get_by_extent(struct fsw_ext4_volume *vol, struct f
                                         struct fsw_extent *extent)
 {
     fsw_status_t  status;
-    fsw_u32       bno, release_bno, buf_bcnt, buf_offset, file_bcnt;
+    fsw_u32       bno, release_bno, buf_offset, file_bcnt;
     int           ext_cnt;
-    int           ext_depth;
     void          *buffer;
 
     struct ext4_extent_header  *ext4_extent_header;
@@ -399,7 +398,6 @@ static fsw_status_t fsw_ext4_get_by_extent(struct fsw_ext4_volume *vol, struct f
 
     // First buffer is the i_block field from inode...
     buffer = (void *)dno->raw->i_block;
-    buf_bcnt = EXT4_NDIR_BLOCKS;
     buf_offset = 0;
     while(1) {
         ext4_extent_header = (struct ext4_extent_header *)buffer + buf_offset;
@@ -432,7 +430,7 @@ static fsw_status_t fsw_ext4_get_by_extent(struct fsw_ext4_volume *vol, struct f
                           ext4_extent_header->eh_depth));
                 ext4_extent_idx = (struct ext4_extent_idx *)(buffer + buf_offset);
                 buf_offset += sizeof(struct ext4_extent_idx);
-                
+
                 FSW_MSG_DEBUG((FSW_MSGSTR("fsw_ext4_get_by_extent: index node covers block %d...\n"),
                           ext4_extent_idx->ei_block));
                 if(bno >= ext4_extent_idx->ei_block)
@@ -447,7 +445,7 @@ static fsw_status_t fsw_ext4_get_by_extent(struct fsw_ext4_volume *vol, struct f
             }
         }
     }
-    
+
     return FSW_NOT_FOUND;
 }
 

@@ -1,11 +1,15 @@
-0.6.2 (12/??/2012):
+0.6.2 (12/30/2012):
 -------------------
 
-- The drivers can now be built with the GNU-EFI toolkit as well as with the
-  TianoCore EDK2. See the BUILDING.txt file for details on how to build
-  them with either toolkit. This improvement doesn't affect users of my
-  binary packages, but it should make it easier for Linux distributions to
-  adopt rEFInd into their package systems.
+- Inclusion of a sample refind.spec file for the benefit of RPM
+  distribution maintainers who might want to include rEFInd. It's a bit
+  rough, but it gets you a good chunk of the way there....
+
+- The EFI filesystem drivers can now be built with the GNU-EFI toolkit as
+  well as with the TianoCore EDK2. See the BUILDING.txt file for details on
+  how to build them with either toolkit. This improvement doesn't affect
+  users of my binary packages, but it should make it easier for Linux
+  distributions to adopt rEFInd into their package systems.
 
 - Tweaked refind.inf file for better build results using "native" TianoCore
   EDK2 build process (vs. the Makefile-based build process that I use under
