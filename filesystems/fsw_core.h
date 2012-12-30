@@ -55,6 +55,7 @@
 #define _FSW_CORE_H_
 
 #include "fsw_base.h"
+#include "fsw_efi_base.h"
 
 
 /** Maximum size for a path, specifically symlink target paths. */

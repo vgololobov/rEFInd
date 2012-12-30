@@ -54,6 +54,10 @@
 
 #include "fsw_core.h"
 
+#ifdef __MAKEWITH_GNUEFI
+#define CompareGuid(a, b) CompareGuid(a, b)==0
+#endif
+
 // extern CHAR8     *msgCursor;
 // extern MESSAGE_LOG_PROTOCOL *Msg;
 

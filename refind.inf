@@ -33,6 +33,10 @@
   EfiLib/BdsHelper.c
   EfiLib/BdsTianoCore.c
   EfiLib/Console.c
+  mok/mok.c
+  mok/guid.c
+  mok/security_policy.c
+  mok/simple_file.c
   refind/main.c
   refind/config.c
   refind/icns.c
@@ -40,7 +44,6 @@
   refind/menu.c
   refind/screen.c
   refind/driver_support.c
-  refind/mok.c
   libeg/image.c
   libeg/load_bmp.c
   libeg/load_icns.c
@@ -144,6 +147,11 @@
 
 [Pcd]
 
-[BuildOptions]
+
+[BuildOptions.IA32]
   XCODE:*_*_*_CC_FLAGS = -Os 
-  GCC:*_*_*_CC_FLAGS = -Os
+  GCC:*_*_*_CC_FLAGS = -Os -DEFI32 -D__MAKEWITH_TIANO
+
+[BuildOptions.X64]
+  XCODE:*_*_*_CC_FLAGS = -Os 
+  GCC:*_*_*_CC_FLAGS = -Os -DEFIX64 -D__MAKEWITH_TIANO

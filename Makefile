@@ -19,10 +19,13 @@ gnuefi:
 	make -C $(LIBEG_DIR)
 	make -C $(MOK_DIR)
 	make -C $(LOADER_DIR)
-#	make -C $(FS_DIR)
+#	make -C $(FS_DIR) all_gnuefi
 
 fs:
 	make -C $(FS_DIR)
+
+fs_gnuefi:
+	make -C $(FS_DIR) all_gnuefi
 
 tiano:
 	make AR_TARGET=EfiLib -C $(EFILIB_DIR) -f Make.tiano

@@ -295,6 +295,19 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 	stanzas override auto-detected boot loader definitions for the same
 	boot loader file.</li>
 
+    <li>I have thoughts about creating an EFI configuration tool and
+	information utility&mdash;something to tell you about your hard
+	disks, enable you to manage MOKs, adjust boot loader priority in
+	the NVRAM, and so on. This would be useful in system maintenance
+	and in recovering from boot problems.</li>
+
+    <li>An installation tool for the EFI environment would be useful.
+        A simple EFI shell script might work, but because this function
+	requires access to the <tt>bcfg</tt> command, this would work
+	only from a version 2 shell or if <tt>bcfg</tt> were implemented
+	as a standalone program. Another alternative would be a program
+	written in C.</li>
+
     <li>It should be possible to override specific auto-detected boot
 	loader settings&mdash;say, to disable one specific boot loader or
 	change its icon.</li>
@@ -321,7 +334,7 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
     </ul></li> <!-- New features -->
 
-    <li><b>Improvements to the EFI drivers:</b>
+<li><b>Improvements to the EFI drivers:</b>
 
     <ul>
 

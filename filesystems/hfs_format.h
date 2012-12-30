@@ -47,11 +47,11 @@
 #ifndef __HFS_FORMAT__
 #define __HFS_FORMAT__
 
-#if !defined(HOST_EFI_EDK2) && !defined(HOST_POSIX)
-// Only available on Mac? and Intel EFI Toolkit?
-#include <sys/types.h>
-#include <sys/appleapiopts.h>
-#endif
+// #if !defined(HOST_EFI_EDK2) && !defined(HOST_POSIX)
+// // Only available on Mac? and Intel EFI Toolkit?
+// #include <sys/types.h>
+// #include <sys/appleapiopts.h>
+// #endif
 
 #ifdef _MSC_VER
 # pragma pack(push,2)

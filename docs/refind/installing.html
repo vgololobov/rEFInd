@@ -92,7 +92,7 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p class="sidebar"><b>Important:</b> A rEFInd zip file, when uncompressed, creates a directory called <tt>refind-<i>version</i></tt>, where <tt><i>version</i></tt> is the version number. This directory includes a subdirectory called <tt>refind</tt> that holds the boot loader, along with another that holds documentation, as well as miscellaneous files in <tt>refind-<i>version</i></tt> itself. When I refer to "the <tt>refind</tt> directory" on this page, I mean the directory with that precise name, not the <tt>refind-<i>version</i></tt> directory that is its parent.</p>
 
-<p>Once you've uncompressed a rEFInd binary zip file, you must install it to your computer's ESP (or conceivably to some other location). The details of how you do this depend on your OS and your computer (UEFI-based PC vs. Macintosh). The upcoming sections provide details. For Linux and Mac OS X, you can use the installation script, <a href="#installsh"><tt>install.sh</tt>,</a> which provides easy one-command installation on most systems. Occasionally this script will fail, though, so I also provide explicit instructions for <a href="#linux">Linux</a> and <a href="#osx">Mac OS X.</a> Installation under <a href="#windows">Windows</a> also must be done manually. In some cases, you'll have to deviate from the default naming conventions, as described in <a href="#naming">a section on this topic.</a> If you're upgrading rEFInd, see the <a href="#upgrading">section on upgrading.</a> Finally, I describe how to install some <a href="#addons">additional components</a> you might find useful.</a></p>
+<p>Once you've uncompressed a rEFInd binary zip file, you must install it to your computer's ESP (or conceivably to some other location). The details of how you do this depend on your OS and your computer (UEFI-based PC vs. Macintosh). The upcoming sections provide details. For Linux and Mac OS X, you can use the installation script, <a href="#installsh"><tt>install.sh</tt>,</a> which provides easy one-command installation on most systems. Occasionally this script will fail, though, so I also provide explicit instructions for <a href="#linux">Linux</a> and <a href="#osx">Mac OS X.</a> Installation under <a href="#windows">Windows</a> also must be done manually. You can even install rEFInd using an <a href="#efishell">EFI shell</a> (version 2 only). In some cases, you'll have to deviate from the default naming conventions, as described in <a href="#naming">a section on this topic.</a> If you're upgrading rEFInd, see the <a href="#upgrading">section on upgrading.</a> Finally, I describe how to install some <a href="#addons">additional components</a> you might find useful.</a></p>
 
 <a name="installsh">
 <h2>Installing rEFInd Using <tt>install.sh</tt> under Linux or Mac OS X</h2>
@@ -454,6 +454,107 @@ $ <b>ioreg -l -p IODeviceTree | grep firmware-abi</b>
 <li>You may be able to use rEFInd's bootable CD image to use rEFInd to boot an OS that's been installed but rendered inoperable because of changes to your boot order. You can then use <tt>efibootmgr</tt>, <tt>bless</tt>, or some other tool to restore rEFInd as the default boot loader.</li>
 
 </ul>
+
+<a name="efishell">
+<h2>Installing rEFInd Manually Using Windows</h2>
+</a>
+
+<p>If you can't currently boot any OS (say, because a firmware update has wiped your NVRAM entries), you may find it convenient to install rEFInd using an EFI version 2 shell. Unfortunately, the <tt>bcfg</tt> command described here is not available in the EFI version 1 shell, and the version 2 shell is unusable on many firmware implementations prior to 2.3.1. Thus, this procedure won't work for all systems.</p>
+
+<p>In addition to emergency situations, using <tt>bcfg</tt> can be desirable if <tt>efibootmgr</tt> or other OS-hosted tools don't do the job. This happens under VirtualBox, for instance. An alternative in such cases can be to use <a href="#naming">alternative names for rEFInd.</a></p>
+
+<p>To begin, you must have a way to launch your shell. Unfortunately, this can pose a dilemma, since without rEFInd or some other boot manager, many EFI implementations lack the means to launch a shell. Some will do so, though, if the shell is stored as <tt>shellx64.efi</tt> (for <i>x</i>86-64) or <tt>shellia32.efi</tt> (for <i>x</i>86) in the root directory of the ESP. Thus, you can try copying your shell file there. You can obtain EFI 2 shells here:</p>
+
+<ul>
+
+<li><a href="https://edk2.svn.sourceforge.net/svnroot/edk2/trunk/edk2/ShellBinPkg/UefiShell/X64/Shell.efi"><i>x</i>86-64 (64-bit) shell 2</a></li>
+
+<li><a href="https://edk2.svn.sourceforge.net/svnroot/edk2/trunk/edk2/ShellBinPkg/UefiShell/Ia32/Shell.efi"><i>x</i>86 (32-bit) shell 2</a></li>
+
+</ul>
+
+<p>Note that the shell included in rEFInd's CD-R image version is a version 1 shell, so you can't use it for this purpose. You can, however, copy rEFInd's files from the CD-R. You can even launch the version 1 shell included with rEFInd and then use that to launch a version 2 shell. Once you've booted the shell, you can proceed as follows:</p>
+
+<ol>
+
+<li>If you haven't installed rEFInd previously, unpack its zip file to a
+    FAT partition. This can be the ESP itself or another partition, such as
+    a USB flash drive. If you're simply repairing a lost NVRAM entry, you
+    needn't move your existing rEFInd files.</li>
+
+<li>Identify your filesystems, which are labelled with the form <tt>fs<tt
+    style="variable">n</tt>:</tt>, as in <tt>fs0:</tt> for the first
+    filesystem, <tt>fs1:</tt> for the second, and so on. Type the
+    filesystem number followed by the Enter key to begin using it. You can
+    then type <tt class="userinput">ls</tt> or <tt
+    class="userinput">dir</tt> to see the contents of the filesystem.
+    Chances are your ESP will be <tt>fs0:</tt>, but it could be something
+    else. (The following steps assume your ESP is <tt>fs0:</tt>; you'll
+    need to adjust them if it's not.) If rEFInd's source files are on
+    another device, you must identify it, too.</li>
+
+<p class="sidebar"><b>Note:</b> Skip ahead to step #9 if you're merely re-activating an already-installed rEFInd binary. If an entry exists but it's no longer the primary one, you can skip ahead to step #14.</p>
+
+<li>If necessary, create a directory for rEFInd by typing <tt
+    class="userinput">mkdir fs0:\EFI\refind</tt>. (If the <tt>fs0:\EFI</tt>
+    directory doesn't already exist, you must create it first,
+    though.)</li>
+
+<li>Change to the directory in which rEFInd's files exist.</li>
+
+<li>Type <tt class="userinput">cp refind_x64.efi fs0:\EFI\refind</tt> to
+    copy the rEFInd binary file. (Adjust the name if you're using a 32-bit
+    computer.)</li>
+
+<li>Type <tt class="userinput">cp refind.conf-sample
+    fs0:\EFI\refind\refind.conf</tt> to copy and rename the sample rEFInd
+    configuration file.</li>
+
+<li>Type <tt class="userinput">cp -r icons fs0:\EFI\refind\</tt> to copy
+    rEFInd's icons.</li>
+
+<li>Optionally, type <tt class="userinput">cp -r drivers_x64
+    fs0:\EFI\refind\</tt> to copy rEFInd's 64-bit drivers. (You could
+    instead copy the 32-bit drivers or limit yourself to just the drivers
+    you need, of course.)</li>
+
+<li>Type <tt class="userinput">fs0:</tt>, if necessary, to change to the
+    ESP.</li>
+
+<li>Type <tt class="userinput">cd \EFI\refind</tt> to change to rEFInd's
+    installation directory.</li>
+
+<li>If you want to edit rEFInd's options, type <tt class="userinput">edit
+    refind.conf</tt> and use the shell's built-in text editor to do so.
+    Press F2 followed by the Enter key to save your changes and F3 to
+    exit.</li>
+
+<li>Type <tt class="userinput">bcfg boot dump -b</tt> to see a list of
+    existing NVRAM entries. Pay attention to their numbers (labelled
+    <tt>Option:</tt> and <tt>Variable:</tt>, with the latter number
+    preceded by the string <tt>Boot</tt>, as in <tt>Boot0007</tt>). You'll
+    want to create a boot entry for rEFInd using a number that's not in
+    use.</li>
+
+<li>Type <tt class="userinput">bcfg boot add 3
+    fs0:\EFI\refind\refind_x64.efi "rEFInd"</tt>, adjusting the number
+    (<tt>3</tt> in this example), filesystem (<tt>fs0:</tt>), and filename
+    (<tt>\EFI\refind\refind_x64.efi</tt>) as necessary for your system. If
+    you're used to Linux, be sure to use backslashes (<tt>\</tt>), not
+    Linux-style forward slashes (<tt>/</tt>) as directory separators. Note
+    that some shells may ignore the number you entered and use another one,
+    so watch for this possibility.</li>
+
+<li>Type <tt class="userinput">bcfg boot mv <i>3</i> 0</tt>, substituting
+    the option number for the entry you created for <tt
+    class="variable">3</tt>. This moves rEFInd to the top of the boot
+    order.</li>
+
+<li>Type <tt class="userinput">reset</tt> to reboot the computer.</li>
+
+</ol>
+
+<p>With any luck, rEFInd will start up at this point. If not, you can check your settings using a shell or an emergency system for your OS of choice. In an EFI shell, you might type <tt class="userinput">bcfg boot dump -b</tt> to view your boot loader entries and verify that rEFInd appears at the top of the list. Be sure to check the pathname for typos. If you continue to have problems, you might look into giving rEFInd a <a href="#naming">fallback filename</a> that your firmware will recognize.</p>
 
 <a name="naming">
 <h2>Alternative Naming Options</h2>

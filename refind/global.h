@@ -88,7 +88,7 @@
 #define LEGACY_TYPE_MAC  1
 #define LEGACY_TYPE_UEFI 2
 
-#ifndef __MAKEWITH_TIANO
+#ifdef __MAKEWITH_GNUEFI
 //
 // define BBS Device Types
 //
@@ -202,9 +202,9 @@ typedef struct {
 typedef struct {
    REFIT_MENU_ENTRY  me;
    REFIT_VOLUME      *Volume;
-#ifdef __MAKEWITH_TIANO
+#ifndef __MAKEWITH_GNUEFI
    BDS_COMMON_OPTION *BdsOption;
-#endif // __MAKEWITH_TIANO
+#endif
    CHAR16            *LoadOptions;
    BOOLEAN           Enabled;
 } LEGACY_ENTRY;

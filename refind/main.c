@@ -55,14 +55,18 @@
 #include "driver_support.h"
 #include "../include/syslinux_mbr.h"
 
-#ifdef __MAKEWITH_TIANO
-#include "../EfiLib/BdsHelper.h"
-#else
+#ifdef __MAKEWITH_GNUEFI
 #define EFI_SECURITY_VIOLATION    EFIERR (26)
-#endif // __MAKEWITH_TIANO
+#else
+#include "../EfiLib/BdsHelper.h"
+#endif // __MAKEWITH_GNUEFI
 
 //
 // variables
+
+// #ifdef EFIX64
+// foo
+// #endif
 
 #define MACOSX_LOADER_PATH      L"System\\Library\\CoreServices\\boot.efi"
 #if defined (EFIX64)
@@ -128,7 +132,7 @@ static VOID AboutrEFInd(VOID)
 
     if (AboutMenu.EntryCount == 0) {
         AboutMenu.TitleImage = BuiltinIcon(BUILTIN_ICON_FUNC_ABOUT);
-        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.6.1.3");
+        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.6.1.5");
         AddMenuInfoLine(&AboutMenu, L"");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2006-2010 Christoph Pfisterer");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2012 Roderick W. Smith");
@@ -211,7 +215,7 @@ static EFI_STATUS StartEFIImageList(IN EFI_DEVICE_PATH **DevicePaths,
     // load the image into memory (and execute it, in the case of a shim/MOK image).
     ReturnStatus = Status = EFI_NOT_FOUND;  // in case the list is empty
     for (DevicePathIndex = 0; DevicePaths[DevicePathIndex] != NULL; DevicePathIndex++) {
-       // NOTE: Below commented-out line could be more efficient iffile were read ahead of
+       // NOTE: Below commented-out line could be more efficient if file were read ahead of
        // time and passed as a pre-loaded image to LoadImage(), but it doesn't work on my
        // 32-bit Mac Mini or my 64-bit Intel box when launching a Linux kernel; the
        // kernel returns a "Failed to handle fs_proto" error message.
@@ -1307,7 +1311,9 @@ static LEGACY_ENTRY * AddLegacyEntry(IN CHAR16 *LoaderTitle, IN REFIT_VOLUME *Vo
 } /* static LEGACY_ENTRY * AddLegacyEntry() */
 
 
-#ifdef __MAKEWITH_TIANO
+#ifdef __MAKEWITH_GNUEFI
+static VOID ScanLegacyUEFI(IN UINTN DiskType){}
+#else
 // default volume badge icon based on disk kind
 static EG_IMAGE * GetDiskBadge(IN UINTN DiskType) {
    EG_IMAGE * Badge = NULL;
@@ -1436,9 +1442,7 @@ static VOID ScanLegacyUEFI(IN UINTN DiskType)
         Index++;
     }
 } /* static VOID ScanLegacyUEFI() */
-#else
-static VOID ScanLegacyUEFI(IN UINTN DiskType){}
-#endif // __MAKEWITH_TIANO
+#endif // __MAKEWITH_GNUEFI
 
 static VOID ScanLegacyVolume(REFIT_VOLUME *Volume, UINTN VolumeIndex) {
    UINTN VolumeIndex2;
@@ -1711,7 +1715,7 @@ static VOID FindLegacyBootType(VOID) {
    GlobalConfig.LegacyType = LEGACY_TYPE_NONE;
 
    // UEFI-style legacy BIOS support is available only with the TianoCore EDK2
-   // build environment, and then only with some implementations....
+   // build environment, and then only with some EFI implementations....
 #ifdef __MAKEWITH_TIANO
    Status = gBS->LocateProtocol (&gEfiLegacyBootProtocolGuid, NULL, (VOID **) &LegacyBios);
    if (!EFI_ERROR (Status))
@@ -1901,7 +1905,7 @@ VOID RescanAll(VOID) {
    SetupScreen();
 } // VOID RescanAll()
 
-#ifndef __MAKEWITH_GNUEFI
+#ifdef __MAKEWITH_TIANO
 
 // Minimal initialization function
 static VOID InitializeLib(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable) {
@@ -1923,13 +1927,12 @@ static BOOLEAN SecureBootSetup(VOID) {
    EFI_STATUS Status;
    BOOLEAN    Success = FALSE;
 
-   if (secure_mode()) {
+   if (secure_mode() && ShimLoaded()) {
       Status = security_policy_install();
       if (Status == EFI_SUCCESS) {
          Success = TRUE;
       } else {
          Print(L"Failed to install MOK Secure Boot extensions");
-//         PauseForKey();
       }
    }
    return Success;
@@ -2048,7 +2051,7 @@ efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
             case TAG_LEGACY_UEFI: // Boot a legacy OS on a non-Mac
                 StartLegacyUEFI((LEGACY_ENTRY *)ChosenEntry);
                 break;
-#endif // __MAKEWITH_TIANO
+#endif
 
             case TAG_TOOL:     // Start a EFI tool
                 StartTool((LOADER_ENTRY *)ChosenEntry);

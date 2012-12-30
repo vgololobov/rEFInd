@@ -181,7 +181,8 @@ described on this page currently supports only <i>x</i>86-64, not
     href="http://www.codon.org.uk/~mjg59/shim-signed/">Matthew J. Garrett's
     download site</a> or from your distribution. (Don't use Ubuntu 12.10's
     version, though; as noted earlier, it's inadequate for use with
-    rEFInd.)</li>
+    rEFInd.) The most recent beta versions of Fedora 18 reportedly ship
+    with a signed shim, but I've not yet tested them.</li>
 
 <p class="sidebar"><b>Tip:</b> If you're running Linux, you can save some effort by using the <tt>install.sh</tt> script with its <tt>--shim <tt class="variable">/path/to/shim.efi</tt></tt> option rather than installing manually, as in steps 4&ndash;6 of this procedure. If you've installed <tt>openssl</tt> and <tt>sbsign</tt>, using <tt>--localkeys</tt> will generate local signing keys and re-sign the rEFInd binaries with your own key, too. You can then use <tt>sbsign</tt> and the keys in <tt>/etc/refind.d/keys</tt> to sign your kernels or boot loaders.</p>
 
@@ -217,7 +218,9 @@ described on this page currently supports only <i>x</i>86-64, not
 <li>Each of the lines with a long awkward string represents a disk
     partition. Select one and you'll see a list of files. Continue
     selecting subdirectories until you find the <tt>refind.cer</tt> file
-    you copied to the ESP earlier.</li>
+    you copied to the ESP earlier. (Note that the long lines can wrap
+    and hide valid entries on the next line, so you may need to select
+    a disk whose entry is masked by another one!)</li>
 
 <li>Select <tt>refind.cer</tt>. You can type <tt class="userinput">1</tt>
     to view the certificate's details if you like, or skip that and type
@@ -313,20 +316,9 @@ $ <tt class="userinput">openssl x509 -in refind_local.crt -out refind_local.cer 
 <h2>Secure Boot Caveats</h2>
 </a>
 
-<p>rEFInd's Secure Boot support is brand-new with version 0.5.0 of the program. Unfortunately, rEFInd, like shim, must essentially bypass UEFI security features, and must simultaneously not create security problems, in order to work. Unfortunately, the procedures that rEFInd uses to do this (which were lifted straight from shim) play "fast and loose" with the UEFI rules. This fact creates a number of limitations, which include (but are almost certainly not limited to) the following:</p>
+<p>rEFInd's Secure Boot support is brand-new with version 0.5.0 of the program, and was revamped for version 0.6.2. I believe rEFInd 0.6.2's Secure Boot support to be significantly superior to that of previous versions, but you might still run into problems. Some issues you might encounter include the following:</p>
 
 <ul>
-
-<li>rEFInd can launch <i>one</i> shim/MOK-signed driver, no more. If you
-    try to launch two drivers, rEFInd throws up an <tt>Access Denied</tt>
-    error for the second driver.</li>
-
-<li>Signing the Windows boot loader with a MOK won't work; it hangs.
-    Fortunately, the Windows 8 boot loader should work because it should be
-    verified and launched via EFI calls rather than via the new
-    shim-derived code. (I lack a Windows 8 installation for testing,
-    though.) This limitation could affect you if you want to boot Windows 7
-    with Secure Boot active.</li>
 
 <li>Under certain circumstances, the time required to launch a boot loader
     can increase. This is unlikely to be noticeable for the average small
@@ -334,15 +326,28 @@ $ <tt class="userinput">openssl x509 -in refind_local.crt -out refind_local.cer 
     filesystems, such as Linux kernels on ext2fs, ext3fs, or ReiserFS
     partitions.</li>
 
-<li>Secure Boot mode doesn't work on <i>x</i>86 (IA32) or ARM systems, just
-    on <i>x</i>86-64 (AMD64) computers. This is largely because shim has
-    the same limitations.</li>
+<li>As of version 0.6.2, rEFInd's own Secure Boot support is theoretically
+    able to work on non-<i>x</i>86-64 platforms; however, shim 0.2 works
+    only on <i>x</i>86-64, and rEFInd is dependent upon shim. Thus, you'll
+    have to wait for future shim developments if you want to use Secure
+    Boot on <i>x</i>86 or ARM computers.</li>
+
+<li>I currently lack a Windows 8 installation with which to test, so I can't
+    even be 100% positive that rEFInd will launch Windows 8 in Secure Boot
+    ode. (It should, though, since it can launch other boot loaders that have
+    been signed with Microsoft's keys.) In theory, signing Microsoft's boot
+    loader with a MOK should work. This might be handy if you want to replace
+    your computer's built-in keys with your own but still boot Windows&mdash;but
+    be aware that if Windows replaces its boot loader, it will then stop
+    working.</li>
 
 </ul>
 
-<p>My focus in testing rEFInd's Secure Boot capabilities has been on getting Linux kernels with EFI stub loaders to launch correctly. I've done some minimal testing with GRUB 2, though. I've also tested some self-signed binaries, such as an EFI shell and MokManager. (The EFI shell launches, but will not itself launch anything that's not been signed with a UEFI Secure Boot key. This of course limits its utility.)</p>
+<p>If you launch a boot loader or other program from rEFInd that relies on the EFI's standard program-launching code, that program should take advantage of shim and its MOKs. For instance, if you launch <a href="http://freedesktop.org/wiki/Software/gummiboot">gummiboot</a> from rEFInd (and rEFInd from shim), gummiboot should be able to launch shim/MOK-signed Linux kernels. This is not currently true if you launch gummiboot directly from shim.</p>
 
-<p>At the moment, I consider rEFInd's shim/MOK support to be of alpha quality. I'm releasing it in this state in the hope of getting feedback from adventurous early adopters. I expect to improve the installation procedure, and with any luck fix some of the known bugs, in the next couple of versions. Some of the usability improvements are dependent upon MOK-capable versions of shim being released with major distributions; such versions of shim, with kernels signed with the key that matches the one built into shim, will greatly reduce the need for users to sign boot loaders.</p>
+<p>My focus in testing rEFInd's Secure Boot capabilities has been on getting Linux kernels with EFI stub loaders to launch correctly. I've done some minimal testing with GRUB 2, though. I've also tested some self-signed binaries, such as an EFI shell and MokManager. (The EFI shell launches, but will not itself launch anything that's not been signed with a UEFI Secure Boot key, even with rEFInd 0.6.2. This of course limits its utility.)</p>
+
+<p>At the moment, I consider rEFInd's shim/MOK support to be of late alpha quality. I'm releasing it in this state in the hope of getting feedback from adventurous early adopters. Some of the usability improvements are dependent upon MOK-capable versions of shim being released with major distributions; such versions of shim, with kernels signed with the key that matches the one built into shim, will greatly reduce the need for users to sign boot loaders.</p>
 
 <hr />
 

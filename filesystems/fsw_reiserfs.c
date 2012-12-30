@@ -61,7 +61,7 @@ struct fsw_fstype_table   FSW_FSTYPE_TABLE_NAME(reiserfs) = {
     { FSW_STRING_TYPE_ISO88591, 8, 8, "reiserfs" },
     sizeof(struct fsw_reiserfs_volume),
     sizeof(struct fsw_reiserfs_dnode),
-    
+
     fsw_reiserfs_volume_mount,
     fsw_reiserfs_volume_free,
     fsw_reiserfs_volume_stat,
