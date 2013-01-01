@@ -553,7 +553,7 @@ ReSignBinaries() {
    mkdir -p $TempDir/drivers_x64
    cp $RefindDir/refind.conf-sample $TempDir 2> /dev/null
    cp $ThisDir/refind.conf-sample $TempDir 2> /dev/null
-   cp $RefindDir/refind_ia32.efi $TempDir
+   cp $RefindDir/refind_ia32.efi $TempDir 2> /dev/null
    cp -a $RefindDir/drivers_ia32 $TempDir 2> /dev/null
    cp -a $ThisDir/drivers_ia32 $TempDir 2> /dev/null
    SignOneBinary $RefindDir/refind_x64.efi $TempDir/refind_x64.efi
@@ -599,10 +599,8 @@ AddBootEntry() {
       EfiEntryFilename=`echo ${EntryFilename//\//\\\}`
       EfiEntryFilename2=`echo ${EfiEntryFilename} | sed s/\\\\\\\\/\\\\\\\\\\\\\\\\/g`
       ExistingEntry=`$Efibootmgr -v | grep $EfiEntryFilename2`
-      # NOTE: Below protects against duplicate entries, but only for non-Secure Boot
-      # installations.
-      # TODO: Improve to detect & protect against duplicating a Secure Boot entry.
-      if [[ $ExistingEntry && $ShimSource == "none" ]] ; then
+
+      if [[ $ExistingEntry ]] ; then
          ExistingEntryBootNum=`echo $ExistingEntry | cut -c 5-8`
          FirstBoot=`$Efibootmgr | grep BootOrder | cut -c 12-15`
          if [[ $ExistingEntryBootNum != $FirstBoot ]] ; then
@@ -616,18 +614,21 @@ AddBootEntry() {
       else
          InstallIt="1"
       fi
+
       if [[ $InstallIt == "1" ]] ; then
          echo "Installing it!"
-         $Efibootmgr -c -l $EfiEntryFilename -L rEFInd -d $InstallDisk -p $PartNum &> /dev/null
+         $Efibootmgr -c -l $EfiEntryFilename -L "rEFInd Boot Manager" -d $InstallDisk -p $PartNum &> /dev/null
          if [[ $? != 0 ]] ; then
             EfibootmgrProblems=1
             Problems=1
          fi
       fi
+
    else
       EfibootmgrProblems=1
       Problems=1
    fi
+
    if [[ $EfibootmgrProblems ]] ; then
       echo
       echo "ALERT: There were problems running the efibootmgr program! You may need to"
