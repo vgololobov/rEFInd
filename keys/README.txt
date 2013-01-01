@@ -22,5 +22,8 @@ The files in this directory are:
 - canonical-uefi-ca.der -- Canonical's public key, used to sign Ubuntu
   boot loaders and kernels.
 
+- fedora-ca.cer -- Fedora's public key, used to sign Fedora 18's version of
+  shim and Fedora 18's kernels.
+
 - refind.cer & refind.crt -- My own (Roderick W. Smith's) public key,
   used to sign refind_x64.efi and the 64-bit rEFInd drivers.

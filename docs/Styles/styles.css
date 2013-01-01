@@ -62,6 +62,15 @@ h1,h2,h3,h4 {
     background-color:#EEE;
 }
 
+.navbar {
+    width: 40%;
+    float: none;
+    padding: 5px;
+    border: 5px solid gray;
+    margin: 10px;
+    background-color:#EEE;
+}
+
 .subhead {
     font-family:"Verdana", "Trebuchet", "Helvetica", sans-serif;
     font-size:150%;
@@ -71,4 +80,9 @@ h1,h2,h3,h4 {
 
 .left {
     text-align:left;
+}
+
+.tight {
+    margin-top: 0.25em;
+    margin-bottom: 0.5em;
 }

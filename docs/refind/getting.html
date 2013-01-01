@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 3/14/2012; last Web page update:
-12/30/2012, referencing rEFInd 0.6.2</p>
+12/31/2012, referencing rEFInd 0.6.2</p>
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
 
@@ -102,7 +102,7 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
     source code zip file</a></b>&mdash;This is useful if you want to compile
     the software locally. Note that I use Linux with the <a
     href="https://sourceforge.net/projects/tianocore/">TianoCore EFI
-    Development Kit 2 (EDK2)</a> to build my binary zip package (below),
+    Development Kit 2 (EDK2)</a> to build my binary packages (below),
     although the <a href="http://sourceforge.net/projects/gnu-efi">GNU-EFI</a>
     development tools are also supported.</li>
 
@@ -115,6 +115,28 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
     and <i>x</i>86-64 (aka <i>x</i>64, AMD64, or EM64T) versions of rEFInd.
     Which you install depends on your architecture, as described on the <a
     href="installing.html">Installing rEFInd</a> page.</li>
+
+<li><b><a
+    href="http://sourceforge.net/projects/refind/files/0.6.2/refind-0.6.2-2.x86_64.rpm/download">A
+    binary RPM file</a></b>&mdash;If you use an RPM-based <i>x</i>86-64
+    Linux system such as Fedora or openSUSE, you can install the binary RPM
+    package rather than use the binary zip file. (I don't provide an
+    equivalent 32-bit package.) This package runs the <tt>install.sh</tt>
+    script (described on the <a href="installing.html">Installing
+    rEFInd</a> page) as part of the installation process. Distribution
+    maintainers can examine the <tt>refind.spec</tt> file in the source
+    package and tweak it to their needs. The <a
+    href="http://sourceforge.net/projects/refind/files/0.6.2/refind-0.6.2-2.src.rpm/download">source
+    RPM file</a> might or might not build on your system as-is; it relies
+    on assumptions about the locations of the GNU-EFI development
+    files.</li>
+
+<li><b><a
+    href="http://sourceforge.net/projects/refind/files/0.6.2/refind_0.6.2-2_amd64.deb/download">A
+    binary Debian package</a></b>&mdash;If you use an <i>x</i>86-64 version
+    of Debian, Ubuntu, Mint, or another Debian-based distribution, you can
+    install from this package, which was converted from the binary RPM
+    package using <tt>alien</tt>.</li>
 
 <!--
 <li><b><a
@@ -145,26 +167,6 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
     don't have an EFI shell available from your regular hard disk. This can
     be an extremely valuable diagnostic tool if you know how to use an EFI
     shell.</li>
-
-<li><b><a
-    href="http://sourceforge.net/projects/refind/files/0.6.2/refind-0.6.2-1.src.rpm/download">Source</a>
-    and <a
-    href="http://sourceforge.net/projects/refind/files/0.6.2/refind-0.6.2-1.x86_64.rpm/download">binary</a>
-    RPM files</b>&mdash;These files are intended more as demonstrations than
-    as practical packages. If you use an RPM-based <i>x</i>86-64 Linux system,
-    though, you can install the binary RPM package. (I don't provide an
-    equivalent 32-bit package.) Note, however, that this package's files are
-    not signed for use with shim or Secure Boot, and it installs four
-    filesystem drivers, which can slow down the boot process. It was also
-    compiled with GNU-EFI, which means that it lacks the ability to boot
-    BIOS-based OSes. Thus, I recommend using the binary zip file instead. If
-    you do use the RPM file, be aware that it installs rEFInd directly to
-    <tt>/boot/efi/EFI/refind</tt>, so your ESP must be mounted at
-    <tt>/boot/efi</tt>. The post-installation script, which adds rEFInd to the
-    NVRAM entries, requires <tt>efibootmgr</tt> and is likely to fail if you
-    try to install from a live CD. Distribution maintainers can examine the
-    <tt>refind.spec</tt> file in the source package and tweak it to their
-    needs and to eliminate some or all of these deficiencies.</li>
 
 <li><b><a href="https://sourceforge.net/p/refind/code">Source code via
     git</a></b>&mdash;If you want to peruse the source code in your Web
@@ -198,22 +200,14 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
     Tianocore toolkit, and so support booting BIOS/legacy boot loaders on
     UEFI-based PCs.</li>
 
+<li><b><a href="http://distro.ibiblio.org/fatdog/web/">Fat
+    Dog</a></b>&mdash;This variant of Puppy Linux uses a combination of
+    rEFInd and GRUB 2 to boot its installation medium in EFI mode and
+    provides a rEFInd package in its repository set.</li>
+
 <li><b>The <a href="http://nixos.org/nixpkgs/">Nix Packages
     collection</a></b>&mdash;This site creates packages for a number of
     OSes using its own packaging system.</li>
-
-<li><b><a
-    href="https://build.opensuse.org/package/show?package=refind&project=home%3Amichael-chang%3AUEFI">OpenSUSE
-    Build Service (OBS)</a></b>&mdash;This site holds a binary x86-64 build
-    of rEFInd that should install on any RPM-based distribution. It doesn't
-    completely set up rEFInd, though; it just places the rEFInd files in
-    the <tt>/usr/share/refind</tt> directory, and a copy of
-    <tt>install.sh</tt> as <tt>/usr/sbin/refind_install</tt>.
-    Unfortunately, the script makes assumptions about the locations of
-    files and so is useless when files are moved around in this way. Thus,
-    you'll need to install manually after installing this RPM, so you might
-    as well download the rEFInd binary <tt>.zip</tt> file from Sourceforge
-    instead.</li>
 
 <li><b>Slackware</b>&mdash;Although it doesn't seem to provide an official
     build, <a href="http://franck-barbenoire.fr/spip.php?article198">this

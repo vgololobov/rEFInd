@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 3/14/2012; last Web page update:
-12/30/2012, referencing rEFInd 0.6.2</p>
+12/31/2012, referencing rEFInd 0.6.2-2</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -90,9 +90,73 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <hr />
 
-<p class="sidebar"><b>Important:</b> A rEFInd zip file, when uncompressed, creates a directory called <tt>refind-<i>version</i></tt>, where <tt><i>version</i></tt> is the version number. This directory includes a subdirectory called <tt>refind</tt> that holds the boot loader, along with another that holds documentation, as well as miscellaneous files in <tt>refind-<i>version</i></tt> itself. When I refer to "the <tt>refind</tt> directory" on this page, I mean the directory with that precise name, not the <tt>refind-<i>version</i></tt> directory that is its parent.</p>
+<div style="float:right; width:55%">
 
-<p>Once you've uncompressed a rEFInd binary zip file, you must install it to your computer's ESP (or conceivably to some other location). The details of how you do this depend on your OS and your computer (UEFI-based PC vs. Macintosh). The upcoming sections provide details. For Linux and Mac OS X, you can use the installation script, <a href="#installsh"><tt>install.sh</tt>,</a> which provides easy one-command installation on most systems. Occasionally this script will fail, though, so I also provide explicit instructions for <a href="#linux">Linux</a> and <a href="#osx">Mac OS X.</a> Installation under <a href="#windows">Windows</a> also must be done manually. You can even install rEFInd using an <a href="#efishell">EFI shell</a> (version 2 only). In some cases, you'll have to deviate from the default naming conventions, as described in <a href="#naming">a section on this topic.</a> If you're upgrading rEFInd, see the <a href="#upgrading">section on upgrading.</a> Finally, I describe how to install some <a href="#addons">additional components</a> you might find useful.</a></p>
+<p>Once you've obtained a rEFInd binary file, you must install it to your computer's ESP (or conceivably to some other location). The details of how you do this depend on your OS and your computer (UEFI-based PC vs. Macintosh). The upcoming sections provide details. See the Contents sidebar to the left for links to specific installation procedures. For most Linux users, an RPM or Debian package is the best way to go. If your Linux system doesn't support these formats, though, or if you're running OS X, using the <tt>install.sh</tt> script can be a good way to go. If you're using Windows, you'll have to install manually.</p>
+
+<p class="sidebar" style="width:95%"><b>Important:</b> A rEFInd zip file, when uncompressed, creates a directory called <tt>refind-<i>version</i></tt>, where <tt><i>version</i></tt> is the version number. This directory includes a subdirectory called <tt>refind</tt> that holds the boot loader, along with another that holds documentation, as well as miscellaneous files in <tt>refind-<i>version</i></tt> itself. When I refer to "the <tt>refind</tt> directory" on this page, I mean the directory with that precise name, not the <tt>refind-<i>version</i></tt> directory that is its parent.</p>
+
+</div>
+
+<div class="navbar">
+
+<h4 class="tight">Contents</h4>
+
+<ul class="tight">
+
+<li class="tight"><a href="#packagefile">Installing rEFInd using an RPM or Debian package file</a></li>
+
+<li class="tight"><a href="#installsh">Installing rEFInd Using <tt>install.sh</tt> under Linux or Mac OS X</a>
+
+   <ul class="tight">
+
+   <li class="tight"><a href="#quickstart">Quick <tt>install.sh</tt> Instructions</a></li>
+
+   <li class="tight"><a href="#extra_installsh">Extra <tt>install.sh</tt> Instructions</a></li>
+
+   </ul></li>
+
+<li class="tight"><a href="#manual">Installing rEFInd Manually</a>
+
+   <ul>
+
+   <li class="tight"><a href="#linux">Installing rEFInd Manually Using Linux</a></li>
+
+   <li class="tight"><a href="#osx">Installing rEFInd Manually Using Mac OS X</a></li>
+
+   <li class="tight"><a href="#windows">Installing rEFInd Manually Using Windows</a></li>
+
+   <li class="tight"><a href="#efishell">Installing rEFInd Manually Using an EFI Shell</a></ul></li>
+
+<li class="tight"><a href="#naming">Alternative Naming Options</a></li>
+
+<li class="tight"><a href="#upgrading">Upgrading rEFInd</a></li>
+
+<li class="tight"><a href="#addons">Installing Additional Components</a></li>
+
+<li class="tight"><a href="#sluggish">Fixing a Sluggish Macintosh Boot</a></li>
+
+<li class="tight"><a href="#uninstalling">Uninstalling rEFInd</a></li>
+
+</ul>
+
+</div>
+
+<a name="packagefile">
+<h2>Installing rEFInd Using an RPM or Debian Package File</h2>
+</a>
+
+<p>Beginning with version 0.6.2, I've included an RPM package file for rEFInd, and I quickly updated this (in 0.6.2-2) to be more sophisticated and to include a Debian package file, as well. If you have a working RPM-based or Debian-based Linux installation that boots in EFI mode, using one of these files is likely to be the easiest way to install rEFInd: You need only download the file and issue an appropriate installation command. In some cases, double-clicking the package in your file manager will install it. If that doesn't work, a command like the following will install the RPM on an RPM-based system:</p>
+
+<pre class="listing"># <tt class="userinput">rpm -Uvh refind-0.6.2-2.x86_64.rpm</tt></pre>
+
+<p>On a Debian-based system, the equivalent command is:</p>
+
+<pre class="listing"># <tt class="userinput">dpkg -i refind_0.6.2-2_amd64.deb</tt></pre>
+
+<p>Either command produces output similar to that described for <a href="#installsh">using the <tt>install.sh</tt> script,</a> so you can check it for error messages and other signs of trouble. The package file installs rEFInd and registers it with the EFI to be the default boot loader. The script that runs as part of the installation process tries to determine if you're using Secure Boot, and if so it will try to configure rEFInd to launch using shim; however, this won't work correctly on all systems. Ubuntu 12.10 users who are booting with Secure Boot active should be wary, since the resulting installation will probably try to use Ubuntu's version of shim, which won't work correctly with rEFInd.</p>
+
+<p>Since version 0.6.2-2, my package files have installed the rEFInd binaries to <tt>/usr/share/refind-<tt class="variable">version</tt></tt>, the documentation to <tt>/usr/share/doc/refind-<tt class="variable">version</tt></tt>, and a few miscellaneous files elsewhere. Upon installation, the package runs the <tt>install.sh</tt> script to copy the files to the ESP. This enables you to re-install rEFInd after the fact by running <tt>install.sh</tt>, should some other tool or OS wipe the ESP or should the installation go awry. In such cases you can <a href="#installsh">use <tt>install.sh</tt></a> or <a href="#manual">install manually.</a></p>
 
 <a name="installsh">
 <h2>Installing rEFInd Using <tt>install.sh</tt> under Linux or Mac OS X</h2>
@@ -101,7 +165,9 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>If you're using Linux or Mac OS X, the easiest way to install rEFInd is to use the <tt>install.sh</tt> script. This script automatically copies rEFInd's files to your ESP or other target location and makes changes to your firmware's NVRAM settings so that rEFInd will start the next time you boot. If you've booted to OS X or in non-Secure-Boot EFI mode to Linux on a UEFI-based PC, <tt>install.sh</tt> will probably do the right thing, so you can get by with the quick instructions. If your setup is unusual, if your computer uses Secure Boot, or if you want to create a USB flash drive with rEFInd on it, you should read the <a href="#extra_installsh">extra instructions</a> for this utility.</p>
 
+<a name="quickstart">
 <h3>Quick <tt>install.sh</tt> Instructions</h3>
+</quickstart>
 
 <p>Under Linux, the <tt>install.sh</tt> script installs rEFInd to your disk's ESP. Under Mac OS X, the script installs rEFInd to your current OS X boot partition by default; but you can install to your ESP instead by passing the script the <tt>--esp</tt> option. Under either OS, you can install to something other than the currently-running OS by using the <tt>--root <tt class="variable">/mountpoint</tt></tt> option. (See <a href="#table1">Table 1</a> for details.)</p>
 
@@ -226,10 +292,10 @@ Installation has completed successfully.</pre>
 
 <pre class="listing">
 install.sh [--esp | --usedefault <tt class="variable">device-file</tt> | --root <tt class="variable">mount-point</tt> ] \
-           [--nodrivers | --alldrivers] [--shim <tt class="variable">shim-filename</tt>] [--localkeys]
+           [--nodrivers | --alldrivers] [--shim <tt class="variable">shim-filename</tt>] [--localkeys] [--yes]
 </pre>
 
-<p>The details of the options are summarized in <a href="#table1">Table 1.</a> Broadly speaking, they come in three classes: installation location options (<tt>--esp</tt>, <tt>--usedefault</tt>, and <tt>--root</tt>), driver options (<tt>--nodrivers</tt> and <tt>--alldrivers</tt>), and Secure Boot options (<tt>--shim</tt> and <tt>--localkeys</tt>). Using some of these options in unusual conditions can generate warnings and prompts to confirm your actions. In particular, using <tt>--shim</tt> or <tt>--localkeys</tt> when you're <i>not</i> booted in Secure Boot mode, or failing to use <tt>--shim</tt> when you <i>are</i> booted in Secure Boot mode, will generate a query and a request to confirm your installation. Consult the <a href="secureboot.html">Managing Secure Boot</a> page for more on this topic.</p>
+<p>The details of the options are summarized in <a href="#table1">Table 1.</a> Broadly speaking, they come in four classes: installation location options (<tt>--esp</tt>, <tt>--usedefault</tt>, and <tt>--root</tt>), driver options (<tt>--nodrivers</tt> and <tt>--alldrivers</tt>), Secure Boot options (<tt>--shim</tt> and <tt>--localkeys</tt>), and a user input option (<tt>--yes</tt>). Using some of these options in unusual conditions can generate warnings and prompts to confirm your actions. In particular, using <tt>--shim</tt> or <tt>--localkeys</tt> when you're <i>not</i> booted in Secure Boot mode, or failing to use <tt>--shim</tt> when you <i>are</i> booted in Secure Boot mode, will generate a query and a request to confirm your installation. Consult the <a href="secureboot.html">Managing Secure Boot</a> page for more on this topic.</p>
 
 <table border="1" cellpadding="1" cellspacing="2" summary="Table 1: Options to <tt>install.sh</tt>"><a name="table1"><caption><b>Table 1: Options to <tt>install.sh</tt></b></caption></a>
 <tr>
@@ -264,12 +330,22 @@ install.sh [--esp | --usedefault <tt class="variable">device-file</tt> | --root 
    <td><tt>--localkeys</tt></td>
    <td>This option tells <tt>install.sh</tt> to generate a new Machine Owner Key (MOK), store it in <tt>/etc/refind.d/keys</tt> as <tt>refind_local.*</tt>, and re-sign all the 64-bit rEFInd binaries with this key before installing them. This is the preferable way to install rEFInd in Secure Boot mode, since it means your binaries will be signed locally rather than with my own key, which is used to sign many other users' binaries; however, this method requires that both the <tt>openssl</tt> and <tt>sbsign</tt> binaries be installed. The former is readily available in most distributions' repositories, but the latter is not, so this option is not the default.</td>
 </tr>
+<tr>
+   <td><tt>--yes</tt></td>
+   <td>This option causes the script to assume a <tt>Y</tt> input to every yes/no prompt that can be generated under certain conditions, such as if you specify <tt>--shim</tt> but <tt>install.sh</tt> detects no evidence of a Secure Boot installation. This option is intended mainly for use by scripts such as those that might be used as part of an installation via an RPM or Debian package. <b>Note:</b> I introduced this option with the 0.6.2-2 incremental release, which was primarily an update of the 0.6.2 RPM package; it's not yet available in the mainline 0.6.2 version.</td>
+</tr>
 </table>
 
 <p>In any event, you should peruse the script's output to ensure that everything looks OK. <tt>install.sh</tt> displays error messages when it encounters errors, such as if the ESP is mounted read-only or if you run out of disk space. You may need to correct such problems manually and re-run the script. In some cases you may need to fall back on manual installation, which gives you better control over details such as which partition to use for installation.</p>
 
+<a name="manual">
+<h2>Installing rEFInd Manually</h2>
+</a>
+
+<p>Sometimes the <tt>install.sh</tt> script just won't do the job, or you may need to install using an OS that it doesn't support, such as Windows. In these cases, you'll have to install rEFInd the old-fashioned way, using file-copying commands and utilities to add the program to your EFI's boot loader list. I describe how to do this with <a href="#linux">Linux</a>, <a href="#osx">OS X</a>, <a href="#windows">Windows</a>, and <a href="#efishell">the EFI shell.</a></p>
+
 <a name="linux">
-<h2>Installing rEFInd Manually Using Linux</h2>
+<h3>Installing rEFInd Manually Using Linux</h3>
 </a>
 
 <p>On a UEFI-based PC, you'll normally install rEFInd to the ESP, which is usually mounted at <tt>/boot/efi</tt>. You can verify that this is the case by using the <tt>df</tt> command:</p>
@@ -313,7 +389,7 @@ Filesystem     1K-blocks  Used Available Use% Mounted on
 <p>On some systems, <tt>efibootmgr</tt> won't do what you expect. On such systems, you may have better luck renaming the rEFInd files, as described in the <a href="#naming">Alternative Naming Options</a> section.</p>
 
 <a name="osx">
-<h2>Installing rEFInd Manually Using Mac OS X</h2>
+<h3>Installing rEFInd Manually Using Mac OS X</h3>
 </a>
 
 <p>Before installing rEFInd on a Mac, you must determine whether it uses a 32-bit or 64-bit EFI implementation. Most Intel-based Macs have 64-bit EFIs, so you should use the <tt>refind_x64.efi</tt> file with them; but very early Intel-based Macs have 32-bit EFIs (and sometimes 32-bit CPUs), which require the <tt>refind_ia32.efi</tt> file. You can determine whether your Mac needs the <i>x</i>86-64 or IA32 build by typing the following command in a Mac Terminal window:</p>
@@ -410,7 +486,7 @@ $ <b>ioreg -l -p IODeviceTree | grep firmware-abi</b>
 <p>If you want to remove rEFInd from your system, you can delete its files. The Mac will revert to booting using whatever standard boot loader it can find. Alternatively, you can use <tt>bless</tt> to bless another EFI boot loader. The GUI Startup Disk utility in System Preferences provides a simplified interface that enables you to select which OS X installation to boot, but it doesn't look for non-Apple boot loaders, so you can't use it to enable rEFInd.</p>
 
 <a name="windows">
-<h2>Installing rEFInd Manually Using Windows</h2>
+<h3>Installing rEFInd Manually Using Windows</h3>
 </a>
 
 <p class="sidebar"><b>Warning:</b> Windows 8 implements a fast shutdown feature that helps speed up shutdown and startup operations on a single-boot computer. Unfortunately, this feature can cause filesystem corruption if it's used on a multi-boot computer. You can disable the feature by launching an Administrator Command Prompt window and typing <tt class="userinput">powercfg /h off</tt> in it.</p>
@@ -456,7 +532,7 @@ $ <b>ioreg -l -p IODeviceTree | grep firmware-abi</b>
 </ul>
 
 <a name="efishell">
-<h2>Installing rEFInd Manually Using Windows</h2>
+<h3>Installing rEFInd Manually Using an EFI Shell</h3>
 </a>
 
 <p>If you can't currently boot any OS (say, because a firmware update has wiped your NVRAM entries), you may find it convenient to install rEFInd using an EFI version 2 shell. Unfortunately, the <tt>bcfg</tt> command described here is not available in the EFI version 1 shell, and the version 2 shell is unusable on many firmware implementations prior to 2.3.1. Thus, this procedure won't work for all systems.</p>

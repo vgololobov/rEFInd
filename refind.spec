@@ -1,13 +1,34 @@
 Summary: EFI boot manager software
 Name: refind
 Version: 0.6.2
-Release: 1%{?dist}
+Release: 2%{?dist}
 License: GPLv3
 URL: http://www.rodsbooks.com/refind/
 Group: System Environment/Base
 Source: refind-src-%version.zip
 Requires: efibootmgr
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
+
+%define efiarch unknown
+%ifarch i386
+%define efiarch ia32
+%endif
+%ifarch i486
+%define efiarch ia32
+%endif
+%ifarch i586
+%define efiarch ia32
+%endif
+%ifarch i686
+%define efiarch ia32
+%endif
+%ifarch x86_64
+%define efiarch x64
+%endif
+
+# Directory in which refind.key and refind.crt files are found for
+# signing of binaries. If absent, binaries are copied unsigned.
+%define keydir /mnt/refind
 
 %description
 
@@ -27,50 +48,101 @@ when paired with Linux kernels that provide EFI stub support.
 %setup -q
 
 %build
-make gnuefi
-make fs_gnuefi
-rm filesystems/ext2*.efi
+if [[ -d /usr/local/UDK2010 ]] ; then
+   make
+   make fs
+else
+   make gnuefi
+   make fs_gnuefi
+fi
 
 %install
 rm -rf $RPM_BUILD_ROOT
-mkdir -p $RPM_BUILD_ROOT/boot/efi/EFI/refind
-cp -a refind/refind*.efi $RPM_BUILD_ROOT/boot/efi/EFI/refind/refind.efi
-cp -a refind.conf-sample $RPM_BUILD_ROOT/boot/efi/EFI/refind/refind.conf
-mkdir -p $RPM_BUILD_ROOT/boot/efi/EFI/refind/drivers/
-cp -a filesystems/*.efi $RPM_BUILD_ROOT/boot/efi/EFI/refind/drivers/
-cp -a icons $RPM_BUILD_ROOT/boot/efi/EFI/refind/
-cp -a keys $RPM_BUILD_ROOT/boot/efi/EFI/refind/
+mkdir -p $RPM_BUILD_ROOT/usr/share/refind-%{version}/refind/
+
+# Copy the rEFInd binaries (rEFInd proper and drivers) to /usr/share/refind-%{version},
+# including signing the binaries if sbsign is installed and a %{keydir}/refind.key file
+# is available
+declare SBSign=`which sbsign 2> /dev/null`
+if [[ -f %{keydir}/refind.key && -x $SBSign ]] ; then
+   $SBSign --key %{keydir}/refind.key --cert %{keydir}/refind.crt --output $RPM_BUILD_ROOT/usr/share/refind-%{version}/refind/refind_%{efiarch}.efi refind/refind_%{efiarch}.efi
+   mkdir -p $RPM_BUILD_ROOT/usr/share/refind-%{version}/refind/drivers_%{efiarch}
+   for File in `ls drivers_%{efiarch}/*_x64.efi` ; do
+      $SBSign --key %{keydir}/refind.key --cert %{keydir}/refind.crt --output $RPM_BUILD_ROOT/usr/share/refind-%{version}/refind/$File $File
+   done
+else
+   install -Dp -m0644 refind/refind*.efi $RPM_BUILD_ROOT/usr/share/refind-%{version}/refind/
+   cp -a drivers_* $RPM_BUILD_ROOT/usr/share/refind-%{version}/refind/
+fi
+
+# Copy configuration and support files to /usr/share/refind-%{version}
+install -Dp -m0644 refind.conf-sample $RPM_BUILD_ROOT/usr/share/refind-%{version}/refind/
+cp -a icons $RPM_BUILD_ROOT/usr/share/refind-%{version}/refind/
+install -Dp -m0755 install.sh $RPM_BUILD_ROOT/usr/share/refind-%{version}/
+
+# Copy documentation to /usr/share/doc/refind-%{version}
 mkdir -p $RPM_BUILD_ROOT/usr/share/doc/refind-%{version}
 cp -a docs/* $RPM_BUILD_ROOT/usr/share/doc/refind-%{version}/
-cp -a NEWS.txt COPYING.txt LICENSE.txt README.txt CREDITS.txt $RPM_BUILD_ROOT/usr/share/doc/refind-%{version}
-mkdir -p $RPM_BUILD_ROOT/usr/share/refind
-cp -a install.sh $RPM_BUILD_ROOT/usr/share/refind/
+install -Dp -m0644 NEWS.txt COPYING.txt LICENSE.txt README.txt CREDITS.txt $RPM_BUILD_ROOT/usr/share/doc/refind-%{version}
+
+# Copy keys to /etc/refind.d/keys
+mkdir -p $RPM_BUILD_ROOT/etc/refind.d/keys
+install -Dp -m0644 keys/* $RPM_BUILD_ROOT/etc/refind.d/keys
+
+# Copy mkrlconf.sh to /usr/sbin
 mkdir -p $RPM_BUILD_ROOT/usr/sbin
-cp -a mkrlconf.sh $RPM_BUILD_ROOT/usr/sbin/
+install -Dp -m0755 mkrlconf.sh $RPM_BUILD_ROOT/usr/sbin/
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root -)
-%doc /usr/share/doc/refind-%{version}/*.txt
-%doc /usr/share/doc/refind-%{version}/Styles/styles.css
-%doc /usr/share/doc/refind-%{version}/refind/*
-/usr/share/refind/install.sh
+%doc /usr/share/doc/refind-%{version}
 /usr/sbin/mkrlconf.sh
-/boot/efi/EFI/refind
-%config /boot/efi/EFI/refind/refind.conf
+/usr/share/refind-%{version}
+/etc/refind.d/
 
 %post
+PATH=$PATH:/usr/local/bin
+# Remove any existing NVRAM entry for rEFInd, to avoid creating a duplicate.
 ExistingEntry=`efibootmgr | grep "rEFInd Boot Manager" | cut -c 5-8`
-if [[ ! -n $ExistingEntry ]] ; then
-   InstallDisk=`grep /boot/efi /etc/mtab | cut -d " " -f 1 | cut -c 1-8`
-   PartNum=`grep /boot/efi /etc/mtab | cut -d " " -f 1 | cut -c 9-10`
-   efibootmgr -c -d $InstallDisk -p $PartNum -l \\EFI\\refind\\refind.efi -L "rEFInd Boot Manager"
+if [[ -n $ExistingEntry ]] ; then
+   efibootmgr --bootnum $ExistingEntry --delete-bootnum
 fi
-/usr/sbin/mkrlconf.sh
 
+cd /usr/share/refind-%{version}
+
+declare VarFile=`ls -d /sys/firmware/efi/vars/SecureBoot* 2> /dev/null`
+declare ShimFile=`find /boot -name shim\.efi 2> /dev/null | grep -v refind | head -n 1`
+declare SBSign=`which sbsign 2> /dev/null`
+declare OpenSSL=`which openssl 2> /dev/null`
+
+# Run the rEFInd installation script. Do so with the --shim option
+# if Secure Boot mode is suspected and if a shim program can be
+# found, or without it if not. If a shim installation is attempted
+# and the sbsign and openssl programs can be found, do the install
+# using a local signing key. Note that this option is undesirable
+# for a distribution, since it would then require the user to
+# enroll an extra MOK. I'm including it here because I'm NOT a
+# distribution maintainer, and I want to encourage users to use
+# their own local keys.
+if [[ -n $VarFile && -n $ShimFile ]] ; then
+   if [[ -n $SBSign && -n $OpenSSL ]] ; then
+      ./install.sh --shim $ShimFile --localkeys --yes
+   else
+      ./install.sh --shim $ShimFile --yes
+   fi
+else
+   ./install.sh --yes
+fi
+
+# CAUTION: Don't create a %preun or a %postun script that deletes the files
+# installed by install.sh, since that script will run after an update, thus
+# wiping out the just-updated files.
 
 %changelog
+* Mon Dec 31 2012 R Smith <rodsmith@rodsbooks.com> - 0.6.2-2
+- Improved installation procedures
 * Sun Dec 30 2012 R Smith <rodsmith@rodsbooks.com> - 0.6.2
 - Created spec file for 0.6.2 release

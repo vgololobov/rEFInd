@@ -29,6 +29,7 @@
 #
 # Revision history:
 #
+# 0.6.2-1 -- Added --yes option & tweaked key-copying for use with RPM install script
 # 0.6.1   -- Added --root option; minor bug fixes
 # 0.6.0   -- Changed --drivers to --alldrivers and added --nodrivers option;
 #            changed default driver installation behavior in Linux to install
@@ -56,6 +57,7 @@ TargetX64="refind_x64.efi"
 TargetIA32="refind_ia32.efi"
 LocalKeys=0
 DeleteRefindDir=0
+AlwaysYes=0
 
 #
 # Functions used by both OS X and Linux....
@@ -91,9 +93,11 @@ GetParams() {
               ;;
          --nodrivers) InstallDrivers="none"
               ;;
+         --yes) AlwaysYes=1
+              ;;
          * ) echo "Usage: $0 [--esp | --usedefault {device-file} | --root {directory} ]"
              echo "                  [--nodrivers | --alldrivers] [--shim {shim-filename}]"
-             echo "                  [--localkeys]"
+             echo "                  [--localkeys] [--yes]"
              exit 1
       esac
       shift
@@ -115,6 +119,18 @@ GetParams() {
    RLConfFile="$RootDir/boot/refind_linux.conf"
    EtcKeysDir="$RootDir/etc/refind.d/keys"
 } # GetParams()
+
+# Get a yes/no response from the user and place it in the YesNo variable.
+# If the AlwaysYes variable is set to 1, skip the user input and set "Y"
+# in the YesNo variable.
+ReadYesNo() {
+   if [[ $AlwaysYes == 1 ]] ; then
+      YesNo="Y"
+      echo "Y"
+   else
+      read YesNo
+   fi
+}
 
 # Abort if the rEFInd files can't be found.
 # Also sets $ConfFile to point to the configuration file,
@@ -220,7 +236,7 @@ CopyDrivers() {
 # Copy the rEFInd files to the ESP or OS X root partition.
 # Sets Problems=1 if any critical commands fail.
 CopyRefindFiles() {
-   mkdir -p $InstallDir/$TargetDir &> /dev/null
+   mkdir -p $InstallDir/$TargetDir
    if [[ $TargetDir == '/EFI/BOOT' ]] ; then
       cp $RefindDir/refind_ia32.efi $InstallDir/$TargetDir/$TargetIA32 2> /dev/null
       if [[ $? != 0 ]] ; then
@@ -262,8 +278,8 @@ CopyRefindFiles() {
          if [[ $LocalKeys == 0 ]] ; then
             echo "Storing copies of rEFInd Secure Boot public keys in $EtcKeysDir"
             mkdir -p $EtcKeysDir
-            cp $ThisDir/keys/refind.cer $EtcKeysDir
-            cp $ThisDir/keys/refind.crt $EtcKeysDir
+            cp $ThisDir/keys/refind.cer $EtcKeysDir 2> /dev/null
+            cp $ThisDir/keys/refind.crt $EtcKeysDir 2> /dev/null
          fi
       fi
    else
@@ -281,7 +297,9 @@ CopyRefindFiles() {
    if [[ $? != 0 ]] ; then
       Problems=1
    fi
-   cp -rf $ThisDir/keys $InstallDir/$TargetDir/
+   mkdir -p $InstallDir/$TargetDir/keys
+   cp -rf $ThisDir/keys/*.[cd]er $InstallDir/$TargetDir/keys/ 2> /dev/null
+   cp -rf $EtcKeysDir/*.[cd]er $InstallDir/$TargetDir/keys/ 2> /dev/null
    if [[ -f $InstallDir/$TargetDir/refind.conf ]] ; then
       echo "Existing refind.conf file found; copying sample file as refind.conf-sample"
       echo "to avoid overwriting your customizations."
@@ -377,7 +395,7 @@ InstallOnOSX() {
       echo "/Library/StartupItems/rEFItBlesser found!"
       echo "This program is part of rEFIt, and will cause rEFInd to fail to work after"
       echo -n "its first boot. Do you want to remove rEFItBlesser (Y/N)? "
-      read YesNo
+      ReadYesNo
       if [[ $YesNo == "Y" || $YesNo == "y" ]] ; then
          echo "Deleting /Library/StartupItems/rEFItBlesser..."
          rm -r /Library/StartupItems/rEFItBlesser
@@ -418,8 +436,8 @@ CheckSecureBoot() {
       echo "http://www.rodsbooks.com/refind/secureboot.html."
       echo ""
       echo -n "Do you want to proceed with installation (Y/N)? "
-      read ContYN
-      if [[ $ContYN == "Y" || $ContYN == "y" ]] ; then
+      ReadYesNo
+      if [[ $YesNo == "Y" || $YesNo == "y" ]] ; then
          echo "OK; continuing with the installation..."
       else
          exit 0
@@ -436,8 +454,8 @@ CheckSecureBoot() {
       echo "http://www.rodsbooks.com/refind/secureboot.html."
       echo ""
       echo -n "Do you want to proceed with installation (Y/N)? "
-      read ContYN
-      if [[ $ContYN == "Y" || $ContYN == "y" ]] ; then
+      ReadYesNo
+      if [[ $YesNo == "Y" || $YesNo == "y" ]] ; then
          echo "OK; continuing with the installation..."
       else
          exit 0
@@ -453,8 +471,8 @@ CheckSecureBoot() {
       echo "more about it at http://www.rodsbooks.com/refind/secureboot.html."
       echo ""
       echo -n "Do you want to proceed with installation (Y/N)? "
-      read ContYN
-      if [[ $ContYN == "Y" || $ContYN == "y" ]] ; then
+      ReadYesNo
+      if [[ $YesNo == "Y" || $YesNo == "y" ]] ; then
          echo "OK; continuing with the installation..."
       else
          exit 0
@@ -621,7 +639,9 @@ AddBootEntry() {
 
 # Create a minimal/sample refind_linux.conf file in /boot.
 GenerateRefindLinuxConf() {
-   if [[ ! -f $RLConfFile ]] ; then
+   if [[ -f $RLConfFile ]] ; then
+      echo "Existing $RLConfFile found; not overwriting."
+   else
       if [[ -f "$RootDir/etc/default/grub" ]] ; then
          # We want the default options used by the distribution, stored here....
          source "$RootDir/etc/default/grub"
@@ -675,8 +695,8 @@ InstallOnLinux() {
       echo "to the following question..."
       echo
       echo -n "Are you sure you want to continue (Y/N)? "
-      read ContYN
-      if [[ $ContYN == "Y" || $ContYN == "y" ]] ; then
+      ReadYesNo
+      if [[ $YesNo == "Y" || $YesNo == "y" ]] ; then
          echo "OK; continuing with the installation..."
       else
          exit 0
