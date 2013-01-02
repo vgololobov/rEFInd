@@ -114,6 +114,8 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
    <li class="tight"><a href="#extra_installsh">Extra <tt>install.sh</tt> Instructions</a></li>
 
+   <li class="tight"><a href="#unhijack">Using <tt>refind-unhijack.sh</tt></li>
+
    </ul></li>
 
 <li class="tight"><a href="#manual">Installing rEFInd Manually</a>
@@ -156,6 +158,8 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Either command produces output similar to that described for <a href="#installsh">using the <tt>install.sh</tt> script,</a> so you can check it for error messages and other signs of trouble. The package file installs rEFInd and registers it with the EFI to be the default boot loader. The script that runs as part of the installation process tries to determine if you're using Secure Boot, and if so it will try to configure rEFInd to launch using shim; however, this won't work correctly on all systems. Ubuntu 12.10 users who are booting with Secure Boot active should be wary, since the resulting installation will probably try to use Ubuntu's version of shim, which won't work correctly with rEFInd.</p>
 
+<p>Since version 0.6.3, the installation script makes an attempt to install rEFInd in a bootable way even if you run the script from a BIOS-mode boot, and therefore the RPM and Debian packages do the same. I cannot guarantee that this will work, though, and even if it does, some of the tricks that <tt>install.sh</tt> uses might not last for long. You might therefore want to run the <tt><a href="#unhijack">refind-unhijack.sh</a></tt> script after you boot Linux in EFI mode for the first time.</p>
+
 <p>Since version 0.6.2-2, my package files have installed the rEFInd binaries to <tt>/usr/share/refind-<tt class="variable">version</tt></tt>, the documentation to <tt>/usr/share/doc/refind-<tt class="variable">version</tt></tt>, and a few miscellaneous files elsewhere. Upon installation, the package runs the <tt>install.sh</tt> script to copy the files to the ESP. This enables you to re-install rEFInd after the fact by running <tt>install.sh</tt>, should some other tool or OS wipe the ESP or should the installation go awry. In such cases you can <a href="#installsh">use <tt>install.sh</tt></a> or <a href="#manual">install manually.</a></p>
 
 <a name="installsh">
@@ -171,7 +175,7 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Under Linux, the <tt>install.sh</tt> script installs rEFInd to your disk's ESP. Under Mac OS X, the script installs rEFInd to your current OS X boot partition by default; but you can install to your ESP instead by passing the script the <tt>--esp</tt> option. Under either OS, you can install to something other than the currently-running OS by using the <tt>--root <tt class="variable">/mountpoint</tt></tt> option. (See <a href="#table1">Table 1</a> for details.)</p>
 
-<p>Before running this script under Linux, you should ensure that your ESP is mounted at <tt>/boot</tt> or <tt>/boot/efi</tt>, as described in more detail in the <a href="#linux">Installing rEFInd Manually Using Linux</a> section. (If you installed Linux in EFI mode, chances are your ESP is properly mounted.) This precaution isn't necessary under OS X.</p>
+<p>Before running this script under Linux, you should ensure that your ESP is mounted at <tt>/boot</tt> or <tt>/boot/efi</tt>, as described in more detail in the <a href="#linux">Installing rEFInd Manually Using Linux</a> section. (If you installed Linux in EFI mode, chances are your ESP is properly mounted.) This precaution isn't necessary under OS X. If you run <tt>install.sh</tt> from a BIOS/legacy-mode boot, particularly on a computer that also runs Windows, you should be aware that the tricks the script uses to install itself from BIOS mode are rather delicate. You can convert to a more conventional configuration using the <a href="#unhijack"><tt>refind-unhijack.sh</tt> script.</a></p>
 
 <p>A sample run under Linux looks something like this:</p>
 
@@ -337,6 +341,44 @@ install.sh [--esp | --usedefault <tt class="variable">device-file</tt> | --root 
 </table>
 
 <p>In any event, you should peruse the script's output to ensure that everything looks OK. <tt>install.sh</tt> displays error messages when it encounters errors, such as if the ESP is mounted read-only or if you run out of disk space. You may need to correct such problems manually and re-run the script. In some cases you may need to fall back on manual installation, which gives you better control over details such as which partition to use for installation.</p>
+
+<a name="unhijack">
+<h3>Using <tt>refind-unhijack.sh</tt></h3>
+</a>
+
+<p>Sometimes it's necessary to install rEFInd from a BIOS/legacy-mode boot. This can happen because you've accidentally installed Linux in this mode or because you're using a BIOS-mode emergency disc to do the installation, for instance. Ordinarily, such installations are unlikely to work, particularly if the computer already has an EFI-mode OS installed. Since version 0.6.3, though, rEFInd's <tt>install.sh</tt> script has attempted to install in one of three ways when run from BIOS mode:</p>
+
+<ul>
+
+<li>It attempts to locate existing rEFInd installations and upgrades
+    them.</li>
+
+<li>It installs rEFInd as <tt>EFI/BOOT/bootx64.efi</tt> (and
+    <tt>EFI/BOOT/bootia32.efi</tt>), the default filenames for EFI-mode
+    booting if no entries exist in the computer's NVRAM.</li>
+
+<li>It copies the Windows boot loader
+    (<tt>EFI/Microsoft/Boot/bootmgfw.efi</tt>), if present, down one level,
+    to <tt>EFI/Microsoft/bootmgfw.efi</tt>, and installs rEFInd as
+    <tt>EFI/Microsoft/Boot/bootmgfw.efi</tt>.</li>
+
+</ul>
+
+<p>The first two approaches are perfectly legitimate and are unlikely to cause problems, although they also might not work in all circumstances. The third approach is essentially an act of desperation, and it violates the usual rule that each OS should manage its own boot loader directory. It has the benefit of working, though; and in fact on some computers with buggy firmware, this approach may be the only way to get rEFInd (or any other non-Microsoft boot loader) to work. When <tt>install.sh</tt> uses this method, it notifies you of the fact:</p>
+
+<pre class="listing">Running in BIOS mode with a suspected Windows installation; moving boot loader
+files so as to install to /boot/efi/EFI/Microsoft/Boot.</pre>
+
+<p>The <tt>install.sh</tt> script preserves the Windows boot loader, and rEFInd should continue to be able to boot Windows when installed in this way. It's possible, though, that Windows will notice the change and will attempt to "fix" the "damage," which will remove rEFInd from the boot process. To avoid this problem, you can run the <tt>refind-unhijack.sh</tt> script. This script moves the rEFInd installation files to a more appropriate location on the ESP (<tt>EFI/refind</tt>) and registers rEFInd with the EFI in the officially-sanctioned manner.</p>
+
+<p>Unfortunately, on some systems you really should leave rEFInd installed as <tt>EFI/Microsoft/Boot/bootmgfw.efi</tt>; some EFIs have bugs that prevent them from launching any boot loader but that one. Thus, there are no hard-and-fast rules; you'll have to determine what works on your system and run <tt>refind-unhijack.sh</tt> or not as you deem best.</p>
+
+<p>To run the script, type its name (and perhaps its path) as <tt>root</tt>. It will report on what it does:</p>
+
+<pre class="listing"># <tt class="userinput">./refind-unhijack.sh</tt>
+I'm not yet written!</pre>
+
+<p>If you run this script on a system whose Windows boot loader has <i>not</i> been "hijacked" by rEFInd, no harm will come of it; the script only does its thing when it detects that rEFInd is installed where the Windows boot loader should be.</p>
 
 <a name="manual">
 <h2>Installing rEFInd Manually</h2>

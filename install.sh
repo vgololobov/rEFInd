@@ -29,6 +29,8 @@
 #
 # Revision history:
 #
+# 0.6.3   -- Support for detecting rEFInd in EFI/BOOT and EFI/Microsoft/Boot
+#            directories & for installing to EFI/BOOT in BIOS mode
 # 0.6.2-1 -- Added --yes option & tweaked key-copying for use with RPM install script
 # 0.6.1   -- Added --root option; minor bug fixes
 # 0.6.0   -- Changed --drivers to --alldrivers and added --nodrivers option;
@@ -53,6 +55,7 @@ RootDir="/"
 TargetDir=/EFI/refind
 LocalKeysBase="refind_local"
 ShimSource="none"
+TargetShim="default"
 TargetX64="refind_x64.efi"
 TargetIA32="refind_ia32.efi"
 LocalKeys=0
@@ -256,14 +259,7 @@ CopyRefindFiles() {
       fi
       Refind=""
       CopyKeys
-   elif [[ $Platform == 'EFI32' ]] ; then
-      cp $RefindDir/refind_ia32.efi $InstallDir/$TargetDir/$TargetIA32
-      if [[ $? != 0 ]] ; then
-         Problems=1
-      fi
-      CopyDrivers ia32
-      Refind="refind_ia32.efi"
-   elif [[ $Platform == 'EFI64' ]] ; then
+   elif [[ $Platform == 'EFI64' || $TargetDir == "/EFI/Microsoft/Boot" ]] ; then
       cp $RefindDir/refind_x64.efi $InstallDir/$TargetDir/$TargetX64
       if [[ $? != 0 ]] ; then
          Problems=1
@@ -272,7 +268,9 @@ CopyRefindFiles() {
       Refind="refind_x64.efi"
       CopyKeys
       if [[ $ShimSource != "none" ]] ; then
-         TargetShim=`basename $ShimSource`
+         if [[ $TargetShim == "default" ]] ; then
+            TargetShim=`basename $ShimSource`
+         fi
          CopyShimFiles
          Refind=$TargetShim
          if [[ $LocalKeys == 0 ]] ; then
@@ -282,6 +280,13 @@ CopyRefindFiles() {
             cp $ThisDir/keys/refind.crt $EtcKeysDir 2> /dev/null
          fi
       fi
+   elif [[ $Platform == 'EFI32' ]] ; then
+      cp $RefindDir/refind_ia32.efi $InstallDir/$TargetDir/$TargetIA32
+      if [[ $? != 0 ]] ; then
+         Problems=1
+      fi
+      CopyDrivers ia32
+      Refind="refind_ia32.efi"
    else
       echo "Unknown platform! Aborting!"
       exit 1
@@ -592,7 +597,6 @@ AddBootEntry() {
    InstallIt="0"
    Efibootmgr=`which efibootmgr 2> /dev/null`
    if [[ $Efibootmgr ]] ; then
-      modprobe efivars &> /dev/null
       InstallDisk=`grep $InstallDir /etc/mtab | cut -d " " -f 1 | cut -c 1-8`
       PartNum=`grep $InstallDir /etc/mtab | cut -d " " -f 1 | cut -c 9-10`
       EntryFilename=$TargetDir/$Refind
@@ -663,52 +667,148 @@ GenerateRefindLinuxConf() {
    fi
 }
 
+# Set varaibles for installation in EFI/BOOT directory
+SetVarsForBoot() {
+   TargetDir="/EFI/BOOT"
+   if [[ $ShimSource == "none" ]] ; then
+      TargetX64="bootx64.efi"
+      TargetIA32="bootia32.efi"
+   else
+      TargetX64="grubx64.efi"
+      TargetIA32="bootia32.efi"
+      TargetShim="bootx64.efi"
+   fi
+} # SetFilenamesForBoot()
+
+# Set variables for installation in EFI/Microsoft/Boot directory
+SetVarsForMsBoot() {
+   TargetDir="/EFI/Microsoft/Boot"
+   if [[ $ShimSource == "none" ]] ; then
+      TargetX64="bootmgfw.efi"
+   else
+      TargetX64="grubx64.efi"
+      TargetShim="bootmgfw.efi"
+   fi
+}
+
+# TargetDir defaults to /EFI/refind; however, this function adjusts it as follows:
+# - If an existing refind.conf is available in /EFI/BOOT or /EFI/Microsoft/Boot,
+#   install to that directory under the suitable name; but DO NOT do this if
+#   refind.conf is also in /EFI/refind.
+# - If booted in BIOS mode and the ESP lacks any other EFI files, install to
+#   /EFI/BOOT
+# - If booted in BIOS mode and there's no refind.conf file and there is a
+#   /EFI/Microsoft/Boot/bootmgfw.efi file, move it down one level and
+#   install under that name, "hijacking" the Windows boot loader filename
+DetermineTargetDir() {
+   Upgrade=0
+
+   if [[ -f $InstallDir/EFI/BOOT/refind.conf ]] ; then
+      SetVarsForBoot
+      Upgrade=1
+   fi
+   if [[ -f $InstallDir/EFI/Microsoft/Boot/refind.conf ]] ; then
+      SetVarsForMsBoot
+      Upgrade=1
+   fi
+   if [[ -f $InstallDir/EFI/refind/refind.conf ]] ; then
+      TargetDir="/EFI/refind"
+      Upgrade=1
+   fi
+   if [[ $Upgrade == 1 ]] ; then
+      echo "Found rEFInd installation in $InstallDir$TargetDir; upgrading it."
+   fi
+
+   if [[ ! -d /sys/firmware/efi && $Upgrade == 0 ]] ; then     # BIOS-mode
+      FoundEfiFiles=`find $InstallDir/EFI/BOOT -name "*.efi" 2> /dev/null`
+      FoundConfFiles=`find $InstallDir -name "refind\.conf" 2> /dev/null`
+      if [[ ! -n $FoundConfFiles && -f $InstallDir/EFI/Microsoft/Boot/bootmgfw.efi ]] ; then
+         mv -n $InstallDir/EFI/Microsoft/Boot/bootmgfw.efi $InstallDir/EFI/Microsoft &> /dev/null
+         SetVarsForMsBoot
+         echo "Running in BIOS mode with a suspected Windows installation; moving boot loader"
+         echo "files so as to install to $InstallDir$TargetDir."
+      elif [[ ! -n $FoundEfiFiles ]] ; then  # In BIOS mode and no default loader; install as default loader
+         SetVarsForBoot
+         echo "Running in BIOS mode with no existing default boot loader; installing to"
+         echo $InstallDir$TargetDir
+      else
+         echo "Running in BIOS mode with an existing default boot loader; backing it up and"
+         echo "installing rEFInd in its place."
+         if [[ -d $InstallDir/EFI/BOOT-rEFIndBackup ]] ; then
+            echo ""
+            echo "Caution: An existing backup of a default boot loader exists! If the current"
+            echo "default boot loader and the backup are different boot loaders, the current"
+            echo "one will become inaccessible."
+            echo ""
+            echo -n "Do you want to proceed with installation (Y/N)? "
+            ReadYesNo
+            if [[ $YesNo == "Y" || $YesNo == "y" ]] ; then
+               echo "OK; continuing with the installation..."
+            else
+               exit 0
+            fi
+         fi
+         mv -n $InstallDir/EFI/BOOT $InstallDir/EFI/BOOT-rEFIndBackup
+         SetVarsForBoot
+      fi
+   fi # BIOS-mode
+} # DetermineTargetDir()
+
 # Controls rEFInd installation under Linux.
 # Sets Problems=1 if something goes wrong.
 InstallOnLinux() {
    echo "Installing rEFInd on Linux...."
+   modprobe efivars &> /dev/null
    if [[ $TargetDir == "/EFI/BOOT" ]] ; then
       MountDefaultTarget
    else
       FindLinuxESP
+      DetermineTargetDir
    fi
    CpuType=`uname -m`
    if [[ $CpuType == 'x86_64' ]] ; then
       Platform="EFI64"
-      if [[ $LocalKeys == 1 ]] ; then
-         ReSignBinaries
-      fi
-   elif [[ $CpuType == 'i386' || $CpuType == 'i486' || $CpuType == 'i586' || $CpuType == 'i686' ]] ; then
-      if [[ $ShimSource != "none" && $TargetDir != "/BOOT/EFI" ]] ; then
-         echo ""
-         echo "CAUTION: Neither rEFInd nor shim currently supports 32-bit systems, so you"
-         echo "should not use the --shim option to install on such systems. Aborting!"
-         echo ""
-         exit 1
-      fi
+   elif [[ ($CpuType == 'i386' || $CpuType == 'i486' || $CpuType == 'i586' || $CpuType == 'i686') ]] ; then
       Platform="EFI32"
-      echo
-      echo "CAUTION: This Linux installation uses a 32-bit kernel. 32-bit EFI-based"
-      echo "computers are VERY RARE. If you've installed a 32-bit version of Linux"
-      echo "on a 64-bit computer, you should manually install the 64-bit version of"
-      echo "rEFInd. If you're installing on a Mac, you should do so from OS X. If"
-      echo "you're positive you want to continue with this installation, answer 'Y'"
-      echo "to the following question..."
-      echo
-      echo -n "Are you sure you want to continue (Y/N)? "
-      ReadYesNo
-      if [[ $YesNo == "Y" || $YesNo == "y" ]] ; then
-         echo "OK; continuing with the installation..."
-      else
-         exit 0
-      fi
+      # If we're in EFI mode, do some sanity checks, and alert the user or even
+      # abort. Not in BIOS mode, though, since that could be used on an emergency
+      # disc to try to recover a troubled Linux installation.
+      if [[ -d /sys/firmware/efi ]] ; then
+         if [[ $ShimSource != "none" && $TargetDir != "/BOOT/EFI" ]] ; then
+            echo ""
+            echo "CAUTION: Neither rEFInd nor shim currently supports 32-bit systems, so you"
+            echo "should not use the --shim option to install on such systems. Aborting!"
+            echo ""
+            exit 1
+         fi
+         echo
+         echo "CAUTION: This Linux installation uses a 32-bit kernel. 32-bit EFI-based"
+         echo "computers are VERY RARE. If you've installed a 32-bit version of Linux"
+         echo "on a 64-bit computer, you should manually install the 64-bit version of"
+         echo "rEFInd. If you're installing on a Mac, you should do so from OS X. If"
+         echo "you're positive you want to continue with this installation, answer 'Y'"
+         echo "to the following question..."
+         echo
+         echo -n "Are you sure you want to continue (Y/N)? "
+         ReadYesNo
+         if [[ $YesNo == "Y" || $YesNo == "y" ]] ; then
+            echo "OK; continuing with the installation..."
+         else
+            exit 0
+         fi
+      fi # in EFI mode
    else
       echo "Unknown CPU type '$CpuType'; aborting!"
       exit 1
    fi
+
+   if [[ $LocalKeys == 1 ]] ; then
+      ReSignBinaries
+   fi
+
    CheckSecureBoot
    CopyRefindFiles
-   if [[ $TargetDir != "/EFI/BOOT" ]] ; then
+   if [[ $TargetDir != "/EFI/BOOT" && $TargetDir != "/EFI/Microsoft/Boot" ]] ; then
       AddBootEntry
       GenerateRefindLinuxConf
    fi
