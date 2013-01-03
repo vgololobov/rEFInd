@@ -1,7 +1,7 @@
 Summary: EFI boot manager software
 Name: refind
-Version: 0.6.2
-Release: 4%{?dist}
+Version: 0.6.2.1
+Release: 1%{?dist}
 License: GPLv3
 URL: http://www.rodsbooks.com/refind/
 Group: System Environment/Base
@@ -89,9 +89,10 @@ install -Dp -m0644 NEWS.txt COPYING.txt LICENSE.txt README.txt CREDITS.txt $RPM_
 mkdir -p $RPM_BUILD_ROOT/etc/refind.d/keys
 install -Dp -m0644 keys/* $RPM_BUILD_ROOT/etc/refind.d/keys
 
-# Copy mkrlconf.sh to /usr/sbin
+# Copy scripts to /usr/sbin
 mkdir -p $RPM_BUILD_ROOT/usr/sbin
 install -Dp -m0755 mkrlconf.sh $RPM_BUILD_ROOT/usr/sbin/
+install -Dp -m0755 mvrefind.sh $RPM_BUILD_ROOT/usr/sbin/
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -100,6 +101,7 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root -)
 %doc /usr/share/doc/refind-%{version}
 /usr/sbin/mkrlconf.sh
+/usr/sbin/mvrefind.sh
 /usr/share/refind-%{version}
 /etc/refind.d/
 

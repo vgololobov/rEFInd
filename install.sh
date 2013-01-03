@@ -589,7 +589,7 @@ FindLinuxESP() {
       exit 1
    fi
    echo "ESP was found at $InstallDir using $EspFilesystem"
-} # MountLinuxESP
+} # FindLinuxESP
 
 # Uses efibootmgr to add an entry for rEFInd to the EFI's NVRAM.
 # If this fails, sets Problems=1
