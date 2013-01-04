@@ -72,7 +72,8 @@ if [[ -f %{keydir}/refind.key && -x $SBSign ]] ; then
    done
 else
    install -Dp -m0644 refind/refind*.efi $RPM_BUILD_ROOT/usr/share/refind-%{version}/refind/
-   cp -a drivers_* $RPM_BUILD_ROOT/usr/share/refind-%{version}/refind/
+   mkdir -p $RPM_BUILD_ROOT/usr/share/refind-%{version}/refind/drivers_%{efiarch}
+   cp -a drivers_%{efiarch}/* $RPM_BUILD_ROOT/usr/share/refind-%{version}/refind/drivers_%{efiarch}/
 fi
 
 # Copy configuration and support files to /usr/share/refind-%{version}
@@ -95,7 +96,7 @@ install -Dp -m0755 mkrlconf.sh $RPM_BUILD_ROOT/usr/sbin/
 install -Dp -m0755 mvrefind.sh $RPM_BUILD_ROOT/usr/sbin/
 
 %clean
-rm -rf $RPM_BUILD_ROOT
+#rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root -)

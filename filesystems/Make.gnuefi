@@ -44,6 +44,7 @@ $(TARGET): $(SHLIB_TARGET)
 	$(OBJCOPY) -j .text -j .sdata -j .data -j .dynamic -j .dynsym -j .rel \
 		   -j .rela -j .reloc --target=$(FORMAT_DRIVER)  $< $@
 	chmod a-x $(TARGET)
+	mkdir -p ../drivers_$(FILENAME_CODE)
 	cp $(TARGET) ../drivers_$(FILENAME_CODE)
 
 # EOF

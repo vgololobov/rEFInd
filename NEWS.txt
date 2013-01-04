@@ -1,7 +1,22 @@
 0.6.3 (?/?/2013):
 -----------------
 
+- New mvrefind.sh script to move a rEFInd installation between a standard
+  location (typically EFI/refind) or one of the fallback locations
+  (EFI/BOOT or EFI/Microsoft/Boot). It can also do more exotic locations.
 
+- The install.sh script now installs to EFI/BOOT/bootx64.efi or
+  EFI/Microsoft/Boot/bootmgfw.efi if it's run in BIOS mode. This is
+  intended to give some chance of producing a bootable installation should
+  a user accidentally install Linux in EFI mode and then install rEFInd
+  from that installation.
+
+- The install.sh script now tries to find an existing rEFInd installation
+  and upgrade it, even if it's in EFI/BOOT or EFI/Microsoft/Boot rather
+  than in EFI/refind.
+
+- New "--yes" option to install.sh to help with unattended or automated
+  installations (as from an RPM or Debian package).
 
 0.6.2 (12/30/2012):
 -------------------

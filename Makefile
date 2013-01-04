@@ -37,7 +37,7 @@ clean:
 	make -C $(LIBEG_DIR) clean
 	make -C $(MOK_DIR) clean
 	make -C $(LOADER_DIR) clean
-	make -C $(EFILIB_DIR) clean -f Make.tiano
+	make -C $(EFILIB_DIR) clean
 	make -C $(FS_DIR) clean
 	rm -f include/*~
 
