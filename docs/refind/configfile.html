@@ -225,7 +225,7 @@ timeout 20
 <tr>
    <td><tt>dont_scan_dirs</tt> or <tt>don't_scan_dirs</tt></td>
    <td>directory path(s)</td>
-   <td>Adds the specified directory or directories to a directory "blacklist"&mdash;these directories are <i>not</i> scanned for boot loaders, on <i>any</i> partition. This may be useful to keep duplicate boot loaders out of the menu (say, if <tt>EFI/Boot/bootx64.efi</tt> is a duplicate of another boot loader); or to keep drivers or utilities out of the boot menu, if you've stored them in a subdirectory of <tt>EFI</tt>. This option takes precedence over <tt>also_scan_dirs</tt>; if a directory appears in both lists, it will <i>not</i> be scanned.</td>
+   <td>Adds the specified directory or directories to a directory "blacklist"&mdash;these directories are <i>not</i> scanned for boot loaders. You may optionally precede a directory path with a volume name and a colon to limit the blacklist to that volume. For instance, <tt>EFI/BOOT</tt> prevents scanning the <tt>EFI/BOOT</tt> directory on <i>all</i> volumes, whereas <tt>ESP:EFI/BOOT</tt> blocks scans of <tt>EFI/BOOT</tt> on the volume called <tt>ESP</tt> but not on other volumes. You can use a filesystem number, as in <tt>fs0</tt>, in place of a volume name. This token may be useful to keep duplicate boot loaders out of the menu (say, if <tt>EFI/BOOT/bootx64.efi</tt> is a duplicate of another boot loader); or to keep drivers or utilities out of the boot menu, if you've stored them in a subdirectory of <tt>EFI</tt>. This option takes precedence over <tt>also_scan_dirs</tt>; if a directory appears in both lists, it will <i>not</i> be scanned.</td>
 </tr>
 <tr>
    <td><tt>dont_scan_files</tt> or <tt>don't_scan_files</tt></td>

@@ -109,6 +109,7 @@ CHAR16 *FindExtension(IN CHAR16 *Path);
 CHAR16 *FindLastDirName(IN CHAR16 *Path);
 CHAR16 *FindPath(IN CHAR16* FullPath);
 VOID FindVolumeAndFilename(IN EFI_DEVICE_PATH *loadpath, OUT REFIT_VOLUME **DeviceVolume, OUT CHAR16 **loader);
+BOOLEAN SplitVolumeAndFilename(IN OUT CHAR16 **Path, OUT CHAR16 **VolName);
 CHAR16 *FindNumbers(IN CHAR16 *InString);
 CHAR16 *FindCommaDelimited(IN CHAR16 *InString, IN UINTN Index);
 BOOLEAN IsIn(IN CHAR16 *SmallString, IN CHAR16 *List);

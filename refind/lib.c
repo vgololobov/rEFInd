@@ -929,7 +929,7 @@ VOID ScanVolumes(VOID)
     MBR_PARTITION_INFO      *MbrTable;
     UINTN                   PartitionIndex;
     UINT8                   *SectorBuffer1, *SectorBuffer2;
-    UINTN                   SectorSum, i;
+    UINTN                   SectorSum, i, VolNumber = 0;
 
     MyFreePool(Volumes);
     Volumes = NULL;
@@ -949,6 +949,8 @@ VOID ScanVolumes(VOID)
         Volume = AllocateZeroPool(sizeof(REFIT_VOLUME));
         Volume->DeviceHandle = Handles[HandleIndex];
         ScanVolume(Volume);
+        if (Volume->IsReadable)
+           Volume->VolNumber = VolNumber++;
 
         AddListElement((VOID ***) &Volumes, &VolumesCount, Volume);
 
@@ -1519,6 +1521,39 @@ VOID FindVolumeAndFilename(IN EFI_DEVICE_PATH *loadpath, OUT REFIT_VOLUME **Devi
 
    MyFreePool(DeviceString);
 } // VOID FindVolumeAndFilename()
+
+// Splits a volume/filename string (e.g., "fs0:\EFI\BOOT") into separate
+// volume and filename components (e.g., "fs0" and "\EFI\BOOT"), returning
+// the filename component in the original *Path variable and the split-off
+// volume component in the *VolName variable.
+// Returns TRUE if both components are found, FALSE otherwise.
+BOOLEAN SplitVolumeAndFilename(IN OUT CHAR16 **Path, OUT CHAR16 **VolName) {
+   UINTN i = 0, Length;
+   CHAR16 *Filename;
+
+   if (*Path == NULL)
+      return FALSE;
+
+   if (*VolName != NULL) {
+      MyFreePool(*VolName);
+      *VolName = NULL;
+   }
+
+   Length = StrLen(*Path);
+   while ((i < Length) && ((*Path)[i] != L':')) {
+      i++;
+   } // while
+
+   if (i < Length) {
+      Filename = StrDuplicate((*Path) + i + 1);
+      (*Path)[i] = 0;
+      *VolName = *Path;
+      *Path = Filename;
+      return TRUE;
+   } else {
+      return FALSE;
+   }
+} // BOOLEAN SplitVolumeAndFilename()
 
 // Returns all the digits in the input string, including intervening
 // non-digit characters. For instance, if InString is "foo-3.3.4-7.img",

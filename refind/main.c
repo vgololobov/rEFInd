@@ -132,7 +132,7 @@ static VOID AboutrEFInd(VOID)
 
     if (AboutMenu.EntryCount == 0) {
         AboutMenu.TitleImage = BuiltinIcon(BUILTIN_ICON_FUNC_ABOUT);
-        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.6.2.1");
+        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.6.2.2");
         AddMenuInfoLine(&AboutMenu, L"");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2006-2010 Christoph Pfisterer");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2012 Roderick W. Smith");
@@ -893,6 +893,42 @@ static VOID CleanUpLoaderList(struct LOADER_LIST *LoaderList) {
    } // while
 } // static VOID CleanUpLoaderList()
 
+// Returns FALSE if the specified file/volume matches the GlobalConfig.DontScanDirs
+// or GlobalConfig.DontScanVolumes specification, or if Path points to a volume
+// other than the one specified by Volume. Returns TRUE if none of these conditions
+// is true. Also reduces *Path to a path alone, with no volume specification.
+static BOOLEAN ShouldScan(REFIT_VOLUME *Volume, CHAR16 *Path) {
+   CHAR16   *VolName = NULL, *DontScanDir;
+   UINTN    i = 0, VolNum;
+   BOOLEAN  ScanIt = TRUE;
+
+   if (IsIn(Volume->VolName, GlobalConfig.DontScanVolumes)) {
+      Print(L"Not scanning volume %s\n", Volume->VolName);
+      PauseForKey();
+      return FALSE;
+   }
+
+   while ((DontScanDir = FindCommaDelimited(GlobalConfig.DontScanDirs, i++)) && ScanIt) {
+      SplitVolumeAndFilename(&DontScanDir, &VolName);
+      CleanUpPathNameSlashes(DontScanDir);
+      if (VolName != NULL) {
+         if ((StriCmp(VolName, Volume->VolName) == 0) && (StriCmp(DontScanDir, Path)))
+            ScanIt = FALSE;
+         if ((VolName[0] == L'f') && (VolName[1] == L's') && (VolName[2] >= L'0') && (VolName[2] <= '9')) {
+            VolNum = Atoi(VolName + 2);
+            if ((VolNum == Volume->VolNumber) && (StriCmp(DontScanDir, Path)))
+               ScanIt = FALSE;
+         }
+      } else {
+         if (StriCmp(DontScanDir, Path) == 0)
+            ScanIt = FALSE;
+      }
+      MyFreePool(DontScanDir);
+      DontScanDir = NULL;
+   }
+   return ScanIt;
+} // BOOLEAN ShouldScan()
+
 // Scan an individual directory for EFI boot loader files and, if found,
 // add them to the list. Sorts the entries within the loader directory
 // so that the most recent one appears first in the list.
@@ -906,8 +942,9 @@ static VOID ScanLoaderDir(IN REFIT_VOLUME *Volume, IN CHAR16 *Path, IN CHAR16 *P
 
     if ((!SelfDirPath || !Path || ((StriCmp(Path, SelfDirPath) == 0) && (Volume->DeviceHandle != SelfVolume->DeviceHandle)) ||
            (StriCmp(Path, SelfDirPath) != 0)) &&
-         (!IsIn(Path, GlobalConfig.DontScanDirs)) &&
-         (!IsIn(Volume->VolName, GlobalConfig.DontScanVolumes))) {
+           (ShouldScan(Volume, Path))) {
+//          (!IsIn(Path, GlobalConfig.DontScanDirs)) &&
+//          (!IsIn(Volume->VolName, GlobalConfig.DontScanVolumes))) {
        // look through contents of the directory
        DirIterOpen(Volume->RootDir, Path, &DirIter);
        while (DirIterNext(&DirIter, 2, Pattern, &DirEntry)) {

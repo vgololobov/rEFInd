@@ -56,7 +56,7 @@ zip -9r refind-src-$1.zip refind-$1
 # Build the IA32 binaries
 cd refind-$1
 ARCH=ia32 make -j4
-ARCH=ia32 make -j4 fs
+ARCH=ia32 make fs
 mkdir -p refind-bin-$1/refind/drivers_ia32
 cp --preserve=timestamps drivers_ia32/*_ia32.efi refind-bin-$1/refind/drivers_ia32/
 cp --preserve=timestamps filesystems/LICENSE*txt refind-bin-$1/refind/drivers_ia32/
@@ -66,7 +66,7 @@ cp refind/refind_ia32.efi $StartDir/
 # Build the X64 binaries
 make clean
 make -j4
-make -j4 fs
+make fs
 mkdir -p refind-bin-$1/refind/drivers_x64
 cp -a icons refind-bin-$1/refind/
 if [[ $SignIt == 1 ]] ; then

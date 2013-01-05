@@ -341,6 +341,7 @@ VOID ReadConfig(CHAR16 *FileName)
     REFIT_FILE      File;
     CHAR16          **TokenList;
     CHAR16          *FlagName;
+    CHAR16          *SelfPath = NULL;
     UINTN           TokenCount, i;
 
     // Set a few defaults only if we're loading the default file.
@@ -350,7 +351,14 @@ VOID ReadConfig(CHAR16 *FileName)
 //        MyFreePool(GlobalConfig.DontScanVolumes);
 //        GlobalConfig.DontScanVolumes = StrDuplicate(L" ");
        MyFreePool(GlobalConfig.DontScanDirs);
-       GlobalConfig.DontScanDirs = StrDuplicate(SelfDirPath);
+       if (SelfVolume->VolName) {
+          SelfPath = StrDuplicate(SelfVolume->VolName);
+       } else {
+          SelfPath = AllocateZeroPool(256 * sizeof(CHAR16));
+          SPrint(SelfPath, 255, L"fs%d", SelfVolume->VolNumber);
+       } // if/else
+       MergeStrings(&SelfPath, SelfDirPath, L':');
+       GlobalConfig.DontScanDirs = SelfPath;
        MyFreePool(GlobalConfig.DontScanFiles);
        GlobalConfig.DontScanFiles = StrDuplicate(DONT_SCAN_FILES);
     }

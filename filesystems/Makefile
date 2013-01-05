@@ -18,23 +18,23 @@ all:	$(FILESYSTEMS)
 
 ext2:
 	rm -f fsw_efi.obj
-	make DRIVERNAME=ext2 -f Make.tiano
+	+make DRIVERNAME=ext2 -f Make.tiano
 
 ext4:
 	rm -f fsw_efi.obj
-	make DRIVERNAME=ext4 -f Make.tiano
+	+make DRIVERNAME=ext4 -f Make.tiano
 
 reiserfs:
 	rm -f fsw_efi.obj
-	make DRIVERNAME=reiserfs -f Make.tiano
+	+make DRIVERNAME=reiserfs -f Make.tiano
 
 iso9660:
 	rm -f fsw_efi.obj
-	make DRIVERNAME=iso9660 -f Make.tiano
+	+make DRIVERNAME=iso9660 -f Make.tiano
 
 hfs:
 	rm -f fsw_efi.obj
-	make DRIVERNAME=hfs -f Make.tiano
+	+make DRIVERNAME=hfs -f Make.tiano
 
 # Build the drivers with GNU-EFI....
 
@@ -44,29 +44,29 @@ all_gnuefi:	$(FILESYSTEMS_GNUEFI)
 
 ext2_gnuefi:
 	rm -f fsw_efi.o
-	make DRIVERNAME=ext2 -f Make.gnuefi
+	+make DRIVERNAME=ext2 -f Make.gnuefi
 
 ext4_gnuefi:
 	rm -f fsw_efi.o
-	make DRIVERNAME=ext4 -f Make.gnuefi
+	+make DRIVERNAME=ext4 -f Make.gnuefi
 
 reiserfs_gnuefi:
 	rm -f fsw_efi.o
-	make DRIVERNAME=reiserfs -f Make.gnuefi
+	+make DRIVERNAME=reiserfs -f Make.gnuefi
 
 iso9660_gnuefi:
 	rm -f fsw_efi.o
-	make DRIVERNAME=iso9660 -f Make.gnuefi
+	+make DRIVERNAME=iso9660 -f Make.gnuefi
 
 hfs_gnuefi:
 	rm -f fsw_efi.o
-	make DRIVERNAME=hfs -f Make.gnuefi
+	+make DRIVERNAME=hfs -f Make.gnuefi
 
 # utility rules
 
 clean:
 	rm -f *~ *.bak *.o *.obj *.so *.efi *.dll err.txt $(TEXTFILES)
-	make -C test clean
+	+make -C test clean
 
 
 install:

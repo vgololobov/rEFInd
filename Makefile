@@ -16,22 +16,22 @@ EFILIB_DIR=EfiLib
 all:	tiano
 
 gnuefi:
-	make -C $(LIBEG_DIR)
-	make -C $(MOK_DIR)
-	make -C $(LOADER_DIR)
-#	make -C $(FS_DIR) all_gnuefi
+	+make -C $(LIBEG_DIR)
+	+make -C $(MOK_DIR)
+	+make -C $(LOADER_DIR)
+#	+make -C $(FS_DIR) all_gnuefi
 
 fs:
-	make -C $(FS_DIR)
+	+make -C $(FS_DIR)
 
 fs_gnuefi:
-	make -C $(FS_DIR) all_gnuefi
+	+make -C $(FS_DIR) all_gnuefi
 
 tiano:
-	make AR_TARGET=EfiLib -C $(EFILIB_DIR) -f Make.tiano
-	make AR_TARGET=libeg -C $(LIBEG_DIR) -f Make.tiano
-	make AR_TARGET=mok -C $(MOK_DIR) -f Make.tiano
-	make BUILDME=refind DLL_TARGET=refind -C $(LOADER_DIR) -f Make.tiano
+	+make AR_TARGET=EfiLib -C $(EFILIB_DIR) -f Make.tiano
+	+make AR_TARGET=libeg -C $(LIBEG_DIR) -f Make.tiano
+	+make AR_TARGET=mok -C $(MOK_DIR) -f Make.tiano
+	+make BUILDME=refind DLL_TARGET=refind -C $(LOADER_DIR) -f Make.tiano
 
 clean:
 	make -C $(LIBEG_DIR) clean

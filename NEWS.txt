@@ -1,6 +1,12 @@
 0.6.3 (?/?/2013):
 -----------------
 
+- Added the ability to specify a volume name or number in the
+  "dont_scan_dirs" token.
+
+- Fixed a bug that caused removable EFI media to not appear in scan lists
+  if rEFInd was installed as EFI/BOOT/boot{arch}.efi on a hard disk.
+
 - Modified ISO-9660 driver so that it can handle discs with other than
   2048-byte sectors. This makes it useful for reading "hybrid ISO" images
   burned to USB flash disks.
