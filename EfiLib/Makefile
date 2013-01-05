@@ -3,4 +3,4 @@
 #
 
 clean:
-	rm -f $(OBJS) *~ *.lib
+	rm -f *.o *.obj *~ *.lib

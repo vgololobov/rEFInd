@@ -602,7 +602,7 @@ AddBootEntry() {
       EntryFilename=$TargetDir/$Refind
       EfiEntryFilename=`echo ${EntryFilename//\//\\\}`
       EfiEntryFilename2=`echo ${EfiEntryFilename} | sed s/\\\\\\\\/\\\\\\\\\\\\\\\\/g`
-      ExistingEntry=`$Efibootmgr -v | grep $EfiEntryFilename2`
+      ExistingEntry=`$Efibootmgr -v | grep -i $EfiEntryFilename2`
 
       if [[ $ExistingEntry ]] ; then
          ExistingEntryBootNum=`echo $ExistingEntry | cut -c 5-8`
@@ -628,7 +628,7 @@ AddBootEntry() {
          fi
       fi
 
-   else
+   else # efibootmgr not found
       EfibootmgrProblems=1
       Problems=1
    fi

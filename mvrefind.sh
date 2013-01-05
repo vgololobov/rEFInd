@@ -78,7 +78,6 @@ FindLinuxESP() {
 # Adjust filename variables appropriately for their locations and detected
 # presence (or lack thereof) of shim installation
 AdjustFilenames() {
-   echo "Entering AdjustFilenames()"
    if [[ -f $SourceDir/grubx64.efi ]] ; then
       SourceX64="grubx64.efi"
       TargetX64=$SourceX64
@@ -112,17 +111,11 @@ AdjustFilenames() {
          TargetShim="bootmgfw.efi"
       fi
    fi
-
-   echo "Leaving AdjustFilenames():"
-   echo "  SourceX64 = $SourceX64, TargetX64 = $TargetX64"
-   echo "  SourceIA32 = $SourceIA32, TargetIA32 = $TargetIA32"
-   echo "  SourceShim = $SourceShim, TargetShim = $TargetShim"
 } # AdjustFilenames()
 
 # Checks for the presence of necessary files, including both boot loaders
 # and support utilities (efibootmgr, etc.)
 CheckForFiles() {
-   echo "Entering CheckForFiles()"
    if [[ (! -f $SourceDir/$SourceX64 && ! -f $SourceDir/$SourceIA32) ||
          ($SourceShim != "none" && ! -f $SourceDir/SourceShim) ||
          ! -f $SourceDir/refind.conf ]] ; then
@@ -146,7 +139,6 @@ CheckForFiles() {
 
 # Do final checks & then move the files!
 MoveFiles() {
-   echo "Entering MoveFiles()"
    ExistingFiles=`find $TargetDir -name "*.efi" 2> /dev/null`
    if [[ -n $ExistingFiles && $EspTargetDir != "/efi/boot" && $EspTargetDir != "/efi/microsoft/boot" ]] ; then
       echo "$TargetDir isn't empty! Aborting!"
@@ -200,35 +192,30 @@ PostMoveCleanup() {
 
 # If necessary, create a new NVRAM entry for the new location
 AddNvramEntry() {
-   echo "Entering AddNvramEntry()"
    InstallIt="0"
    Efibootmgr=`which efibootmgr 2> /dev/null`
    InstallDisk=`grep $InstallDir /etc/mtab | cut -d " " -f 1 | cut -c 1-8`
    PartNum=`grep $InstallDir /etc/mtab | cut -d " " -f 1 | cut -c 9-10`
 
    if [[ $TargetShim != "none" ]] ; then
-      EntryFilename=$TargetDir/$TargetShim
+      EntryFilename=$EspTargetDir/$TargetShim
    else
       CpuType=`uname -m`
       if [[ $CpuType == 'x86_64' ]] ; then
-         EntryFilename=$TargetDir/$TargetX64
+         EntryFilename=$EspTargetDir/$TargetX64
       else
-         EntryFilename=$TargetDir/$TargetIA32
+         EntryFilename=$EspTargetDir/$TargetIA32
       fi
    fi # if/else
 
    EfiEntryFilename=`echo ${EntryFilename//\//\\\}`
    EfiEntryFilename2=`echo ${EfiEntryFilename} | sed s/\\\\\\\\/\\\\\\\\\\\\\\\\/g`
-   ExistingEntry=`$Efibootmgr -v | grep $EfiEntryFilename2`
+   ExistingEntry=`$Efibootmgr -v | grep -i $EfiEntryFilename2`
 
    if [[ $ExistingEntry ]] ; then
       ExistingEntryBootNum=`echo $ExistingEntry | cut -c 5-8`
       FirstBoot=`$Efibootmgr | grep BootOrder | cut -c 12-15`
       if [[ $ExistingEntryBootNum != $FirstBoot ]] ; then
-         echo "An existing rEFInd boot entry exists, but isn't set as the default boot"
-         echo "manager. The boot order is being adjusted to make rEFInd the default boot"
-         echo "manager. If this is NOT what you want, you should use efibootmgr to"
-         echo "manually adjust your EFI's boot order."
          $Efibootmgr -b $ExistingEntryBootNum -B &> /dev/null
          InstallIt="1"
       fi
@@ -237,7 +224,12 @@ AddNvramEntry() {
    fi
 
    if [[ $InstallIt == "1" ]] ; then
-      $Efibootmgr -c -l $EfiEntryFilename -L "rEFInd Boot Manager" -d $InstallDisk -p $PartNum &> /dev/null
+      if [[ $EfiTargetDir == "/efi/microsoft/boot" ]] ; then
+         # Name it the way some firmware expects -- see http://mjg59.dreamwidth.org/20187.html
+         $Efibootmgr -c -l $EfiEntryFilename -L "Windows Boot Manager" -d $InstallDisk -p $PartNum &> /dev/null
+      else
+         $Efibootmgr -c -l $EfiEntryFilename -L "rEFInd Boot Manager" -d $InstallDisk -p $PartNum &> /dev/null
+      fi
       if [[ $? != 0 ]] ; then
          EfibootmgrProblems=1
       fi
@@ -269,7 +261,4 @@ AdjustFilenames
 CheckForFiles
 MoveFiles
 PostMoveCleanup
-echo "EspTargetDir == \"$EspTargetDir\""
-if [[ $EspTargetDir != "/efi/boot" && $EspTargetDir != "/efi/microsoft/boot" ]] ; then
-   AddNvramEntry
-fi
+AddNvramEntry

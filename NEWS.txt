@@ -1,6 +1,10 @@
 0.6.3 (?/?/2013):
 -----------------
 
+- Modified ISO-9660 driver so that it can handle discs with other than
+  2048-byte sectors. This makes it useful for reading "hybrid ISO" images
+  burned to USB flash disks.
+
 - New mvrefind.sh script to move a rEFInd installation between a standard
   location (typically EFI/refind) or one of the fallback locations
   (EFI/BOOT or EFI/Microsoft/Boot). It can also do more exotic locations.

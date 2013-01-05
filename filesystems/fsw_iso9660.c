@@ -323,8 +323,8 @@ static fsw_status_t fsw_iso9660_volume_mount(struct fsw_iso9660_volume *vol)
     if (vol->primary_voldesc == NULL)
         return FSW_UNSUPPORTED;
     pvoldesc = vol->primary_voldesc;
-    if (ISOINT(pvoldesc->logical_block_size) != 2048)
-        return FSW_UNSUPPORTED;
+//     if (ISOINT(pvoldesc->logical_block_size) != 2048)
+//         return FSW_UNSUPPORTED;
 
     // get volume name
     for (i = 32; i > 0; i--)
