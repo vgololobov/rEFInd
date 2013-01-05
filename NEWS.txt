@@ -2,7 +2,7 @@
 -----------------
 
 - Added the ability to specify a volume name or number in the
-  "dont_scan_dirs" token.
+  "dont_scan_dirs" and "also_scan_dirs" tokens.
 
 - Fixed a bug that caused removable EFI media to not appear in scan lists
   if rEFInd was installed as EFI/BOOT/boot{arch}.efi on a hard disk.

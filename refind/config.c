@@ -424,11 +424,11 @@ VOID ReadConfig(CHAR16 *FileName)
         } else if ((StriCmp(TokenList[0], L"don't_scan_volumes") == 0) || (StriCmp(TokenList[0], L"dont_scan_volumes") == 0)) {
            HandleStrings(TokenList, TokenCount, &(GlobalConfig.AlsoScan));
            // Note: Don't use HandleStrings() because it modifies slashes, which might be present in volume name
-            MyFreePool(GlobalConfig.DontScanVolumes);
-            GlobalConfig.DontScanVolumes = NULL;
-            for (i = 1; i < TokenCount; i++) {
-               MergeStrings(&GlobalConfig.DontScanVolumes, TokenList[i], L',');
-            }
+           MyFreePool(GlobalConfig.DontScanVolumes);
+           GlobalConfig.DontScanVolumes = NULL;
+           for (i = 1; i < TokenCount; i++) {
+              MergeStrings(&GlobalConfig.DontScanVolumes, TokenList[i], L',');
+           }
 
         } else if ((StriCmp(TokenList[0], L"don't_scan_dirs") == 0) || (StriCmp(TokenList[0], L"dont_scan_dirs") == 0)) {
             HandleStrings(TokenList, TokenCount, &(GlobalConfig.DontScanDirs));

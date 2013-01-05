@@ -132,7 +132,7 @@ static VOID AboutrEFInd(VOID)
 
     if (AboutMenu.EntryCount == 0) {
         AboutMenu.TitleImage = BuiltinIcon(BUILTIN_ICON_FUNC_ABOUT);
-        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.6.2.2");
+        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.6.2.3");
         AddMenuInfoLine(&AboutMenu, L"");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2006-2010 Christoph Pfisterer");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2012 Roderick W. Smith");
@@ -902,21 +902,18 @@ static BOOLEAN ShouldScan(REFIT_VOLUME *Volume, CHAR16 *Path) {
    UINTN    i = 0, VolNum;
    BOOLEAN  ScanIt = TRUE;
 
-   if (IsIn(Volume->VolName, GlobalConfig.DontScanVolumes)) {
-      Print(L"Not scanning volume %s\n", Volume->VolName);
-      PauseForKey();
+   if (IsIn(Volume->VolName, GlobalConfig.DontScanVolumes))
       return FALSE;
-   }
 
    while ((DontScanDir = FindCommaDelimited(GlobalConfig.DontScanDirs, i++)) && ScanIt) {
       SplitVolumeAndFilename(&DontScanDir, &VolName);
       CleanUpPathNameSlashes(DontScanDir);
       if (VolName != NULL) {
-         if ((StriCmp(VolName, Volume->VolName) == 0) && (StriCmp(DontScanDir, Path)))
+         if ((StriCmp(VolName, Volume->VolName) == 0) && (StriCmp(DontScanDir, Path) == 0))
             ScanIt = FALSE;
          if ((VolName[0] == L'f') && (VolName[1] == L's') && (VolName[2] >= L'0') && (VolName[2] <= '9')) {
             VolNum = Atoi(VolName + 2);
-            if ((VolNum == Volume->VolNumber) && (StriCmp(DontScanDir, Path)))
+            if ((VolNum == Volume->VolNumber) && (StriCmp(DontScanDir, Path) == 0))
                ScanIt = FALSE;
          }
       } else {
@@ -943,8 +940,6 @@ static VOID ScanLoaderDir(IN REFIT_VOLUME *Volume, IN CHAR16 *Path, IN CHAR16 *P
     if ((!SelfDirPath || !Path || ((StriCmp(Path, SelfDirPath) == 0) && (Volume->DeviceHandle != SelfVolume->DeviceHandle)) ||
            (StriCmp(Path, SelfDirPath) != 0)) &&
            (ShouldScan(Volume, Path))) {
-//          (!IsIn(Path, GlobalConfig.DontScanDirs)) &&
-//          (!IsIn(Volume->VolName, GlobalConfig.DontScanVolumes))) {
        // look through contents of the directory
        DirIterOpen(Volume->RootDir, Path, &DirIter);
        while (DirIterNext(&DirIter, 2, Pattern, &DirEntry)) {
@@ -989,7 +984,7 @@ static VOID ScanEfiFiles(REFIT_VOLUME *Volume) {
    EFI_STATUS              Status;
    REFIT_DIR_ITER          EfiDirIter;
    EFI_FILE_INFO           *EfiDirEntry;
-   CHAR16                  FileName[256], *Directory, *MatchPatterns;
+   CHAR16                  FileName[256], *Directory, *MatchPatterns, *VolName = NULL;
    UINTN                   i, Length;
 
    MatchPatterns = StrDuplicate(LOADER_MATCH_PATTERNS);
@@ -1036,11 +1031,13 @@ static VOID ScanEfiFiles(REFIT_VOLUME *Volume) {
       // Scan user-specified (or additional default) directories....
       i = 0;
       while ((Directory = FindCommaDelimited(GlobalConfig.AlsoScan, i++)) != NULL) {
+         SplitVolumeAndFilename(&Directory, &VolName);
          CleanUpPathNameSlashes(Directory);
          Length = StrLen(Directory);
-         if (Length > 0)
+         if ((Length > 0) && ((VolName == NULL) || (StriCmp(VolName, Volume->VolName) == 0)))
             ScanLoaderDir(Volume, Directory, MatchPatterns);
          MyFreePool(Directory);
+         MyFreePool(VolName);
       } // while
    } // if
 } // static VOID ScanEfiFiles()

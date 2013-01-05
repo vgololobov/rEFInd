@@ -264,6 +264,13 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 	caused by a truncated DevicePath to the shell, which includes the
 	shell's pathname but not the device identifier.</li>
 
+    <li>When specifying a volume by name in <tt>dont_scan_dirs</tt>,
+	slashes are converted to backslashes in the specification but not
+	in the actual volume name read from disk. Thus, you can't specify a
+	volume by name if it includes a slash (as in <tt>Fedora
+	/boot</tt>). Workarounds are to rename the volume to omit the slash
+	and to use a filesystem number rather than a volume label.</li>
+
     <li>The code is in need of review to search for memory leaks and
 	similar problems.</li>
 
