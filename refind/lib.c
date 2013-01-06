@@ -921,15 +921,15 @@ static VOID ScanExtendedPartition(REFIT_VOLUME *WholeDiskVolume, MBR_PARTITION_I
 VOID ScanVolumes(VOID)
 {
     EFI_STATUS              Status;
-    UINTN                   HandleCount = 0;
-    UINTN                   HandleIndex;
     EFI_HANDLE              *Handles;
     REFIT_VOLUME            *Volume, *WholeDiskVolume;
-    UINTN                   VolumeIndex, VolumeIndex2;
     MBR_PARTITION_INFO      *MbrTable;
+    UINTN                   HandleCount = 0;
+    UINTN                   HandleIndex;
+    UINTN                   VolumeIndex, VolumeIndex2;
     UINTN                   PartitionIndex;
-    UINT8                   *SectorBuffer1, *SectorBuffer2;
     UINTN                   SectorSum, i, VolNumber = 0;
+    UINT8                   *SectorBuffer1, *SectorBuffer2;
 
     MyFreePool(Volumes);
     Volumes = NULL;
@@ -951,6 +951,8 @@ VOID ScanVolumes(VOID)
         ScanVolume(Volume);
         if (Volume->IsReadable)
            Volume->VolNumber = VolNumber++;
+        else
+           Volume->VolNumber = VOL_UNREADABLE;
 
         AddListElement((VOID ***) &Volumes, &VolumesCount, Volume);
 

@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 4/19/2012; last Web page update:
-12/30/2012, referencing rEFInd 0.6.2</p>
+1/6/2013, referencing rEFInd 0.6.3</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -90,13 +90,40 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <hr />
 
+<div style="float:right; width:55%">
+
 <p>Beginning with version 0.2.7, rEFInd has been able to load EFI drivers, and as of version 0.4.0, it has shipped with some EFI filesystem drivers. Although EFI implementations should be able to load drivers prior to rEFInd's launch, in my experience, most EFI implementations offer such poor control over EFI driver loading that they can't be counted on to do this. Thus, if you want to use EFI drivers, rEFInd's ability to do so can be useful. This page tells you why you might want to use drivers, how you can install and use rEFInd's own drivers, where you can go to find other drivers, and provides tips on a few specific drivers.</p>
 
+</div>
+
+<div class="navbar">
+
+<h4 class="tight">Contents</h4>
+
+<ul>
+
+<li class="tight"><a href="#why">Why Should You Use Drivers?</li>
+
+<li class="tight"><a href="#using">Using rEFInd's EFI Drivers</a></li>
+
+<li class="tight"><a href="#finding">Finding Additional Drivers</a></li>
+
+<li class="tight"><a href="#notes">Notes on Specific Drivers</a></li>
+
+</ul>
+
+</div>
+
+<br/>
+<a name="why">
 <h2>Why Should You Use EFI Drivers?</h2>
+</a>
 
 <p>EFI supports drivers, which can activate hardware or filesystems in the pre-boot environment. At the moment, EFI drivers are few and far between; but you can or might want to use them for various reasons:</p>
 
 <ul>
+
+<!-- <p class="sidebar"><b>Tip:</b> Some Linux installation media come as <i>hybrid ISO</i> files, which can be written to either optical discs or USB flash drives for installation. Some of these media, though, are useless for installing to EFI systems from USB flash drives&mdash;unless your computer supports ISO-9660 on non-optical media. rEFInd's ISO-9660 driver provides this support. To use such a hybrid image from USB flash drive, you must boot using rEFInd on another disk that has the ISO-9660 driver installed. rEFInd should then provide an option to boot from the USB flash drive. I cannot guarantee that the installer will boot at this point, but it might.</p> -->
 
 <li>You can load a filesystem driver to gain access to files on a filesystem other than FAT (or HFS+ on Macs or ISO-9660 on some systems). This is most likely to be useful on a Linux installation, since a filesystem driver can enable you to store a Linux kernel with EFI stub loader or for use by ELILO on a Linux-native filesystem if your ESP is getting crowded.</li>
 
@@ -114,7 +141,9 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>As a side note, using an ISO-9660 driver can theoretically help you keep the size of a custom Linux boot CD/DVD down to a reasonable value. This is because EFI systems normally boot from optical discs by reading a FAT image file in El Torito format and treating that file as an ESP. If you need to store the kernel both in that file and directly in the ISO-9660 filesystem (to maintain bootability on BIOS systems), that can represent an unwanted extra space requirement. Placing rEFInd and an ISO-9660 driver in the FAT image file should enable you to store the kernel on the disc only once. Unfortunately, this doesn't work in practice. When the ISO-9660 driver is loaded from the El Torito image, the driver discovers that the optical disc is in use and refuses to access it. It's possible to use EFI shell commands to give the ISO-9660 driver access to the shell device, but this causes the El Torito access to go away, which means that anything loaded from the El Torito image (such as rEFInd) is likely to malfunction. Also, some EFI implementations include ISO-9660 drivers, so you might not need a separate ISO-9660 driver if you're building a disc for a particular computer.</p>
 
+<a name="using">
 <h2>Using rEFInd's EFI Drivers</h2>
+</a>
 
 <p class="sidebar"><b>Note:</b> If you want to use the drivers with a Mac, be sure to use at least version 0.4.3. Earlier versions were incompatible with the Mac's EFI 1.x firmware. Alternatively, you can use the drivers that came with <a href="http://refit.sourceforge.net">rEFIt,</a> which work on Macs.</p>
 
@@ -190,7 +219,9 @@ fs0: <tt class="userinput">load reiserfs_x64.efi</tt>
 fs0: <tt class="userinput">map -r</tt>
 </pre>
 
+<a name="finding">
 <h2>Finding Additional EFI Drivers</h2>
+</a>
 
 <p>As already noted, I know of no EFI drivers for EFI hardware, aside from those that are built into motherboards' EFI implementations. I do, however, know of a few EFI filesystem drivers, in addition to those provided with rEFInd:</p>
 
@@ -230,7 +261,7 @@ fs0: <tt class="userinput">map -r</tt>
 
 <hr />
 
-<p>copyright &copy; 2012 by Roderick W. Smith</p>
+<p>copyright &copy; 2012&ndash;2013 by Roderick W. Smith</p>
 
 <p>This document is licensed under the terms of the <a href="FDL-1.3.txt">GNU Free Documentation License (FDL), version 1.3.</a></p>
 

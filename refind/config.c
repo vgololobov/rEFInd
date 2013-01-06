@@ -348,8 +348,6 @@ VOID ReadConfig(CHAR16 *FileName)
     if (StriCmp(FileName, CONFIG_FILE_NAME) == 0) {
        MyFreePool(GlobalConfig.AlsoScan);
        GlobalConfig.AlsoScan = StrDuplicate(ALSO_SCAN_DIRS);
-//        MyFreePool(GlobalConfig.DontScanVolumes);
-//        GlobalConfig.DontScanVolumes = StrDuplicate(L" ");
        MyFreePool(GlobalConfig.DontScanDirs);
        if (SelfVolume->VolName) {
           SelfPath = StrDuplicate(SelfVolume->VolName);

@@ -73,6 +73,9 @@ typedef struct {
 #define DISK_KIND_EXTERNAL  (1)
 #define DISK_KIND_OPTICAL   (2)
 
+#define VOL_DONTSCAN   998
+#define VOL_UNREADABLE 999
+
 #define IS_EXTENDED_PART_TYPE(type) ((type) == 0x05 || (type) == 0x0f || (type) == 0x85)
 
 EFI_STATUS InitRefitLib(IN EFI_HANDLE ImageHandle);

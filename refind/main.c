@@ -64,10 +64,6 @@
 //
 // variables
 
-// #ifdef EFIX64
-// foo
-// #endif
-
 #define MACOSX_LOADER_PATH      L"System\\Library\\CoreServices\\boot.efi"
 #if defined (EFIX64)
 #define SHELL_NAMES             L"\\EFI\\tools\\shell.efi,\\EFI\\tools\\shellx64.efi,\\shellx64.efi"
@@ -132,7 +128,7 @@ static VOID AboutrEFInd(VOID)
 
     if (AboutMenu.EntryCount == 0) {
         AboutMenu.TitleImage = BuiltinIcon(BUILTIN_ICON_FUNC_ABOUT);
-        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.6.2.3");
+        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.6.3");
         AddMenuInfoLine(&AboutMenu, L"");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2006-2010 Christoph Pfisterer");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2012 Roderick W. Smith");
@@ -896,7 +892,8 @@ static VOID CleanUpLoaderList(struct LOADER_LIST *LoaderList) {
 // Returns FALSE if the specified file/volume matches the GlobalConfig.DontScanDirs
 // or GlobalConfig.DontScanVolumes specification, or if Path points to a volume
 // other than the one specified by Volume. Returns TRUE if none of these conditions
-// is true. Also reduces *Path to a path alone, with no volume specification.
+// is met -- that is, if the path is eligible for scanning. Also reduces *Path to a
+// path alone, with no volume specification.
 static BOOLEAN ShouldScan(REFIT_VOLUME *Volume, CHAR16 *Path) {
    CHAR16   *VolName = NULL, *DontScanDir;
    UINTN    i = 0, VolNum;
@@ -911,7 +908,7 @@ static BOOLEAN ShouldScan(REFIT_VOLUME *Volume, CHAR16 *Path) {
       if (VolName != NULL) {
          if ((StriCmp(VolName, Volume->VolName) == 0) && (StriCmp(DontScanDir, Path) == 0))
             ScanIt = FALSE;
-         if ((VolName[0] == L'f') && (VolName[1] == L's') && (VolName[2] >= L'0') && (VolName[2] <= '9')) {
+         if ((VolName[0] == L'f') && (VolName[1] == L's') && (VolName[2] >= L'0') && (VolName[2] <= L'9')) {
             VolNum = Atoi(VolName + 2);
             if ((VolNum == Volume->VolNumber) && (StriCmp(DontScanDir, Path) == 0))
                ScanIt = FALSE;
@@ -985,7 +982,7 @@ static VOID ScanEfiFiles(REFIT_VOLUME *Volume) {
    REFIT_DIR_ITER          EfiDirIter;
    EFI_FILE_INFO           *EfiDirEntry;
    CHAR16                  FileName[256], *Directory, *MatchPatterns, *VolName = NULL;
-   UINTN                   i, Length;
+   UINTN                   i, Length, VolNum;
 
    MatchPatterns = StrDuplicate(LOADER_MATCH_PATTERNS);
    if (GlobalConfig.ScanAllLinux)
@@ -1031,10 +1028,13 @@ static VOID ScanEfiFiles(REFIT_VOLUME *Volume) {
       // Scan user-specified (or additional default) directories....
       i = 0;
       while ((Directory = FindCommaDelimited(GlobalConfig.AlsoScan, i++)) != NULL) {
+         VolNum = VOL_DONTSCAN;
          SplitVolumeAndFilename(&Directory, &VolName);
          CleanUpPathNameSlashes(Directory);
          Length = StrLen(Directory);
-         if ((Length > 0) && ((VolName == NULL) || (StriCmp(VolName, Volume->VolName) == 0)))
+         if ((Length > 0) && (VolName[0] == L'f') && (VolName[1] == L's') && (VolName[2] >= L'0') && (VolName[2] <= L'9'))
+            VolNum = Atoi(VolName + 2);
+         if ((Length > 0) && ((VolName == NULL) || (StriCmp(VolName, Volume->VolName) == 0) || (Volume->VolNumber == VolNum)))
             ScanLoaderDir(Volume, Directory, MatchPatterns);
          MyFreePool(Directory);
          MyFreePool(VolName);

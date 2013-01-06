@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 3/14/2012; last Web page update:
-12/30/2012, referencing rEFInd 0.6.2</p>
+1/6/2013, referencing rEFInd 0.6.3</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -90,11 +90,35 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <hr />
 
+<div style="float:right; width:55%">
+
 <p>Many casual users will be able to use rEFInd without making changes to its settings; in its default configuration, the boot manager automatically detects all the EFI boot loader programs you have on your ESP (or your OS X boot partition, in the case of Macs) and displays icons for them. On Macs, rEFInd also presents legacy BIOS boot options by default. Sometimes, though, you may want to tweak rEFInd's configuration. Sometimes you can obtain your desired results by adjusting the filenames of your boot loaders. Other times, you can edit rEFInd's configuration file, <tt>refind.conf</tt>, which resides in the same directory as its binary file (<tt>refind.efi</tt> or whatever you've renamed it).</p>
+
+</div>
+
+<div class="navbar">
+
+<h4 class="tight">Contents</h4>
+
+<ul>
+
+<li class="tight"><a href="#hiding">Hiding and Displaying EFI Boot Loaders</li>
+
+<li class="tight"><a href="#adjusting">Adjusting the Global Configuration</a></li>
+
+<li class="tight"><a href="#stanzas">Creating OS Stanzas</a></li>
+
+<li class="tight"><a href="#submenu">Creating Submenu Entries</a></li>
+
+</ul>
+
+</div>
 
 <p>Broadly speaking, rEFInd's configuration file is broken down into two sections: <i>global options</i> and <i>OS stanzas.</i> The global options section sets options that apply globally&mdash;to set the timeout period, enable graphics or text mode, and so on. OS stanzas are optional, but if present, they enable you to add new boot options or replace the auto-detected options with customized ones. Both sections include configuration lines and comment lines, the latter being denoted by a leading hash mark (<tt>#</tt>). rEFInd ignores comment lines, so you can add explanatory text. The default configuration file includes numerous comments explaining each of the options.</p>
 
+<a name="hiding">
 <h2>Hiding and Displaying EFI Boot Loaders</h2>
+</a>
 
 <p class="sidebar">ESPs use the FAT filesystem, which is case-insensitive. Unfortunately, at least one EFI implementation (Gigabyte's <a href="http://www.rodsbooks.com/gb-hybrid-efi/">Hybrid EFI</a>) contains a bug that causes string comparisons that should be case-insensitive to actually be done in a case-sensitive way. This can cause files that are present to appear to be missing. rEFInd includes code to work around this bug in some situations, but not in all of them. If boot loaders appear to be missing, try changing the case on their filenames or on the <tt>EFI</tt> directory in the ESP. (It's coded as uppercase in rEFInd; but EFI loader filename extensions are coded as lowercase <tt>.efi</tt>. I made these choices because they seem to be the most common uses on real-world installations.)</p>
 
@@ -124,7 +148,9 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>In addition to the main OS tag icon, you can set the <i>badge</i> icon for a volume by creating a file called <tt>.VolumeBadge.icns</tt> in the root directory of a partition. This icon file must include a 32x32 bitmap. If present, it replaces the disk-type icons that are overlaid on the main OS icon. If you use this feature, the badge is applied to all the boot loaders read from the disk, not just those stored in the root directory or the Apple boot loader location. You could use this feature to set a custom badge for different specific disks or to help differentiate multiple OS X installations on one computer. If you don't want any badges, you can replace the three badge icons in the rEFInd <tt>icons</tt> subdirectory (<tt>vol_external.icns</tt>, <tt>vol_internal.icns</tt>, and <tt>vol_optical.icns</tt>) with a completely transparent badge. The <tt>transparent.icns</tt> file in the rEFInd <tt>icons</tt> directory may be used for this purpose.</p>
 
+<a name="adjusting">
 <h2>Adjusting the Global Configuration</h2>
+</a>
 
 <p>You can adjust many of rEFInd's options by editing its <tt>refind.conf</tt> file. You can use any text editor you like for the job, but be sure it saves the file in plain ASCII text, not in a word processing format. (In theory, a UTF-16 encoding should also work, but I've not tried that myself.) Note that the EFI shell includes its own editor. If you need to make a change before you launch an OS, you can launch a shell, change to the rEFInd directory, and type <b><tt>edit refind.conf</tt></b> to edit the file. This EFI editor is quite primitive, but it gets the job done. After editing, you'll need to reboot for rEFInd to read the changed configuration file.</p>
 
@@ -264,7 +290,9 @@ default_selection elilo
 
 <p>This example sets a timeout of 5 seconds; loads a custom graphic file called <tt>custom.bmp</tt> from the directory in which <tt>refind.efi</tt> resides; scans the <tt>drivers</tt> and <tt>EFI/tools/drivers</tt> directories for EFI drivers; uses manual boot loader configuration but also scans for external EFI boot loaders and EFI boot loaders on optical discs; and sets the default boot loader to the first loader found that includes the string <tt>elilo</tt>. Of course, since this file specifies use of manual boot loader configuration, it's not complete; you'll need to add at least one OS stanza to be able to boot from anything but an external disk or optical drive, as described shortly.</p>
 
+<a name="stanzas">
 <h2>Creating OS Stanzas</h2>
+</a>
 
 <p>OS stanzas in rEFInd are similar to those in GRUB Legacy, GRUB 2, or ELILO. You can use them to add configuration options to those that are auto-detected. You cannot modify the auto-detected options, though; if you just want to tweak one OS's configuration, you have several options, none of which is ideal:</p>
 
@@ -376,7 +404,9 @@ fs0:\EFI\Microsoft\Boot\bootmgfw.efi</pre>
 
 <p>You can combine these OS stanzas with the global <tt>refind.conf</tt> options presented earlier. The result would contain just two entries on the rEFInd boot menu (for Gentoo and Windows, since the Ubuntu entry is disabled), unless rEFInd found other boot options on an external or optical disk.</p>
 
+<a name="submenu">
 <h2>Creating Submenu Entries</h2>
+</a>
 
 <p>As described on the <a href="using.html">Using rEFInd</a> page, rEFInd can present a menu of options for certain loader tags when you press the Insert, F2, or + key. rEFInd does this automatically when it detects Mac OS X or ELILO boot loaders, or when you set the OS type via the <tt>ostype</tt> option. The Mac OS X boot loader, in particular, accepts various options that you can use to boot in various ways.</p>
 
@@ -472,7 +502,7 @@ menuentry Gentoo {
 
 <hr />
 
-<p>copyright &copy; 2012 by Roderick W. Smith</p>
+<p>copyright &copy; 2012&ndash;2013 by Roderick W. Smith</p>
 
 <p>This document is licensed under the terms of the <a href="FDL-1.3.txt">GNU Free Documentation License (FDL), version 1.3.</a></p>
 

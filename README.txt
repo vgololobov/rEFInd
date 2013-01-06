@@ -12,8 +12,12 @@ following files and subdirectories:
    refind/icons/                    Subdirectory containing icons
    refind/drivers_ia32/             Subdirectory containing IA32 drivers
    refind/drivers_x64/              Subdirectory containing x86-64 drivers
+   keys/                            Subdirectory containing MOKs
    install.sh                       Linux/MacOS installation script
+   mkrlconf.sh                      A script to create refind_linux.conf
+   mvrefind.sh                      A script to move a rEFInd installation
    README.txt                       This file
+   NEWS.txt                         A summary of program changes
    LICENSE.txt                      The original rEFIt license
    COPYING.txt                      The rEFInd license
    CREDITS.txt                      Acknowledgments of code sources
@@ -23,7 +27,9 @@ The easiest way of installing rEFInd is generally to use the install.sh
 script; however, you must be running under Linux or OS X to do this. If
 you're using either of those OSes, simply typing "./install.sh" will
 generally install rEFInd. If you have problems with this method, though,
-you'll have to do a manual installation.
+you'll have to do a manual installation. The install.sh script supports a
+number of options that you might want to use; consult the
+docs/refind/installing.html file for details.
 
 To install the binary package manually, you must first access your EFI
 System Partition (ESP). You can then place the files from the refind

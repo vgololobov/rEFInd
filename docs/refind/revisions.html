@@ -14,7 +14,7 @@
 <p class="subhead">by Roderick W. Smith, <a
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
-<p>Last Web page update: 12/30/2012</p>
+<p>Last Web page update: 1/6/2013</p>
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
 
@@ -92,6 +92,8 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <ul>
 
+<li><b>0.6.3 (1/6/2013)</b>&mdash;The installation script and related tools see the biggest changes in this version of the program. The <tt>install.sh</tt> script can now detect a rEFInd installation in <tt>EFI/BOOT</tt> or <tt>EFI/Microsoft/Boot</tt> and update it rather than install to the default location of <tt>EFI/refind</tt>. It will also install to one of these fallback locations if it's run in BIOS mode, thus helping users who want to get a BIOS-mode install of Linux running on an EFI-based computer. A new <tt>mvrefind.sh</tt> script can move the installation between these three locations (or more exotic locations). Outside of scripts, the <tt>dont_scan_dirs</tt> and <tt>also_scan_dirs</tt> tokens can now accept volume specifications, as in <tt>myvol:EFI/bogus</tt> to not scan (or scan) the <tt>EFI/bogus</tt> directory on the <tt>myvol</tt> volume. I've also fixed a bug that caused rEFInd to ignore default boot loaders on removable disks if rEFInd was installed using the fallback filename. I've also modified the ISO-9660 driver so that it works with ISO-9660 images written to non-optical media. This may help with getting "hybrid ISO" images written to USB flash drives to boot.</li>
+
 <li><b>0.6.2 (12/30/2012)</b>&mdash;This version's biggest changes are "behind-the-scenes" improvements. Specifically, I've completely re-worked the shim/MOK Secure Boot code, based largely on an approach used by James Bottomley in his PreLoader boot loader. This fixes some bugs, such as the inability to launch more than one EFI boot loader in Secure Boot mode. The EFI filesystem drivers can now be built with GNU-EFI, which may help distribution maintainers. I'm also providing RPM packages of rEFInd, although I recommend installing from the binary zip file. Finally, I've changed rEFInd's default text-mode setting behavior to not adjust the text mode. (Recent previous versions forced the system to use text mode 0, which cuased problems on some systems.)</li>
 
 <li><b>0.6.1 (12/21/2012)</b>&mdash;(Mayan apocalypse edition!) This version features a number of refinements and minor bug fixes. The <tt>install.sh</tt> script now includes a new <tt>--root</tt> option to enable easier installation of rEFInd to a regular OS installation from an emergency disc. The ext4fs driver now supports the <tt>meta_bg</tt> filesystem feature. I've fixed a number of obscure display resolution-setting bugs and a bug that caused the screen to clear after displaying certain error messages but before prompting you to continue. Instead of displaying a blank filesystem label as the "from" location for a boot loader, rEFInd now describes the filesystem by its type (FAT, ext4fs, etc.) and/or size. rEFInd also now uses the filesystem label as a hint about what type of icon to display for a boot loader.</li>
@@ -152,7 +154,7 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <hr />
 
-<p>copyright &copy; 2012 by Roderick W. Smith</p>
+<p>copyright &copy; 2012&ndash;2013 by Roderick W. Smith</p>
 
 <p>This document is licensed under the terms of the <a href="FDL-1.3.txt">GNU Free Documentation License (FDL), version 1.3.</a></p>
 

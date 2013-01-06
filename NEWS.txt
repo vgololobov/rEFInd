@@ -1,4 +1,4 @@
-0.6.3 (?/?/2013):
+0.6.3 (1/6/2013):
 -----------------
 
 - Added the ability to specify a volume name or number in the
@@ -12,7 +12,7 @@
   burned to USB flash disks.
 
 - New mvrefind.sh script to move a rEFInd installation between a standard
-  location (typically EFI/refind) or one of the fallback locations
+  location (typically EFI/refind) and one of the fallback locations
   (EFI/BOOT or EFI/Microsoft/Boot). It can also do more exotic locations.
 
 - The install.sh script now installs to EFI/BOOT/bootx64.efi or

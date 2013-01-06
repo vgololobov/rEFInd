@@ -1,6 +1,6 @@
 Summary: EFI boot manager software
 Name: refind
-Version: 0.6.2.1
+Version: 0.6.3
 Release: 1%{?dist}
 License: GPLv3
 URL: http://www.rodsbooks.com/refind/
@@ -107,6 +107,7 @@ install -Dp -m0755 mvrefind.sh $RPM_BUILD_ROOT/usr/sbin/
 /etc/refind.d/
 
 %post
+env
 PATH=$PATH:/usr/local/bin
 # Remove any existing NVRAM entry for rEFInd, to avoid creating a duplicate.
 ExistingEntry=`efibootmgr | grep "rEFInd Boot Manager" | cut -c 5-8`

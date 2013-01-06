@@ -24,8 +24,8 @@ SourceIA32="refind_ia32.efi"
 TargetIA32=$SourceIA32
 SourceShim="shim.efi"
 TargetShim=$SourceShim
-SourceDir=${1}
-TargetDir=${2}
+SourceDir=`readlink -f ${1}`
+TargetDir=`readlink -f ${2}`
 
 # Identifies the ESP's location (/boot or /boot/efi); aborts if the ESP isn't
 # mounted at either location. Also splits the ESP location from SourceDir and

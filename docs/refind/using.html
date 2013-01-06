@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 3/14/2012; last Web page update:
-12/30/2012, referencing rEFInd 0.6.2</p>
+1/6/2013, referencing rEFInd 0.6.3</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -90,19 +90,43 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <hr />
 
+<div style="float:right; width:55%">
+
+<p>For the most part, rEFInd is easy to use; just use your keyboard's arrow keys to select the OS you want to boot or the utility you want to launch and press the Enter key. A few details aren't entirely intuitive, though, so this page describes them.</p>
+
+</div>
+
+<div class="navbar">
+
+<h4 class="tight">Contents</h4>
+
+<ul>
+
+<li class="tight"><a href="#basic">Using Basic rEFInd Features</li>
+
+<li class="tight"><a href="#keyboard">Using Keyboard Shortcuts</a></li>
+
+<li class="tight"><a href="#legacy">Booting Legacy OSes</a></li>
+
+</ul>
+
+</div>
+
+<a name="basic">
 <h2>Using Basic rEFInd Features</h2>
+</a>
 
 <p>With rEFInd in place and added to your firmware's list of boot utilities, you can reboot your computer. Depending on your configuration, rEFInd may come up immediately or you may need to select it from your firmware's boot options or reconfigure your firmware to present rEFInd automatically. Unfortunately, I can't offer much specific advice on this score, since EFI implementations differ so much in their user interfaces.</p>
 
 <p>Assuming rEFInd starts up correctly, you should see its main screen, which resembles the following:</p>
 
-    <br /><center><img src="refind.png" align="center" width="905"
-    height="389" alt="rEFInd presents a GUI menu for selecting your boot
+    <br /><center><img src="refind.png" align="center" width="608"
+    height="377" alt="rEFInd presents a GUI menu for selecting your boot
     OS." border=2 /></center> <br />
 
-<p>If you don't press any key before the timeout (shown on the last line) expires, the default boot loader will launch. This is normally the first item in the menu, but you can adjust the default by editing the configuration file. (In this example, it's the SUSE loader, which is further identified by text above the timeout as <i>Linux 3.3.0-rc7 from ESP.</i>)</p>
+<p>If you don't press any key before the timeout (shown on the last line) expires, the default boot loader will launch. This is normally the first item in the menu, but you can adjust the default by editing the configuration file. (In this example, it's the SUSE loader, which is further identified by text above the timeout as <i>vmlinuz-3.4.6-2.10-desktop from SUSE boot.</i>)</p>
 
-<p>This display is dominated by the central set of OS <i>tags</i> (icons), which in this example includes tags for OS X, Windows, Ubuntu, a generic Linux installation (ELILO, in fact), SUSE, and an unkown boot loader. All but the last of these are on hard disks, but the unknown boot loader is on an optical disc, as revealed by the small icons (known as <i>badges</i>) in the lower-right corner of the OS icons.</p>
+<p>This display is dominated by the central set of OS <i>tags</i> (icons), which in this example includes tags for OS X, Windows, SUSE, and an unkown boot loader. All but the last of these are on hard disks, but the unknown boot loader is on an optical disc, as revealed by the small icons (known as <i>badges</i>) in the lower-right corner of the OS icons.</p>
 
 <p>In this example, the SUSE tag is selected. You can move the selection left by pressing the left arrow key and right by pressing the right arrow key. If your system has many boot loaders, an arrow icon will appear to the right of the boot loader list, indicating that the boot loader list will scroll when you move off the right edge. If you do this, an arrow icon will appear to the left of the icon list, indicating that you can scroll back in a similar manner. You can scroll the list by one line full of icons by using the Page Up or Page Down keys to move left and right, respectively. Moving past the final selection or using the down arrow key moves the selection to the second row of small tags, which launch ancillary programs or perform special actions. If you've moved the selection cursor to the second row, pressing the up arrow key or scrolling past the left edge of the second row moves the cursor to the top row. In this figure, these five tags are present:</p>
 
@@ -110,9 +134,7 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <li>Launch the EFI shell</li>
 
-<p class="sidebar">As noted on the <a href="installing.html">Installing rEFInd</a> page, the <tt>gptsync</tt> utility is dangerous, but it's useful on some Mac systems that dual-boot with Windows. If you're using a UEFI-based PC, it's best to <i>not</i> install this utility!</p>
-
-<li>Launch the <tt>gptsync</tt> utility</li>
+<li>Launch the <tt>MokManager</tt> utility</li>
 
 <li>Produce an information page</li>
 
@@ -122,21 +144,25 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 </ul>
 
-<p>The last three of these options are always available by default, but the first depends on the presence of the EFI shell program file, as described earlier. To get the <tt>gptsync</tt> icon, you must install <tt>gptsync.efi</tt> and adjust the <tt>showtools</tt> option in <tt>refind.conf</tt>, as well.</p>
+<p>The last three of these options are always available by default, but the first depends on the presence of the EFI shell program file, as described earlier. To get the <tt>MokManager</tt> icon, you must install <tt>MokManager.efi</tt>, as well. Other ancillary tags may be present on other computers.</p>
 
-<p>To launch an OS or utility, you should select its tag and then press the Enter key. If you press the Insert key, rEFInd will show a menu that may hold additional options, depending on the OS type. The following figure shows the submenu for Mac OS X. You can use this menu much like the main menu; move the cursor to select the option you want to use, then press the Enter key to launch the boot loader with the selected options. Press the Esc key or select <tt>Return to Main Menu</tt> to return to the main menu. You can also press the Insert key again to edit your boot loader options. A simple text-mode line editor opens, enabling you to move a curso back and forth in the line with your arrow keys, delete text, and type in new text. If you want to boot with your edited options, press the Enter key. If you decide you picked the wrong entry, press the Esc key.</p>
+<p>To launch an OS or utility, you should select its tag and then press the Enter key. If you press the Insert, F2, or + key, rEFInd will show a menu that may hold additional options, depending on the OS type. The following figure shows the submenu for Mac OS X. You can use this menu much like the main menu; move the cursor to select the option you want to use, then press the Enter key to launch the boot loader with the selected options. Press the Esc key or select <tt>Return to Main Menu</tt> to return to the main menu. You can also press the Insert key again to edit your boot loader options. A simple text-mode line editor opens, enabling you to move a cursor back and forth in the line with your arrow keys, delete text, and type in new text. If you want to boot with your edited options, press the Enter key. If you decide you picked the wrong entry, press the Esc key.</p>
 
     <br /><center><img src="submenu.png" align="center" width="442"
     height="269" alt="rEFInd submenus enable you to set session-specific
     options." border=2></center> <br />
 
-<p class="sidebar"><b>Note:</b> rEFInd defaults to scanning for EFI, but <i>not</i> for BIOS, boot loaders. If you want to launch BIOS-mode OSes from rEFInd, you must edit the <tt>scanfor</tt> line in <tt>refind.conf</tt>, as described on the <a href="configfile.html">Configuring the Boot Manager</a> page. This type of configuration is most likely to be necessary on Macs that dual-boot with Windows.</p>
+<p class="sidebar"><b>Note:</b>On UEFI-based PCs, rEFInd defaults to scanning for EFI, but <i>not</i> for BIOS, boot loaders. If you want to launch BIOS-mode OSes from rEFInd, you must edit the <tt>scanfor</tt> line in <tt>refind.conf</tt>, as described on the <a href="configfile.html">Configuring the Boot Manager</a> page. On Macs, rEFInd scans for BIOS-based OSes by default, since such configurations are a common way to launch Windows on Macs.</p>
 
 <p>Ordinarily, rEFInd displays tags for OSes it finds on internal hard disks, external hard disks (including USB flash drives, CF disks, and so on), and optical discs. Sometimes, though, the firmware hasn't had time to fully examine these devices by the time rEFInd starts; or you might only insert or plug in the media after rEFInd appears. In these cases, you can press the Esc key to have rEFInd re-read its configuration file and re-scan your media for boot loaders. This action can take a few seconds to complete, so be patient. You can also use this feature to detect OSes if you launch a shell and use it to load a driver or edit the <tt>refind.conf</tt> file. If you regularly need to press Esc, you might look into the <tt>scan_delay</tt> configuration file option, described on the <a href="configfile.html">Configuring the Boot Manager</a> page.</p>
 
+<p>On some computers, the firmware doesn't mount external USB media unless you adjust a firmware option or use the EFI's own boot manager prior to launching rEFInd. If you don't see external media appear in rEFInd's list, consult your computer's manual or examine its firmware to locate a relevant option.</p>
+
 <p>If your computer supports Secure Boot, you may find that some of your OSes and tools won't work; they'll produce <tt>Access Denied</tt> error messages. You can overcome this problem by creating a signing key, signing your binaries with it, and adding the public version of that key to your machine owner key (MOK) list. This process is described on the <a href="secureboot.html">Managing Secure Boot</a> page.</p>
 
+<a name="keyboard">
 <h2>Using Keyboard Shortcuts</h2>
+</a>
 
 <p>Although most rEFInd features can be activated via fairly obvious keyboard actions, some are not obvious. <a href="#table1">Table 1</a> summarizes the keystrokes that rEFInd accepts, and the action that each keystroke invokes.</p>
 
@@ -265,7 +291,7 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <hr />
 
-<p>copyright &copy; 2012 by Roderick W. Smith</p>
+<p>copyright &copy; 2012&ndash;2013 by Roderick W. Smith</p>
 
 <p>This document is licensed under the terms of the <a href="FDL-1.3.txt">GNU Free Documentation License (FDL), version 1.3.</a></p>
 

@@ -167,12 +167,14 @@ timeout 20
 # for additional boot loaders, but it doesn't recurse into these directories.
 # The also_scan_dirs token adds more directories to the scan list.
 # Directories are specified relative to the volume's root directory. This
-# option applies to ALL the volumes that rEFInd scans. If a specified
-# directory doesn't exist, it's ignored (no error condition results).
-# The default is to scan the "boot" directory in addition to various
-# hard-coded directories.
+# option applies to ALL the volumes that rEFInd scans UNLESS you include
+# a volume name and colon before the directory name, as in "myvol:/somedir"
+# to scan the somedir directory only on the filesystem named myvol. If a
+# specified directory doesn't exist, it's ignored (no error condition
+# results). The default is to scan the "boot" directory in addition to
+# various hard-coded directories.
 #
-#also_scan_dirs boot,EFI/linux/kernels
+#also_scan_dirs boot,ESP2:EFI/linux/kernels
 
 # Partitions to omit from scans. You must specify a volume by its
 # label, which you can obtain in an EFI shell by typing "vol", from
@@ -191,9 +193,12 @@ timeout 20
 # or non-bootloader utilities provided by a hardware manufacturer. If
 # a directory is listed both here and in also_scan_dirs, dont_scan_dirs
 # takes precedence. Note that this blacklist applies to ALL the
-# filesystems that rEFInd scans, not just the ESP.
+# filesystems that rEFInd scans, not just the ESP, unless you precede
+# the directory name by a filesystem name, as in "myvol:EFI/somedir"
+# to exclude EFI/somedir from the scan on the myvol volume but not on
+# other volumes.
 #
-#dont_scan_dirs EFI/boot,EFI/Dell
+#dont_scan_dirs ESP:/EFI/boot,EFI/Dell
 
 # Files that should NOT be included as EFI boot loaders (on the
 # first line of the display). If you're using a boot loader that

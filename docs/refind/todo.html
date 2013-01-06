@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 3/14/2012; last Web page update:
-12/30/2012, referencing rEFInd 0.6.2</p>
+1/6/2013, referencing rEFInd 0.6.3</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -190,37 +190,11 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 	and/or initial RAM disks relative to the rEFInd directory (or the
 	boot loader's directory, in the case of initrds).</li>
 
-    <li>Various options (<tt>dont_scan_dirs</tt>, <tt>also_scan_dirs</tt>,
-	<tt>scan_driver_dirs</tt>, etc.) refer to directories or files,
-	either on the ESP or on all partitions. A way to identify specific
-	partitions for these options would be useful in some
-	situations.</li>
-
     </ul></li> <!-- Improvements -->
 
 <li><b>Known bugs that need squashing:</b>
 
     <ul>
-
-    <li>When in Secure Boot mode, rEFInd can launch just one driver that's
-	signed with a shim key or MOK. The second and later drivers
-	generate "access denied" errors. <!-- I think this is because of
-	the fast-and-loose sample code I borrowed from shim, which re-uses
-	rEFInd's own image handle (the <tt>image_handle</tt> variable in
-	<tt>start_image()</tt>) for launching shim/MOK-signed binaries. The
-	result is that when the second driver is loaded, it can't register
-	itself with the firmware because the firmware believes it's already
-	been registered. The solution is likely to involve creating a child
-	image handle rather than re-using rEFInd's own image handle, but
-	this is likely to be tedious to do&mdash;see
-	<tt>/usr/local/UDK2010/MyWorkSpace/MdeModulePkg/Core/Dxe/Image/Image.c</tt>
-	for the reference UEFI implementation. --> </li>
-
-    <li>When setting a resolution higher than about 800x600 (or maybe even
-	640x480) in text mode, the text displayed by rEFInd, and on some
-	systems shells and other programs launched from rEFInd, is
-	restricted to an 80x24-character area in the top-left corner of the
-	screen.</li>
 
     <li>The <a href="http://www.rodsbooks.com/gb-hybrid-efi/">Gigabyte
 	Hybrid EFI</a> has a bug that causes the allegedly case-insensitive
@@ -240,7 +214,7 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 	implementation, and a dismal one at that, so I'm inclined to just
 	let it go.</li>
 
-    <li>The Shutdown option works correctly on Macs, but not on UEFI-based
+    <li>The Shutdown option works correctly on Macs, but not on many UEFI-based
 	PCs. On such systems, Shutdown reboots the computer. This should be
 	fixed.</li>
 
@@ -371,7 +345,7 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <hr />
 
-<p>copyright &copy; 2012 by Roderick W. Smith</p>
+<p>copyright &copy; 2012&ndash;2013 by Roderick W. Smith</p>
 
 <p>This document is licensed under the terms of the <a href="FDL-1.3.txt">GNU Free Documentation License (FDL), version 1.3.</a></p>
 
