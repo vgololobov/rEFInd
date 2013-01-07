@@ -128,7 +128,7 @@ static VOID AboutrEFInd(VOID)
 
     if (AboutMenu.EntryCount == 0) {
         AboutMenu.TitleImage = BuiltinIcon(BUILTIN_ICON_FUNC_ABOUT);
-        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.6.3");
+        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.6.3.2");
         AddMenuInfoLine(&AboutMenu, L"");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2006-2010 Christoph Pfisterer");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2012 Roderick W. Smith");
@@ -908,7 +908,7 @@ static BOOLEAN ShouldScan(REFIT_VOLUME *Volume, CHAR16 *Path) {
       if (VolName != NULL) {
          if ((StriCmp(VolName, Volume->VolName) == 0) && (StriCmp(DontScanDir, Path) == 0))
             ScanIt = FALSE;
-         if ((VolName[0] == L'f') && (VolName[1] == L's') && (VolName[2] >= L'0') && (VolName[2] <= L'9')) {
+         if ((StrLen(VolName) > 2) && (VolName[0] == L'f') && (VolName[1] == L's') && (VolName[2] >= L'0') && (VolName[2] <= L'9')) {
             VolNum = Atoi(VolName + 2);
             if ((VolNum == Volume->VolNumber) && (StriCmp(DontScanDir, Path) == 0))
                ScanIt = FALSE;
@@ -1032,7 +1032,8 @@ static VOID ScanEfiFiles(REFIT_VOLUME *Volume) {
          SplitVolumeAndFilename(&Directory, &VolName);
          CleanUpPathNameSlashes(Directory);
          Length = StrLen(Directory);
-         if ((Length > 0) && (VolName[0] == L'f') && (VolName[1] == L's') && (VolName[2] >= L'0') && (VolName[2] <= L'9'))
+         if ((Length > 0) && (StrLen(VolName) > 2) && (VolName[0] == L'f') && (VolName[1] == L's') &&
+             (VolName[2] >= L'0') && (VolName[2] <= L'9'))
             VolNum = Atoi(VolName + 2);
          if ((Length > 0) && ((VolName == NULL) || (StriCmp(VolName, Volume->VolName) == 0) || (Volume->VolNumber == VolNum)))
             ScanLoaderDir(Volume, Directory, MatchPatterns);

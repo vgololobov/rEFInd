@@ -1,3 +1,9 @@
+0.6.4 (1/?/2013):
+-----------------
+
+- Fixed bug that could cause a hang on boot if any partition had a name
+  that was less than three characters long.
+
 0.6.3 (1/6/2013):
 -----------------
 

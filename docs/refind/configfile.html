@@ -400,7 +400,7 @@ menuentry "Windows via shell script" {
 <pre class="listing">mm 0003003E 8 -pci
 fs0:\EFI\Microsoft\Boot\bootmgfw.efi</pre>
 
-<p>This example writes data to the computer's PCI bus via the EFI shell's <tt>mm</tt> command and then launches Windows. Chances are you won't need to engage in such operations, and I do <i>not</i> recommend you try this exact example unless you know what you're doing! This command was required to activate the video hardware on a computer of a person with whom I corresponded prior to booting Windows, but such needs are rare.</p>
+<p>This example writes data to the computer's PCI bus via the EFI shell's <tt>mm</tt> command and then launches Windows. Chances are you won't need to engage in such operations, and I do <i>not</i> recommend you try this exact example unless you know what you're doing! This command was required to activate the video hardware on a computer of a person with whom I corresponded prior to booting Windows, but such needs are rare. Another example of a similar approach can be found in <a href="http://forum.techinferno.com/diy-e-gpu-projects/printfriendly2367.htm">this forum thread.</a> A few pointers on finding addresses for your hardware can be found <a href="http://forum.techinferno.com/diy-e-gpu-projects/2367-macbook-pro-retina-15-gtx-560-ti-%40-th05-8.html#post36199">in this post.</a></p>
 
 <p>You can combine these OS stanzas with the global <tt>refind.conf</tt> options presented earlier. The result would contain just two entries on the rEFInd boot menu (for Gentoo and Windows, since the Ubuntu entry is disabled), unless rEFInd found other boot options on an external or optical disk.</p>
 
