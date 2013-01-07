@@ -1,7 +1,7 @@
 Summary: EFI boot manager software
 Name: refind
 Version: 0.6.3
-Release: 1%{?dist}
+Release: 2%{?dist}
 License: GPLv3
 URL: http://www.rodsbooks.com/refind/
 Group: System Environment/Base
@@ -107,7 +107,6 @@ install -Dp -m0755 mvrefind.sh $RPM_BUILD_ROOT/usr/sbin/
 /etc/refind.d/
 
 %post
-env
 PATH=$PATH:/usr/local/bin
 # Remove any existing NVRAM entry for rEFInd, to avoid creating a duplicate.
 ExistingEntry=`efibootmgr | grep "rEFInd Boot Manager" | cut -c 5-8`
@@ -146,7 +145,7 @@ fi
 # wiping out the just-updated files.
 
 %changelog
-* Mon Dec 31 2012 R Smith <rodsmith@rodsbooks.com> - 0.6.2-2
-- Improved installation procedures
-* Sun Dec 30 2012 R Smith <rodsmith@rodsbooks.com> - 0.6.2
-- Created spec file for 0.6.2 release
+* Sun Jan 6 2013 R Smith <rodsmith@rodsbooks.com> - 0.6.3-2
+- Fixed accidental inclusion of "env" as part of installation script
+* Sun Jan 6 2013 R Smith <rodsmith@rodsbooks.com> - 0.6.3
+- Created spec file for 0.6.3 release
