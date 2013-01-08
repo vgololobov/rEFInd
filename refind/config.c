@@ -349,12 +349,15 @@ VOID ReadConfig(CHAR16 *FileName)
        MyFreePool(GlobalConfig.AlsoScan);
        GlobalConfig.AlsoScan = StrDuplicate(ALSO_SCAN_DIRS);
        MyFreePool(GlobalConfig.DontScanDirs);
-       if (SelfVolume->VolName) {
-          SelfPath = StrDuplicate(SelfVolume->VolName);
-       } else {
-          SelfPath = AllocateZeroPool(256 * sizeof(CHAR16));
-          SPrint(SelfPath, 255, L"fs%d", SelfVolume->VolNumber);
-       } // if/else
+       if (SelfVolume) {
+          if (SelfVolume->VolName) {
+             SelfPath = StrDuplicate(SelfVolume->VolName);
+          } else {
+             SelfPath = AllocateZeroPool(256 * sizeof(CHAR16));
+             if (SelfPath != NULL)
+                SPrint(SelfPath, 255, L"fs%d", SelfVolume->VolNumber);
+          } // if/else
+       }
        MergeStrings(&SelfPath, SelfDirPath, L':');
        GlobalConfig.DontScanDirs = SelfPath;
        MyFreePool(GlobalConfig.DontScanFiles);

@@ -1,8 +1,13 @@
-0.6.4 (1/?/2013):
+0.6.4 (1/8/2013):
 -----------------
 
-- Fixed bug that could cause a hang on boot if any partition had a name
-  that was less than three characters long.
+- Revised install.sh to copy ext2fs driver, rather than ext4fs driver, for
+  ext2/3 filesystems. This can help keep non-functional entries from links
+  from /vmlinuz to /boot/vmlinuz out of the menu if the system uses ext4fs
+  on root and ext2fs or ext3fs on /boot.
+
+- Fixed a couple of memory management bugs that cause rEFInd to hang at
+  startup on some systems.
 
 0.6.3 (1/6/2013):
 -----------------

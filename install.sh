@@ -29,6 +29,7 @@
 #
 # Revision history:
 #
+# 0.6.4   -- Copies ext2 driver rather than ext4 driver for ext2/3fs
 # 0.6.3   -- Support for detecting rEFInd in EFI/BOOT and EFI/Microsoft/Boot
 #            directories & for installing to EFI/BOOT in BIOS mode
 # 0.6.2-1 -- Added --yes option & tweaked key-copying for use with RPM install script
@@ -219,7 +220,11 @@ CopyDrivers() {
       BootFS=`blkid -o export $BootPart 2> /dev/null | grep TYPE= | cut -f 2 -d =`
       DriverType=""
       case $BootFS in
-         ext2 | ext3 | ext4) DriverType="ext4"
+         ext2 | ext3) DriverType="ext2"
+              # Could use ext4, but that can create unwanted entries from symbolic
+              # links in / to /boot/vmlinuz if a separate /boot partition is used.
+              ;;
+         ext4) DriverType="ext4"
               ;;
          reiserfs) DriverType="reiserfs"
               ;;

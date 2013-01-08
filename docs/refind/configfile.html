@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 3/14/2012; last Web page update:
-1/6/2013, referencing rEFInd 0.6.3</p>
+1/8/2013, referencing rEFInd 0.6.4</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -92,7 +92,7 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <div style="float:right; width:55%">
 
-<p>Many casual users will be able to use rEFInd without making changes to its settings; in its default configuration, the boot manager automatically detects all the EFI boot loader programs you have on your ESP (or your OS X boot partition, in the case of Macs) and displays icons for them. On Macs, rEFInd also presents legacy BIOS boot options by default. Sometimes, though, you may want to tweak rEFInd's configuration. Sometimes you can obtain your desired results by adjusting the filenames of your boot loaders. Other times, you can edit rEFInd's configuration file, <tt>refind.conf</tt>, which resides in the same directory as its binary file (<tt>refind.efi</tt> or whatever you've renamed it).</p>
+<p>Many casual users will be able to use rEFInd without making changes to its settings; in its default configuration, the boot manager automatically detects all the EFI boot loader programs you have on your ESP (or your OS X boot partition, in the case of Macs) and displays icons for them. On Macs, rEFInd also presents legacy BIOS boot options by default. Sometimes, though, you may want to tweak rEFInd's configuration. Sometimes you can obtain your desired results by adjusting the filenames of your boot loaders. Other times, you can edit rEFInd's configuration file, <tt>refind.conf</tt>, which resides in the same directory as its binary file (<tt>refind_x64.efi</tt> or whatever you've renamed it).</p>
 
 </div>
 
@@ -186,7 +186,7 @@ timeout 20
 <tr>
    <td><tt>banner</tt></td>
    <td>filename</td>
-   <td>Specifies a custom banner file to replaced the rEFInd banner image. The file should be a BMP image with a color depth of 24, 8, 4, or 1 bits. The file path is relative to the directory where <tt>refind.efi</tt> is stored.</td>
+   <td>Specifies a custom banner file to replaced the rEFInd banner image. The file should be a BMP image with a color depth of 24, 8, 4, or 1 bits. The file path is relative to the directory where the rEFInd binary is stored.</td>
 </tr>
 <tr>
    <td><tt>selection_big</tt></td>
@@ -288,7 +288,7 @@ scanfor manual,external,optical
 default_selection elilo
 </pre>
 
-<p>This example sets a timeout of 5 seconds; loads a custom graphic file called <tt>custom.bmp</tt> from the directory in which <tt>refind.efi</tt> resides; scans the <tt>drivers</tt> and <tt>EFI/tools/drivers</tt> directories for EFI drivers; uses manual boot loader configuration but also scans for external EFI boot loaders and EFI boot loaders on optical discs; and sets the default boot loader to the first loader found that includes the string <tt>elilo</tt>. Of course, since this file specifies use of manual boot loader configuration, it's not complete; you'll need to add at least one OS stanza to be able to boot from anything but an external disk or optical drive, as described shortly.</p>
+<p>This example sets a timeout of 5 seconds; loads a custom graphic file called <tt>custom.bmp</tt> from the directory in which the rEFInd binary resides; scans the <tt>drivers</tt> and <tt>EFI/tools/drivers</tt> directories for EFI drivers; uses manual boot loader configuration but also scans for external EFI boot loaders and EFI boot loaders on optical discs; and sets the default boot loader to the first loader found that includes the string <tt>elilo</tt>. Of course, since this file specifies use of manual boot loader configuration, it's not complete; you'll need to add at least one OS stanza to be able to boot from anything but an external disk or optical drive, as described shortly.</p>
 
 <a name="stanzas">
 <h2>Creating OS Stanzas</h2>

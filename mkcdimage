@@ -86,21 +86,23 @@ mkisofs -A "Bootable rEFInd" -V "rEFInd $Version" -volset "rEFInd $Version" \
 # Note: Seems to work on only a few systems, so I'm not distributing
 # the resulting images yet....
 #
-rm ../../refind-flashdrive-$Version.*
-cat $StartDir/flashparts.img refind-bin-$Version.img > refind-flashdrive-$Version.img
-cp $StartDir/README-flashdrive.txt ./
+rm -f ../../refind-flashdrive-$Version.*
+let FatSize=`du -s refind-bin-$Version.img | cut -f 1`
+let FatSize=($FatSize)+2048
+dd if=/dev/zero of=../../refind-flashdrive-$Version.img bs=1024 count=$FatSize
+sgdisk -n 1:2048:0 -t 1:EF00 -g ../../refind-flashdrive-$Version.img
+if [[ $? != 0 ]] ; then
+   echo "sgdisk failed! Exiting!"
+   exit 1
+fi
+dd if=refind-bin-$Version.img of=../../refind-flashdrive-$Version.img bs=512 seek=2048 conv=notrunc
+
 cd ..
-mv refind-bin-$Version refind-flashdrive-$Version
-zip -9r ../refind-flashdrive-$Version.zip \
-    refind-flashdrive-$Version/refind-flashdrive-$Version.img \
-    refind-flashdrive-$Version/docs refind-flashdrive-$Version/LICENSE.txt \
-    refind-flashdrive-$Version/install.sh \
-    refind-flashdrive-$Version/COPYING.txt \
-    refind-flashdrive-$Version/CREDITS.txt \
-    refind-flashdrive-$Version/README.txt \
-    refind-flashdrive-$Version/SHELLS.txt \
-    refind-flashdrive-$Version/README-flashdrive.txt
-mv refind-flashdrive-$Version/refind-flashdrive-$Version.img ../
+mkdir refind-flashdrive-$Version
+ln ../refind-flashdrive-$Version.img refind-flashdrive-$Version
+cp $StartDir/README-flashdrive.txt $StartDir/COPYING.txt $StartDir/NEWS.txt \
+   $StartDir/CREDITS.txt $StartDir/LICENSE.txt $StartDir/SHELLS.txt refind-flashdrive-$Version
+zip -9r ../refind-flashdrive-$Version.zip refind-flashdrive-$Version
 
 cd ../
 

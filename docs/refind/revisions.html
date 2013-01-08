@@ -14,7 +14,7 @@
 <p class="subhead">by Roderick W. Smith, <a
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
-<p>Last Web page update: 1/6/2013</p>
+<p>Last Web page update: 1/8/2013</p>
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
 
@@ -91,6 +91,8 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 <p>The following summarizes changes in rEFInd's public releases:</p>
 
 <ul>
+
+<li><b>0.6.4 (1/8/2013)</b>&mdash;Bug fixes motivate this release; it corrects a couple of memory management bugs in 0.6.3 that cause rEFInd to hang at startup on some computers (unfortunately not on any of mine, so I missed this). I've also made a small change to the <tt>install.sh</tt> script so that it installs the ext2fs driver rather than the ext4fs driver if the script detects that a Linux kernel is on an ext2fs or ext3fs partition. This can keep rEFInd from scanning ext4fs partitions and picking up non-functional symbolic links to vmlinuz on such partitions.</li>
 
 <li><b>0.6.3 (1/6/2013)</b>&mdash;The installation script and related tools see the biggest changes in this version of the program. The <tt>install.sh</tt> script can now detect a rEFInd installation in <tt>EFI/BOOT</tt> or <tt>EFI/Microsoft/Boot</tt> and update it rather than install to the default location of <tt>EFI/refind</tt>. It will also install to one of these fallback locations if it's run in BIOS mode, thus helping users who want to get a BIOS-mode install of Linux running on an EFI-based computer. A new <tt>mvrefind.sh</tt> script can move the installation between these three locations (or more exotic locations). Outside of scripts, the <tt>dont_scan_dirs</tt> and <tt>also_scan_dirs</tt> tokens can now accept volume specifications, as in <tt>myvol:EFI/bogus</tt> to not scan (or scan) the <tt>EFI/bogus</tt> directory on the <tt>myvol</tt> volume. I've also fixed a bug that caused rEFInd to ignore default boot loaders on removable disks if rEFInd was installed using the fallback filename. I've also modified the ISO-9660 driver so that it works with ISO-9660 images written to non-optical media. This may help with getting "hybrid ISO" images written to USB flash drives to boot.</li>
 

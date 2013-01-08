@@ -1640,7 +1640,7 @@ BOOLEAN IsIn(IN CHAR16 *SmallString, IN CHAR16 *List) {
 
 // Implement FreePool the way it should have been done to begin with, so that
 // it doesn't throw an ASSERT message if fed a NULL pointer....
-VOID MyFreePool(IN OUT VOID *Pointer) {
+VOID MyFreePool(IN VOID *Pointer) {
    if (Pointer != NULL)
       FreePool(Pointer);
 }
