@@ -1,3 +1,10 @@
+0.6.5 (1/??/2013):
+------------------
+
+- Fixed bug that could cause rEFInd to crash if fed a banner image that's
+  too big. Note that "too big" can be substantially smaller than the screen
+  resolution!
+
 0.6.4 (1/8/2013):
 -----------------
 

@@ -47,6 +47,7 @@
 #include "config.h"
 #include "libegint.h"
 #include "lib.h"
+#include "menu.h"
 #include "../include/refit_call_wrapper.h"
 
 #include "../include/egemb_refind_banner.h"
@@ -435,23 +436,33 @@ VOID SwitchToGraphicsAndClear(VOID)
 VOID BltClearScreen(IN BOOLEAN ShowBanner)
 {
     static EG_IMAGE *Banner = NULL;
+    INTN BannerPosX, BannerPosY;
 
     if (ShowBanner && !(GlobalConfig.HideUIFlags & HIDEUI_FLAG_BANNER)) {
         // load banner on first call
         if (Banner == NULL) {
-            if (GlobalConfig.BannerFileName == NULL)
+            if (GlobalConfig.BannerFileName == NULL) {
                 Banner = egPrepareEmbeddedImage(&egemb_refind_banner, FALSE);
-            else
+            } else {
                 Banner = egLoadImage(SelfDir, GlobalConfig.BannerFileName, FALSE);
+                if ((Banner == NULL) || (Banner->Width > UGAWidth) || (Banner->Height > UGAHeight)) {
+                   MyFreePool(Banner);
+                   Banner = egPrepareEmbeddedImage(&egemb_refind_banner, FALSE);
+                } // if unusable image
+            }
             if (Banner != NULL)
                 MenuBackgroundPixel = Banner->PixelData[0];
         }
 
         // clear and draw banner
         egClearScreen(&MenuBackgroundPixel);
-        if (Banner != NULL)
-            BltImage(Banner, (UGAWidth - Banner->Width) >> 1,
-                     ((UGAHeight - LAYOUT_TOTAL_HEIGHT) >> 1) + LAYOUT_BANNER_HEIGHT - Banner->Height);
+        if (Banner != NULL) {
+            BannerPosX = (Banner->Width < UGAWidth) ? ((UGAWidth - Banner->Width) / 2) : 0;
+            BannerPosY = ComputeRow0PosX() - Banner->Height - LAYOUT_BANNER_YGAP;
+            if (BannerPosY < 0)
+               BannerPosY = 0;
+            BltImage(Banner, (UINTN) BannerPosX, (UINTN) BannerPosY);
+        }
 
     } else {
         // clear to standard background color

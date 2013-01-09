@@ -68,6 +68,7 @@ typedef VOID (*MENU_STYLE_FUNC)(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *S
 static CHAR16 ArrowUp[2] = { ARROW_UP, 0 };
 static CHAR16 ArrowDown[2] = { ARROW_DOWN, 0 };
 
+// Text and icon spacing constants....
 #define TEXT_YMARGIN (2)
 #define TEXT_XMARGIN (8)
 #define TEXT_LINE_HEIGHT (FONT_CELL_HEIGHT + TEXT_YMARGIN * 2)
@@ -544,9 +545,6 @@ static VOID TextMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, 
                 MergeStrings(&DisplayStrings[i], Screen->Entries[i]->Title, 0);
                 if (StrLen(DisplayStrings[i]) > MenuWidth)
                    DisplayStrings[i][MenuWidth - 1] = 0;
-//                DisplayStrings[i] = AllocateZeroPool(256 * sizeof(CHAR16));
-//                SPrint(DisplayStrings[i], ((MenuWidth < 255) ? MenuWidth : 255) * sizeof(CHAR16),
-//                       L" %s ", Screen->Entries[i]->Title);
                 // TODO: use more elaborate techniques for shortening too long strings (ellipses in the middle)
                 // TODO: account for double-width characters
             } // for
@@ -691,7 +689,7 @@ static VOID GraphicsMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *Sta
                 EntriesPosX = (UGAWidth + (Screen->TitleImage->Width + TITLEICON_SPACING) - MenuWidth) >> 1;
             else
                 EntriesPosX = (UGAWidth - MenuWidth) >> 1;
-            EntriesPosY = ((UGAHeight - LAYOUT_TOTAL_HEIGHT) >> 1) + LAYOUT_BANNER_YOFFSET + TEXT_LINE_HEIGHT * 2;
+            EntriesPosY = ComputeRow0PosX() + TEXT_LINE_HEIGHT * 2;
             TimeoutPosY = EntriesPosY + (Screen->EntryCount + 1) * TEXT_LINE_HEIGHT;
 
             // initial painting
@@ -859,6 +857,10 @@ static VOID PaintIcon(IN EG_EMBEDDED_IMAGE *BuiltInIcon, IN CHAR16 *ExternalFile
    }
 } // static VOID PaintIcon()
 
+inline UINTN ComputeRow0PosX(VOID) {
+   return ((UGAHeight / 2) - (5 * ROW0_TILESIZE / 6));
+} // UINTN ComputeRow0PosX()
+
 // Display main menu in graphics mode
 VOID MainMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, IN UINTN Function, IN CHAR16 *ParamText)
 {
@@ -889,7 +891,8 @@ VOID MainMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, IN UINT
                }
             }
             row0PosX = (UGAWidth + TILE_XSPACING - (ROW0_TILESIZE + TILE_XSPACING) * row0Count) >> 1;
-            row0PosY = ((UGAHeight - LAYOUT_TOTAL_HEIGHT) >> 1) + LAYOUT_BANNER_YOFFSET;
+            row0PosY = ComputeRow0PosX();
+//            row0PosY = ((UGAHeight - LAYOUT_TOTAL_HEIGHT) >> 1) + LAYOUT_BANNER_YOFFSET;
             row1PosX = (UGAWidth + TILE_XSPACING - (ROW1_TILESIZE + TILE_XSPACING) * row1Count) >> 1;
             row1PosY = row0PosY + ROW0_TILESIZE + TILE_YSPACING;
             if (row1Count > 0)

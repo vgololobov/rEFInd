@@ -355,7 +355,11 @@ VOID egClearScreen(IN EG_PIXEL *Color)
 
 VOID egDrawImage(IN EG_IMAGE *Image, IN UINTN ScreenPosX, IN UINTN ScreenPosY)
 {
-    if (!egHasGraphics)
+    // NOTE: Weird seemingly redundant tests because some placement code can "wrap around" and
+    // send "negative" values, which of course become very large unsigned ints that can then
+    // wrap around AGAIN if values are added to them.....
+    if (!egHasGraphics || ((ScreenPosX + Image->Width) > egScreenWidth) || ((ScreenPosY + Image->Height) > egScreenHeight) ||
+        (ScreenPosX > egScreenWidth) || (ScreenPosY > egScreenHeight))
         return;
 
     if (Image->HasAlpha) {
@@ -370,7 +374,7 @@ VOID egDrawImage(IN EG_IMAGE *Image, IN UINTN ScreenPosX, IN UINTN ScreenPosY)
         refit_call10_wrapper(UgaDraw->Blt, UgaDraw, (EFI_UGA_PIXEL *)Image->PixelData, EfiUgaBltBufferToVideo,
                      0, 0, ScreenPosX, ScreenPosY, Image->Width, Image->Height, 0);
     }
-}
+} /* VOID egDrawImage() */
 
 VOID egDrawImageArea(IN EG_IMAGE *Image,
                      IN UINTN AreaPosX, IN UINTN AreaPosY,
