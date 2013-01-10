@@ -399,11 +399,11 @@ VOID egFillImage(IN OUT EG_IMAGE *CompImage, IN EG_PIXEL *Color)
     UINTN       i;
     EG_PIXEL    FillColor;
     EG_PIXEL    *PixelPtr;
-    
+
     FillColor = *Color;
     if (!CompImage->HasAlpha)
         FillColor.a = 0;
-    
+
     PixelPtr = CompImage->PixelData;
     for (i = 0; i < CompImage->Width * CompImage->Height; i++, PixelPtr++)
         *PixelPtr = FillColor;
@@ -418,14 +418,14 @@ VOID egFillImageArea(IN OUT EG_IMAGE *CompImage,
     EG_PIXEL    FillColor;
     EG_PIXEL    *PixelPtr;
     EG_PIXEL    *PixelBasePtr;
-    
+
     egRestrictImageArea(CompImage, AreaPosX, AreaPosY, &AreaWidth, &AreaHeight);
-    
+
     if (AreaWidth > 0) {
         FillColor = *Color;
         if (!CompImage->HasAlpha)
             FillColor.a = 0;
-        
+
         PixelBasePtr = CompImage->PixelData + AreaPosY * CompImage->Width + AreaPosX;
         for (y = 0; y < AreaHeight; y++) {
             PixelPtr = PixelBasePtr;
@@ -492,18 +492,18 @@ VOID egRawCompose(IN OUT EG_PIXEL *CompBasePtr, IN EG_PIXEL *TopBasePtr,
 VOID egComposeImage(IN OUT EG_IMAGE *CompImage, IN EG_IMAGE *TopImage, IN UINTN PosX, IN UINTN PosY)
 {
     UINTN       CompWidth, CompHeight;
-    
+
     CompWidth  = TopImage->Width;
     CompHeight = TopImage->Height;
     egRestrictImageArea(CompImage, PosX, PosY, &CompWidth, &CompHeight);
-    
+
     // compose
     if (CompWidth > 0) {
         if (CompImage->HasAlpha) {
             CompImage->HasAlpha = FALSE;
             egSetPlane(PLPTR(CompImage, a), 0, CompImage->Width * CompImage->Height);
         }
-        
+
         if (TopImage->HasAlpha)
             egRawCompose(CompImage->PixelData + PosY * CompImage->Width + PosX, TopImage->PixelData,
                          CompWidth, CompHeight, CompImage->Width, TopImage->Width);
@@ -521,7 +521,7 @@ EG_IMAGE * egEnsureImageSize(IN EG_IMAGE *Image, IN UINTN Width, IN UINTN Height
         return NULL;
     if (Image->Width == Width && Image->Height == Height)
         return Image;
-    
+
     NewImage = egCreateFilledImage(Width, Height, Image->HasAlpha, Color);
     if (NewImage == NULL) {
         egFreeImage(Image);
@@ -529,7 +529,7 @@ EG_IMAGE * egEnsureImageSize(IN EG_IMAGE *Image, IN UINTN Width, IN UINTN Height
     }
     egComposeImage(NewImage, Image, 0, 0);
     egFreeImage(Image);
-    
+
     return NewImage;
 }
 
@@ -540,7 +540,7 @@ EG_IMAGE * egEnsureImageSize(IN EG_IMAGE *Image, IN UINTN Width, IN UINTN Height
 VOID egInsertPlane(IN UINT8 *SrcDataPtr, IN UINT8 *DestPlanePtr, IN UINTN PixelCount)
 {
     UINTN i;
-    
+
     for (i = 0; i < PixelCount; i++) {
         *DestPlanePtr = *SrcDataPtr++;
         DestPlanePtr += 4;
@@ -550,7 +550,7 @@ VOID egInsertPlane(IN UINT8 *SrcDataPtr, IN UINT8 *DestPlanePtr, IN UINTN PixelC
 VOID egSetPlane(IN UINT8 *DestPlanePtr, IN UINT8 Value, IN UINTN PixelCount)
 {
     UINTN i;
-    
+
     for (i = 0; i < PixelCount; i++) {
         *DestPlanePtr = Value;
         DestPlanePtr += 4;
@@ -560,7 +560,7 @@ VOID egSetPlane(IN UINT8 *DestPlanePtr, IN UINT8 Value, IN UINTN PixelCount)
 VOID egCopyPlane(IN UINT8 *SrcPlanePtr, IN UINT8 *DestPlanePtr, IN UINTN PixelCount)
 {
     UINTN i;
-    
+
     for (i = 0; i < PixelCount; i++) {
         *DestPlanePtr = *SrcPlanePtr;
         DestPlanePtr += 4, SrcPlanePtr += 4;

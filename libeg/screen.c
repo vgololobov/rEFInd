@@ -368,8 +368,8 @@ VOID egDrawImage(IN EG_IMAGE *Image, IN UINTN ScreenPosX, IN UINTN ScreenPosY)
     }
 
     if (GraphicsOutput != NULL) {
-        refit_call10_wrapper(GraphicsOutput->Blt, GraphicsOutput, (EFI_GRAPHICS_OUTPUT_BLT_PIXEL *)Image->PixelData, EfiBltBufferToVideo,
-                            0, 0, ScreenPosX, ScreenPosY, Image->Width, Image->Height, 0);
+        refit_call10_wrapper(GraphicsOutput->Blt, GraphicsOutput, (EFI_GRAPHICS_OUTPUT_BLT_PIXEL *)Image->PixelData,
+                             EfiBltBufferToVideo, 0, 0, ScreenPosX, ScreenPosY, Image->Width, Image->Height, 0);
     } else if (UgaDraw != NULL) {
         refit_call10_wrapper(UgaDraw->Blt, UgaDraw, (EFI_UGA_PIXEL *)Image->PixelData, EfiUgaBltBufferToVideo,
                      0, 0, ScreenPosX, ScreenPosY, Image->Width, Image->Height, 0);
