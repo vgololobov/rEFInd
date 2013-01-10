@@ -1,6 +1,11 @@
 0.6.5 (1/??/2013):
 ------------------
 
+- Added "safemode" option to "hideui" token, to hide option to boot into
+  safe mode for OS X ("-v -x" option to boot.efi).
+
+- Added icon for Haiku (os_haiku.icns).
+
 - Fixed bug that could cause rEFInd to crash if fed a banner image that's
   too big. Note that "too big" can be substantially smaller than the screen
   resolution!

@@ -568,7 +568,17 @@ VOID GenerateSubScreen(LOADER_ENTRY *Entry, IN REFIT_VOLUME *Volume) {
             SubEntry->LoadOptions     = L"-v -s";
             AddMenuEntry(SubScreen, (REFIT_MENU_ENTRY *)SubEntry);
          } // if
-      } // not single-user
+      } // single-user mode allowed
+
+      if (!(GlobalConfig.HideUIFlags & HIDEUI_FLAG_SAFEMODE)) {
+         SubEntry = InitializeLoaderEntry(Entry);
+         if (SubEntry != NULL) {
+            SubEntry->me.Title        = L"Boot Mac OS X in safe mode";
+            SubEntry->UseGraphicsMode = FALSE;
+            SubEntry->LoadOptions     = L"-v -x";
+            AddMenuEntry(SubScreen, (REFIT_MENU_ENTRY *)SubEntry);
+         } // if
+      } // safe mode allowed
 
       // check for Apple hardware diagnostics
       StrCpy(DiagsFileName, L"System\\Library\\CoreServices\\.diagnostics\\diags.efi");
