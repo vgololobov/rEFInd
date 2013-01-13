@@ -142,7 +142,17 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <li class="tight"><a href="#addons">Installing Additional Components</a></li>
 
-<li class="tight"><a href="#sluggish">Fixing a Sluggish Macintosh Boot</a></li>
+<li class="tight"><a href="#sluggish">Fixing a Sluggish Macintosh Boot</a>
+
+   <ul>
+
+   <li class="tight"><a href="#moving">Moving rEFInd to an HFS+ Volume</a></li>
+
+   <li class="tight"><a href="#fallback">Using the Fallback Filename</a></li>
+
+   <li class="tight"><a href="#clearing">Clearing the NVRAM Entries</a></li>
+
+   </ul></li>
 
 <li class="tight"><a href="#uninstalling">Uninstalling rEFInd</a></li>
 
@@ -826,7 +836,27 @@ $ <b>ioreg -l -p IODeviceTree | grep firmware-abi</b>
 <h2>Fixing a Sluggish Macintosh Boot</h2>
 </a>
 
-<p>I've received a few reports of a sluggish boot process (a delay of about 30 seconds before starting rEFInd) on some Macs after installing rEFInd. I've been unable to replicate this problem myself, and its true cause remains mysterious to me. I have found <a href="http://ubuntuforums.org/showpost.php?p=12256273&postcount=200">a Web forum post</a> describing a possible fix. Be aware, though, that this procedure involves using the <tt>efibootmgr</tt> utility on Macs, which has been known to damage the firmware on some Macs. Other reports indicate that this problem has been fixed with 3.3.0 and later kernels. Thus, I present this information cautiously and with a strong "use at your own risk" warning. If you care to proceed, I recommend you update your Linux kernel to the latest possible version and then proceed as follows:</p>
+<p>I've received a few reports of a sluggish boot process (a delay of about 30 seconds before starting rEFInd) on some Macs after installing rEFInd. I've been unable to replicate this problem myself, and its true cause remains mysterious to me. I have found three possible solutions, though: <a href="#moving">moving rEFInd to an HFS+ volume,</a> <a href="#fallback">using the fallback filename,</a> and <a href="#clearing">clearing NVRAM entries.</a></p>
+
+<a name="moving">
+<h3>Moving rEFInd to an HFS+ Volume</h3>
+</a>
+
+<p>Most of the reports of sluggish Macintosh boots I've seen note that the user installed rEFInd to the ESP rather than to the OS X root partition. Some users have reported that re-installing rEFInd to the OS X root partition clears up the problem. This is obviously a straightforward solution to the problem, if it works. Note that rEFInd can launch boot loaders that are stored on any partition that the EFI can read no matter where it's installed; therefore, you'll still be able to launch boot loaders stored on the ESP (or elsewhere) if you install it in this way.</p>
+
+<p>The biggest drawback to this approach is that you won't be able to edit the rEFInd configuration file or move rEFInd-related binaries from an EFI shell if you install it in this way, since Apple's HFS+ driver for EFI is read-only. (The same is true of rEFInd's HFS+ driver, so it won't help you overcome this limitation.) You may also be limited in making changes to your rEFInd configuration from Linux or other OSes, too, since Linux's HFS+ drivers disable write support by default on volumes with an active journal. You can force write access by using the <tt>force</tt> option to <tt>mount</tt>; however, this procedure is noted as being risky in the Linux HFS+ documentation, so I don't recommend doing this on a regular basis. As a compromise, you might try creating a small non-journaled HFS+ volume that's dedicated to holding rEFInd. You could even mount it as the Linux <tt>/boot</tt> partition, in which case it would also hold the Linux kernel and related files. You'll need to install rEFInd manually if you try this.</p>
+
+<a name="fallback">
+<h3>Using the Fallback Filename</h3>
+</a>
+
+<p>I've received one report that installing rEFInd to the ESP using the fallback filename (<tt>EFI/BOOT/bootx64.efi</tt> on most systems, or <tt>EFI/BOOT/bootia32.efi</tt> on very old Macs) can work around the problem.</p>
+
+<a name="clearing">
+<h3>Clearing the NVRAM Entries</h3>
+</a>
+
+<p>The first is <a href="http://ubuntuforums.org/showpost.php?p=12256273&postcount=200">a Web forum post</a> that describes a possible fix. Be aware, though, that this procedure involves using the <tt>efibootmgr</tt> utility on Macs, which has been known to damage the firmware on some Macs. Other reports indicate that this problem has been fixed with 3.3.0 and later kernels. Thus, I present this information cautiously and with a strong "use at your own risk" warning. If you care to proceed, I recommend you update your Linux kernel to the latest possible version and then proceed as follows:</p>
 
 <ol>
 

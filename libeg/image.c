@@ -94,6 +94,27 @@ EG_IMAGE * egCopyImage(IN EG_IMAGE *Image)
     return NewImage;
 }
 
+// Returns a smaller image composed of the specified crop area from the larger area.
+// If the specified area is larger than is in the original, returns NULL.
+EG_IMAGE * egCropImage(IN EG_IMAGE *Image, IN UINTN StartX, IN UINTN StartY, IN UINTN Width, IN UINTN Height) {
+   EG_IMAGE *NewImage = NULL;
+   UINTN x, y;
+
+   if (((StartX + Width) > Image->Width) || ((StartY + Height) > Image->Height))
+      return NULL;
+
+   NewImage = egCreateImage(Width, Height, Image->HasAlpha);
+   if (NewImage == NULL)
+      return NULL;
+
+   for (y = 0; y < Height; y++) {
+      for (x = 0; x < Width; x++) {
+         NewImage->PixelData[y * NewImage->Width + x] = Image->PixelData[(y + StartY) * Image->Width + x + StartX];
+      }
+   }
+   return NewImage;
+} // EG_IMAGE * egCropImage()
+
 VOID egFreeImage(IN EG_IMAGE *Image)
 {
     if (Image != NULL) {
@@ -442,7 +463,7 @@ VOID egRawCopy(IN OUT EG_PIXEL *CompBasePtr, IN EG_PIXEL *TopBasePtr,
 {
     UINTN       x, y;
     EG_PIXEL    *TopPtr, *CompPtr;
-    
+
     for (y = 0; y < Height; y++) {
         TopPtr = TopBasePtr;
         CompPtr = CompBasePtr;
@@ -464,7 +485,7 @@ VOID egRawCompose(IN OUT EG_PIXEL *CompBasePtr, IN EG_PIXEL *TopBasePtr,
     UINTN       Alpha;
     UINTN       RevAlpha;
     UINTN       Temp;
-    
+
     for (y = 0; y < Height; y++) {
         TopPtr = TopBasePtr;
         CompPtr = CompBasePtr;
@@ -499,17 +520,18 @@ VOID egComposeImage(IN OUT EG_IMAGE *CompImage, IN EG_IMAGE *TopImage, IN UINTN 
 
     // compose
     if (CompWidth > 0) {
-        if (CompImage->HasAlpha) {
-            CompImage->HasAlpha = FALSE;
-            egSetPlane(PLPTR(CompImage, a), 0, CompImage->Width * CompImage->Height);
-        }
+//         if (CompImage->HasAlpha) {
+//             CompImage->HasAlpha = FALSE;
+//             egSetPlane(PLPTR(CompImage, a), 0, CompImage->Width * CompImage->Height);
+//         }
 
-        if (TopImage->HasAlpha)
+        if (TopImage->HasAlpha) {
             egRawCompose(CompImage->PixelData + PosY * CompImage->Width + PosX, TopImage->PixelData,
                          CompWidth, CompHeight, CompImage->Width, TopImage->Width);
-        else
+        } else {
             egRawCopy(CompImage->PixelData + PosY * CompImage->Width + PosX, TopImage->PixelData,
                       CompWidth, CompHeight, CompImage->Width, TopImage->Width);
+        }
     }
 }
 

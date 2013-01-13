@@ -14,6 +14,7 @@ timeout 20
 #  label       - boot option text label in the menu
 #  singleuser  - remove the submenu options to boot Mac OS X in single-user
 #                or verbose modes; affects ONLY MacOS X
+#  safemode    - remove the submenu option to boot Mac OS X in "safe mode"
 #  hwtest      - the submenu option to run Apple's hardware test
 #  arrows      - scroll arrows on the OS selection tag line
 #  hints       - brief command summary in the menu

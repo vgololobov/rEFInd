@@ -435,7 +435,7 @@ VOID SwitchToGraphicsAndClear(VOID)
 
 VOID BltClearScreen(IN BOOLEAN ShowBanner)
 {
-    static EG_IMAGE *Banner = NULL;
+    static EG_IMAGE *Banner = NULL, *CroppedBanner;
     INTN BannerPosX, BannerPosY;
 
     if (ShowBanner && !(GlobalConfig.HideUIFlags & HIDEUI_FLAG_BANNER)) {
@@ -445,20 +445,26 @@ VOID BltClearScreen(IN BOOLEAN ShowBanner)
                 Banner = egPrepareEmbeddedImage(&egemb_refind_banner, FALSE);
             } else {
                 Banner = egLoadImage(SelfDir, GlobalConfig.BannerFileName, FALSE);
-                if ((Banner == NULL) || (Banner->Width > UGAWidth) || (Banner->Height > UGAHeight)) {
+                if (Banner && ((Banner->Width > UGAWidth) || (Banner->Height > UGAHeight))) {
+                   CroppedBanner = egCropImage(Banner, 0, 0, (Banner->Width > UGAWidth) ? UGAWidth : Banner->Width,
+                                               (Banner->Height > UGAHeight) ? UGAHeight : Banner->Height);
                    MyFreePool(Banner);
+                   Banner = CroppedBanner;
+                } // if image too big
+                if (Banner == NULL) {
                    Banner = egPrepareEmbeddedImage(&egemb_refind_banner, FALSE);
                 } // if unusable image
             }
             if (Banner != NULL)
-                MenuBackgroundPixel = Banner->PixelData[0];
+               MenuBackgroundPixel = Banner->PixelData[0];
         }
 
         // clear and draw banner
         egClearScreen(&MenuBackgroundPixel);
         if (Banner != NULL) {
             BannerPosX = (Banner->Width < UGAWidth) ? ((UGAWidth - Banner->Width) / 2) : 0;
-            BannerPosY = ComputeRow0PosX() - Banner->Height - LAYOUT_BANNER_YGAP;
+            BannerPosY = (ComputeRow0PosX() / 2) - Banner->Height;
+//            BannerPosY = ComputeRow0PosX() - Banner->Height - LAYOUT_BANNER_YGAP;
             if (BannerPosY < 0)
                BannerPosY = 0;
             BltImage(Banner, (UINTN) BannerPosX, (UINTN) BannerPosY);
@@ -470,6 +476,8 @@ VOID BltClearScreen(IN BOOLEAN ShowBanner)
     }
 
     GraphicsScreenDirty = FALSE;
+    egFreeImage(GlobalConfig.ScreenBackground);
+    GlobalConfig.ScreenBackground = egCopyScreen();
 }
 
 VOID BltImage(IN EG_IMAGE *Image, IN UINTN XPos, IN UINTN YPos)

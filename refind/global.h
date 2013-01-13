@@ -223,6 +223,7 @@ typedef struct {
    UINTN       LegacyType;
    UINTN       ScanDelay;
    CHAR16      *BannerFileName;
+   EG_IMAGE    *ScreenBackground;
    CHAR16      *SelectionSmallFileName;
    CHAR16      *SelectionBigFileName;
    CHAR16      *DefaultSelection;

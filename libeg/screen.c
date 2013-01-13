@@ -355,6 +355,8 @@ VOID egClearScreen(IN EG_PIXEL *Color)
 
 VOID egDrawImage(IN EG_IMAGE *Image, IN UINTN ScreenPosX, IN UINTN ScreenPosY)
 {
+    EG_IMAGE *CompImage = NULL;
+
     // NOTE: Weird seemingly redundant tests because some placement code can "wrap around" and
     // send "negative" values, which of course become very large unsigned ints that can then
     // wrap around AGAIN if values are added to them.....
@@ -362,18 +364,33 @@ VOID egDrawImage(IN EG_IMAGE *Image, IN UINTN ScreenPosX, IN UINTN ScreenPosY)
         (ScreenPosX > egScreenWidth) || (ScreenPosY > egScreenHeight))
         return;
 
-    if (Image->HasAlpha) {
-        Image->HasAlpha = FALSE;
-        egSetPlane(PLPTR(Image, a), 0, Image->Width * Image->Height);
+//     if (Image->HasAlpha) {
+//         Image->HasAlpha = FALSE;
+//         egSetPlane(PLPTR(Image, a), 0, Image->Width * Image->Height);
+//     }
+
+    if ((GlobalConfig.ScreenBackground == NULL) || ((Image->Width == egScreenWidth) && (Image->Height == egScreenHeight))) {
+       CompImage = Image;
+    } else if (GlobalConfig.ScreenBackground == Image) {
+       CompImage = GlobalConfig.ScreenBackground;
+    } else {
+       CompImage = egCropImage(GlobalConfig.ScreenBackground, ScreenPosX, ScreenPosY, Image->Width, Image->Height);
+       if (CompImage == NULL) {
+          Print(L"Error! Can't compose image in egDrawImage()!\n");
+          return;
+       }
+       egComposeImage(CompImage, Image, 0, 0);
     }
 
     if (GraphicsOutput != NULL) {
-        refit_call10_wrapper(GraphicsOutput->Blt, GraphicsOutput, (EFI_GRAPHICS_OUTPUT_BLT_PIXEL *)Image->PixelData,
-                             EfiBltBufferToVideo, 0, 0, ScreenPosX, ScreenPosY, Image->Width, Image->Height, 0);
+       refit_call10_wrapper(GraphicsOutput->Blt, GraphicsOutput, (EFI_GRAPHICS_OUTPUT_BLT_PIXEL *)CompImage->PixelData,
+                            EfiBltBufferToVideo, 0, 0, ScreenPosX, ScreenPosY, CompImage->Width, CompImage->Height, 0);
     } else if (UgaDraw != NULL) {
-        refit_call10_wrapper(UgaDraw->Blt, UgaDraw, (EFI_UGA_PIXEL *)Image->PixelData, EfiUgaBltBufferToVideo,
-                     0, 0, ScreenPosX, ScreenPosY, Image->Width, Image->Height, 0);
+       refit_call10_wrapper(UgaDraw->Blt, UgaDraw, (EFI_UGA_PIXEL *)CompImage->PixelData, EfiUgaBltBufferToVideo,
+                            0, 0, ScreenPosX, ScreenPosY, CompImage->Width, CompImage->Height, 0);
     }
+    if ((CompImage != GlobalConfig.ScreenBackground) && (CompImage != Image))
+       egFreeImage(CompImage);
 } /* VOID egDrawImage() */
 
 VOID egDrawImageArea(IN EG_IMAGE *Image,
@@ -388,17 +405,18 @@ VOID egDrawImageArea(IN EG_IMAGE *Image,
     if (AreaWidth == 0)
         return;
 
-    if (Image->HasAlpha) {
-        Image->HasAlpha = FALSE;
-        egSetPlane(PLPTR(Image, a), 0, Image->Width * Image->Height);
-    }
+//     if (Image->HasAlpha) {
+//         Image->HasAlpha = FALSE;
+//         egSetPlane(PLPTR(Image, a), 0, Image->Width * Image->Height);
+//     }
 
     if (GraphicsOutput != NULL) {
-        refit_call10_wrapper(GraphicsOutput->Blt, GraphicsOutput, (EFI_GRAPHICS_OUTPUT_BLT_PIXEL *)Image->PixelData, EfiBltBufferToVideo,
-                            AreaPosX, AreaPosY, ScreenPosX, ScreenPosY, AreaWidth, AreaHeight, Image->Width * 4);
+        refit_call10_wrapper(GraphicsOutput->Blt, GraphicsOutput, (EFI_GRAPHICS_OUTPUT_BLT_PIXEL *)Image->PixelData,
+                             EfiBltBufferToVideo, AreaPosX, AreaPosY, ScreenPosX, ScreenPosY, AreaWidth, AreaHeight,
+                             Image->Width * 4);
     } else if (UgaDraw != NULL) {
         refit_call10_wrapper(UgaDraw->Blt, UgaDraw, (EFI_UGA_PIXEL *)Image->PixelData, EfiUgaBltBufferToVideo,
-                     AreaPosX, AreaPosY, ScreenPosX, ScreenPosY, AreaWidth, AreaHeight, Image->Width * 4);
+                             AreaPosX, AreaPosY, ScreenPosX, ScreenPosY, AreaWidth, AreaHeight, Image->Width * 4);
     }
 }
 
@@ -420,6 +438,31 @@ VOID egDisplayMessage(IN CHAR16 *Text, EG_PIXEL *BGColor) {
    } // if non-NULL inputs
 } // VOID egDisplayMessage()
 
+// Copy the current contents of the display into an EG_IMAGE....
+// Returns pointer if successful, NULL if not.
+EG_IMAGE * egCopyScreen(VOID) {
+   EG_IMAGE *Image = NULL;
+
+   if (!egHasGraphics)
+      return NULL;
+
+   // allocate a buffer for the whole screen
+   Image = egCreateImage(egScreenWidth, egScreenHeight, FALSE);
+   if (Image == NULL) {
+      return NULL;
+   }
+
+   // get full screen image
+   if (GraphicsOutput != NULL) {
+      refit_call10_wrapper(GraphicsOutput->Blt, GraphicsOutput, (EFI_GRAPHICS_OUTPUT_BLT_PIXEL *)Image->PixelData,
+                           EfiBltVideoToBltBuffer, 0, 0, 0, 0, Image->Width, Image->Height, 0);
+   } else if (UgaDraw != NULL) {
+      refit_call10_wrapper(UgaDraw->Blt, UgaDraw, (EFI_UGA_PIXEL *)Image->PixelData, EfiUgaVideoToBltBuffer,
+                           0, 0, 0, 0, Image->Width, Image->Height, 0);
+   }
+   return Image;
+} // EG_IMAGE * egCopyScreen()
+
 //
 // Make a screenshot
 //
@@ -432,23 +475,10 @@ VOID egScreenShot(VOID)
     UINTN           FileDataLength;
     UINTN           Index;
 
-    if (!egHasGraphics)
-        return;
-
-    // allocate a buffer for the whole screen
-    Image = egCreateImage(egScreenWidth, egScreenHeight, FALSE);
+    Image = egCopyScreen();
     if (Image == NULL) {
-        Print(L"Error egCreateImage returned NULL\n");
-        goto bailout_wait;
-    }
-
-    // get full screen image
-    if (GraphicsOutput != NULL) {
-        refit_call10_wrapper(GraphicsOutput->Blt, GraphicsOutput, (EFI_GRAPHICS_OUTPUT_BLT_PIXEL *)Image->PixelData, EfiBltVideoToBltBuffer,
-                            0, 0, 0, 0, Image->Width, Image->Height, 0);
-    } else if (UgaDraw != NULL) {
-        refit_call10_wrapper(UgaDraw->Blt, UgaDraw, (EFI_UGA_PIXEL *)Image->PixelData, EfiUgaVideoToBltBuffer,
-                     0, 0, 0, 0, Image->Width, Image->Height, 0);
+       Print(L"Error: Unable to take screen shot\n");
+       goto bailout_wait;
     }
 
     // encode as BMP

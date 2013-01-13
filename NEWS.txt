@@ -1,6 +1,8 @@
 0.6.5 (1/??/2013):
 ------------------
 
+- Added icon for ALT Linux.
+
 - Added "safemode" option to "hideui" token, to hide option to boot into
   safe mode for OS X ("-v -x" option to boot.efi).
 

@@ -48,6 +48,7 @@
 #include "menu.h"
 #include "config.h"
 #include "libeg.h"
+#include "libegint.h"
 #include "../include/refit_call_wrapper.h"
 
 #include "../include/egemb_back_selected_small.h"
@@ -638,11 +639,25 @@ static VOID TextMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, 
 // graphical generic style
 //
 
+// Display an unselected icon on the screen, so that the background image shows
+// through the transparency areas. The BadgeImage may be NULL, in which case
+// it's not composited in.
+static VOID DrawImageWithTransparency(EG_IMAGE *Image, EG_IMAGE *BadgeImage, UINTN XPos, UINTN YPos, UINTN Width, UINTN Height) {
+   EG_IMAGE *Background;
 
-static VOID DrawMenuText(IN CHAR16 *Text, IN UINTN SelectedWidth, IN UINTN XPos, IN UINTN YPos)
+   Background = egCropImage(GlobalConfig.ScreenBackground, XPos, YPos, Width, Height);
+   if (Background != NULL) {
+      BltImageCompositeBadge(Background, Image, BadgeImage, XPos, YPos);
+      egFreeImage(Background);
+   }
+} // VOID DrawImageWithTransparency()
+
+
+// Display a submenu
+static VOID DrawSubmenuText(IN CHAR16 *Text, IN UINTN SelectedWidth, IN UINTN XPos, IN UINTN YPos)
 {
     if (TextBuffer == NULL)
-        TextBuffer = egCreateImage(LAYOUT_TEXT_WIDTH, TEXT_LINE_HEIGHT, FALSE);
+        TextBuffer = egCreateImage(LAYOUT_TEXT_WIDTH, TEXT_LINE_HEIGHT, TRUE);
 
     egFillImage(TextBuffer, &MenuBackgroundPixel);
     if (SelectedWidth > 0) {
@@ -653,7 +668,8 @@ static VOID DrawMenuText(IN CHAR16 *Text, IN UINTN SelectedWidth, IN UINTN XPos,
 
     // render the text
     egRenderText(Text, TextBuffer, TEXT_XMARGIN, TEXT_YMARGIN);
-    BltImage(TextBuffer, XPos, YPos);
+    DrawImageWithTransparency(TextBuffer, NULL, XPos, YPos, TextBuffer->Width, TextBuffer->Height);
+//    BltImage(TextBuffer, XPos, YPos);
 }
 
 // Displays sub-menus
@@ -695,14 +711,12 @@ static VOID GraphicsMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *Sta
             // initial painting
             SwitchToGraphicsAndClear();
             egMeasureText(Screen->Title, &ItemWidth, NULL);
-            DrawMenuText(Screen->Title, 0, ((UGAWidth - ItemWidth) >> 1) - TEXT_XMARGIN, EntriesPosY - TEXT_LINE_HEIGHT * 2);
+            DrawSubmenuText(Screen->Title, 0, ((UGAWidth - ItemWidth) >> 1) - TEXT_XMARGIN, EntriesPosY - TEXT_LINE_HEIGHT * 2);
             if (Screen->TitleImage)
-                BltImageAlpha(Screen->TitleImage,
-                              EntriesPosX - (Screen->TitleImage->Width + TITLEICON_SPACING), EntriesPosY,
-                              &MenuBackgroundPixel);
+               BltImage(Screen->TitleImage, EntriesPosX - (Screen->TitleImage->Width + TITLEICON_SPACING), EntriesPosY);
             if (Screen->InfoLineCount > 0) {
                 for (i = 0; i < (INTN)Screen->InfoLineCount; i++) {
-                    DrawMenuText(Screen->InfoLines[i], 0, EntriesPosX, EntriesPosY);
+                    DrawSubmenuText(Screen->InfoLines[i], 0, EntriesPosX, EntriesPosY);
                     EntriesPosY += TEXT_LINE_HEIGHT;
                 }
                 EntriesPosY += TEXT_LINE_HEIGHT;  // also add a blank line
@@ -716,16 +730,16 @@ static VOID GraphicsMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *Sta
 
         case MENU_FUNCTION_PAINT_ALL:
             for (i = 0; i <= State->MaxIndex; i++) {
-                DrawMenuText(Screen->Entries[i]->Title, (i == State->CurrentSelection) ? MenuWidth : 0,
+                DrawSubmenuText(Screen->Entries[i]->Title, (i == State->CurrentSelection) ? MenuWidth : 0,
                              EntriesPosX, EntriesPosY + i * TEXT_LINE_HEIGHT);
             }
             if (!(GlobalConfig.HideUIFlags & HIDEUI_FLAG_HINTS)) {
                if ((Screen->Hint1 != NULL) && (StrLen(Screen->Hint1) > 0)) {
-                  DrawMenuText(Screen->Hint1, 0, (UGAWidth - (StrLen(Screen->Hint1) * FONT_CELL_WIDTH)) / 2,
+                  DrawSubmenuText(Screen->Hint1, 0, (UGAWidth - (StrLen(Screen->Hint1) * FONT_CELL_WIDTH)) / 2,
                                UGAHeight - (FONT_CELL_HEIGHT * 3));
                }
                if ((Screen->Hint2 != NULL) && (StrLen(Screen->Hint2) > 0)) {
-                  DrawMenuText(Screen->Hint2, 0, (UGAWidth - (StrLen(Screen->Hint2) * FONT_CELL_WIDTH)) / 2,
+                  DrawSubmenuText(Screen->Hint2, 0, (UGAWidth - (StrLen(Screen->Hint2) * FONT_CELL_WIDTH)) / 2,
                                UGAHeight - (FONT_CELL_HEIGHT * 2));
                } // if
             } // if
@@ -733,14 +747,14 @@ static VOID GraphicsMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *Sta
 
         case MENU_FUNCTION_PAINT_SELECTION:
             // redraw selection cursor
-            DrawMenuText(Screen->Entries[State->PreviousSelection]->Title, 0,
+            DrawSubmenuText(Screen->Entries[State->PreviousSelection]->Title, 0,
                          EntriesPosX, EntriesPosY + State->PreviousSelection * TEXT_LINE_HEIGHT);
-            DrawMenuText(Screen->Entries[State->CurrentSelection]->Title, MenuWidth,
+            DrawSubmenuText(Screen->Entries[State->CurrentSelection]->Title, MenuWidth,
                          EntriesPosX, EntriesPosY + State->CurrentSelection * TEXT_LINE_HEIGHT);
             break;
 
         case MENU_FUNCTION_PAINT_TIMEOUT:
-            DrawMenuText(ParamText, 0, EntriesPosX, TimeoutPosY);
+            DrawSubmenuText(ParamText, 0, EntriesPosX, TimeoutPosY);
             break;
 
     }
@@ -755,19 +769,21 @@ static VOID DrawMainMenuEntry(REFIT_MENU_ENTRY *Entry, BOOLEAN selected, UINTN X
     UINTN ImageNum;
 
     ImageNum = ((Entry->Row == 0) ? 0 : 2) + (selected ? 0 : 1);
-    if (SelectionImages != NULL)
-        BltImageCompositeBadge(SelectionImages[ImageNum],
-                               Entry->Image, Entry->BadgeImage, XPos, YPos);
-}
+    if (SelectionImages != NULL) {
+       if ((ImageNum == 1) || (ImageNum == 3)) { // Image not selected; copy background
+          DrawImageWithTransparency(Entry->Image, Entry->BadgeImage, XPos, YPos,
+                                 SelectionImages[ImageNum]->Width, SelectionImages[ImageNum]->Height);
+       } else {
+          BltImageCompositeBadge(SelectionImages[ImageNum], Entry->Image, Entry->BadgeImage, XPos, YPos);
+       } // if/else
+    } // if
+} // VOID DrawMainMenuEntry()
 
 static VOID DrawMainMenuText(IN CHAR16 *Text, IN UINTN XPos, IN UINTN YPos)
 {
     UINTN TextWidth, TextPosX;
 
-    if (TextBuffer == NULL)
-        TextBuffer = egCreateImage(LAYOUT_TEXT_WIDTH, TEXT_LINE_HEIGHT, FALSE);
-
-    egFillImage(TextBuffer, &MenuBackgroundPixel);
+    TextBuffer = egCropImage(GlobalConfig.ScreenBackground, XPos, YPos, LAYOUT_TEXT_WIDTH, TEXT_LINE_HEIGHT);
 
     // render the text
     egMeasureText(Text, &TextWidth, NULL);
@@ -776,8 +792,7 @@ static VOID DrawMainMenuText(IN CHAR16 *Text, IN UINTN XPos, IN UINTN YPos)
     else
        TextPosX = (TextBuffer->Width - TextWidth) / 2;
     egRenderText(Text, TextBuffer, TextPosX, 0);
-//    egRenderText(Text, TextBuffer, (TextBuffer->Width - TextWidth) >> 1, 0);
-    BltImage(TextBuffer, XPos, YPos);
+    DrawImageWithTransparency(TextBuffer, NULL, XPos, YPos, TextBuffer->Width, TextBuffer->Height);
 }
 
 static VOID PaintAll(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, UINTN *itemPosX,
@@ -853,7 +868,7 @@ static VOID PaintIcon(IN EG_EMBEDDED_IMAGE *BuiltInIcon, IN CHAR16 *ExternalFile
    if (Icon != NULL) {
       if (Alignment == ALIGN_RIGHT)
          PosX -= Icon->Width;
-      BltImageAlpha(Icon, PosX, PosY - (Icon->Height / 2), &MenuBackgroundPixel);
+      DrawImageWithTransparency(Icon, NULL, PosX, PosY - (Icon->Height / 2), Icon->Width, Icon->Height);
    }
 } // static VOID PaintIcon()
 

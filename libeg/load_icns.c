@@ -48,13 +48,13 @@ VOID egDecompressIcnsRLE(IN OUT UINT8 **CompData, IN OUT UINTN *CompLen, IN UINT
     UINTN pp_left;
     UINTN len, i;
     UINT8 value;
-    
+
     // setup variables
     cp = *CompData;
     cp_end = cp + *CompLen;
     pp = PixelData;
     pp_left = PixelCount;
-    
+
     // decode
     while (cp + 1 < cp_end && pp_left > 0) {
         len = *cp++;
@@ -78,11 +78,11 @@ VOID egDecompressIcnsRLE(IN OUT UINT8 **CompData, IN OUT UINTN *CompLen, IN UINT
         }
         pp_left -= len;
     }
-    
+
     if (pp_left > 0) {
         Print(L" egDecompressIcnsRLE: still need %d bytes of pixel data\n", pp_left);
     }
-    
+
     // record what's left of the compressed data stream
     *CompData = cp;
     *CompLen = (UINTN)(cp_end - cp);
@@ -221,6 +221,6 @@ EG_IMAGE * egDecodeICNS(IN UINT8 *FileData, IN UINTN FileDataLength, IN UINTN Ic
     // FUTURE: scale to originally requested size if we had to load another size
 
     return NewImage;
-}
+} // EG_IMAGE * egDecodeICNS()
 
 /* EOF */
