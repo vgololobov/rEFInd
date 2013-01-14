@@ -376,7 +376,7 @@ VOID egDrawImage(IN EG_IMAGE *Image, IN UINTN ScreenPosX, IN UINTN ScreenPosY)
     } else {
        CompImage = egCropImage(GlobalConfig.ScreenBackground, ScreenPosX, ScreenPosY, Image->Width, Image->Height);
        if (CompImage == NULL) {
-          Print(L"Error! Can't compose image in egDrawImage()!\n");
+          Print(L"Error! Can't crop image in egDrawImage()!\n");
           return;
        }
        egComposeImage(CompImage, Image, 0, 0);
@@ -392,6 +392,19 @@ VOID egDrawImage(IN EG_IMAGE *Image, IN UINTN ScreenPosX, IN UINTN ScreenPosY)
     if ((CompImage != GlobalConfig.ScreenBackground) && (CompImage != Image))
        egFreeImage(CompImage);
 } /* VOID egDrawImage() */
+
+// Display an unselected icon on the screen, so that the background image shows
+// through the transparency areas. The BadgeImage may be NULL, in which case
+// it's not composited in.
+VOID egDrawImageWithTransparency(EG_IMAGE *Image, EG_IMAGE *BadgeImage, UINTN XPos, UINTN YPos, UINTN Width, UINTN Height) {
+   EG_IMAGE *Background;
+
+   Background = egCropImage(GlobalConfig.ScreenBackground, XPos, YPos, Width, Height);
+   if (Background != NULL) {
+      BltImageCompositeBadge(Background, Image, BadgeImage, XPos, YPos);
+      egFreeImage(Background);
+   }
+} // VOID DrawImageWithTransparency()
 
 VOID egDrawImageArea(IN EG_IMAGE *Image,
                      IN UINTN AreaPosX, IN UINTN AreaPosY,

@@ -560,7 +560,10 @@ VOID BltImageCompositeBadge(IN EG_IMAGE *BaseImage, IN EG_IMAGE *TopImage, IN EG
      }
 
      // blit to screen and clean up
-     egDrawImage(CompImage, XPos, YPos);
+     if (CompImage->HasAlpha)
+        egDrawImageWithTransparency(CompImage, NULL, XPos, YPos, CompImage->Width, CompImage->Height);
+     else
+        egDrawImage(CompImage, XPos, YPos);
      egFreeImage(CompImage);
      GraphicsScreenDirty = TRUE;
 }

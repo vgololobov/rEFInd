@@ -119,6 +119,7 @@ VOID egRenderText(IN CHAR16 *Text, IN OUT EG_IMAGE *CompImage, IN UINTN PosX, IN
 
 VOID egClearScreen(IN EG_PIXEL *Color);
 VOID egDrawImage(IN EG_IMAGE *Image, IN UINTN ScreenPosX, IN UINTN ScreenPosY);
+VOID egDrawImageWithTransparency(EG_IMAGE *Image, EG_IMAGE *BadgeImage, UINTN XPos, UINTN YPos, UINTN Width, UINTN Height);
 VOID egDrawImageArea(IN EG_IMAGE *Image,
                      IN UINTN AreaPosX, IN UINTN AreaPosY,
                      IN UINTN AreaWidth, IN UINTN AreaHeight,

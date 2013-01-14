@@ -84,7 +84,7 @@ static CHAR16 ArrowDown[2] = { ARROW_DOWN, 0 };
 #define ALIGN_RIGHT 1
 #define ALIGN_LEFT 0
 
-static EG_IMAGE *SelectionImages[4] = { NULL, NULL, NULL, NULL };
+static EG_IMAGE *SelectionImages[2] = { NULL, NULL };
 static EG_PIXEL SelectionBackgroundPixel = { 0xff, 0xff, 0xff, 0 };
 static EG_IMAGE *TextBuffer = NULL;
 
@@ -104,33 +104,33 @@ static VOID InitSelection(VOID)
 
     // load small selection image
     if (GlobalConfig.SelectionSmallFileName != NULL) {
-        SelectionImages[2] = egLoadImage(SelfDir, GlobalConfig.SelectionSmallFileName, FALSE);
+        SelectionImages[1] = egLoadImage(SelfDir, GlobalConfig.SelectionSmallFileName, TRUE);
     }
-    if (SelectionImages[2] == NULL)
-        SelectionImages[2] = egPrepareEmbeddedImage(&egemb_back_selected_small, FALSE);
-    SelectionImages[2] = egEnsureImageSize(SelectionImages[2],
+    if (SelectionImages[1] == NULL)
+        SelectionImages[1] = egPrepareEmbeddedImage(&egemb_back_selected_small, TRUE);
+    SelectionImages[1] = egEnsureImageSize(SelectionImages[1],
                                            ROW1_TILESIZE, ROW1_TILESIZE, &MenuBackgroundPixel);
-    if (SelectionImages[2] == NULL)
+    if (SelectionImages[1] == NULL)
         return;
 
     // load big selection image
     if (GlobalConfig.SelectionBigFileName != NULL) {
-        SelectionImages[0] = egLoadImage(SelfDir, GlobalConfig.SelectionBigFileName, FALSE);
+        SelectionImages[0] = egLoadImage(SelfDir, GlobalConfig.SelectionBigFileName, TRUE);
         SelectionImages[0] = egEnsureImageSize(SelectionImages[0],
                                                ROW0_TILESIZE, ROW0_TILESIZE, &MenuBackgroundPixel);
     }
     if (SelectionImages[0] == NULL) {
         // calculate big selection image from small one
 
-        SelectionImages[0] = egCreateImage(ROW0_TILESIZE, ROW0_TILESIZE, FALSE);
+        SelectionImages[0] = egCreateImage(ROW0_TILESIZE, ROW0_TILESIZE, TRUE);
         if (SelectionImages[0] == NULL) {
-            egFreeImage(SelectionImages[2]);
-            SelectionImages[2] = NULL;
+            egFreeImage(SelectionImages[1]);
+            SelectionImages[1] = NULL;
             return;
         }
 
         DestPtr = SelectionImages[0]->PixelData;
-        SrcPtr  = SelectionImages[2]->PixelData;
+        SrcPtr  = SelectionImages[1]->PixelData;
         for (y = 0; y < ROW0_TILESIZE; y++) {
             if (y < (ROW1_TILESIZE >> 1))
                 src_y = y;
@@ -151,11 +151,7 @@ static VOID InitSelection(VOID)
             }
         }
     }
-
-    // non-selected background images
-    SelectionImages[1] = egCreateFilledImage(ROW0_TILESIZE, ROW0_TILESIZE, FALSE, &MenuBackgroundPixel);
-    SelectionImages[3] = egCreateFilledImage(ROW1_TILESIZE, ROW1_TILESIZE, FALSE, &MenuBackgroundPixel);
-}
+} // VOID InitSelection()
 
 //
 // Scrolling functions
@@ -639,19 +635,6 @@ static VOID TextMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, 
 // graphical generic style
 //
 
-// Display an unselected icon on the screen, so that the background image shows
-// through the transparency areas. The BadgeImage may be NULL, in which case
-// it's not composited in.
-static VOID DrawImageWithTransparency(EG_IMAGE *Image, EG_IMAGE *BadgeImage, UINTN XPos, UINTN YPos, UINTN Width, UINTN Height) {
-   EG_IMAGE *Background;
-
-   Background = egCropImage(GlobalConfig.ScreenBackground, XPos, YPos, Width, Height);
-   if (Background != NULL) {
-      BltImageCompositeBadge(Background, Image, BadgeImage, XPos, YPos);
-      egFreeImage(Background);
-   }
-} // VOID DrawImageWithTransparency()
-
 
 // Display a submenu
 static VOID DrawSubmenuText(IN CHAR16 *Text, IN UINTN SelectedWidth, IN UINTN XPos, IN UINTN YPos)
@@ -668,7 +651,7 @@ static VOID DrawSubmenuText(IN CHAR16 *Text, IN UINTN SelectedWidth, IN UINTN XP
 
     // render the text
     egRenderText(Text, TextBuffer, TEXT_XMARGIN, TEXT_YMARGIN);
-    DrawImageWithTransparency(TextBuffer, NULL, XPos, YPos, TextBuffer->Width, TextBuffer->Height);
+    egDrawImageWithTransparency(TextBuffer, NULL, XPos, YPos, TextBuffer->Width, TextBuffer->Height);
 //    BltImage(TextBuffer, XPos, YPos);
 }
 
@@ -766,17 +749,19 @@ static VOID GraphicsMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *Sta
 
 static VOID DrawMainMenuEntry(REFIT_MENU_ENTRY *Entry, BOOLEAN selected, UINTN XPos, UINTN YPos)
 {
-    UINTN ImageNum;
+   EG_IMAGE *Background;
 
-    ImageNum = ((Entry->Row == 0) ? 0 : 2) + (selected ? 0 : 1);
-    if (SelectionImages != NULL) {
-       if ((ImageNum == 1) || (ImageNum == 3)) { // Image not selected; copy background
-          DrawImageWithTransparency(Entry->Image, Entry->BadgeImage, XPos, YPos,
-                                 SelectionImages[ImageNum]->Width, SelectionImages[ImageNum]->Height);
-       } else {
-          BltImageCompositeBadge(SelectionImages[ImageNum], Entry->Image, Entry->BadgeImage, XPos, YPos);
-       } // if/else
-    } // if
+   if (SelectionImages != NULL) {
+      if (selected) {
+         Background = egCropImage(GlobalConfig.ScreenBackground, XPos, YPos,
+                                  SelectionImages[Entry->Row]->Width, SelectionImages[Entry->Row]->Height);
+         egComposeImage(Background, SelectionImages[Entry->Row], 0, 0);
+         BltImageCompositeBadge(Background, Entry->Image, Entry->BadgeImage, XPos, YPos);
+      } else { // Image not selected; copy background
+         egDrawImageWithTransparency(Entry->Image, Entry->BadgeImage, XPos, YPos,
+                                     SelectionImages[Entry->Row]->Width, SelectionImages[Entry->Row]->Height);
+      } // if/else
+   } // if
 } // VOID DrawMainMenuEntry()
 
 static VOID DrawMainMenuText(IN CHAR16 *Text, IN UINTN XPos, IN UINTN YPos)
@@ -792,7 +777,7 @@ static VOID DrawMainMenuText(IN CHAR16 *Text, IN UINTN XPos, IN UINTN YPos)
     else
        TextPosX = (TextBuffer->Width - TextWidth) / 2;
     egRenderText(Text, TextBuffer, TextPosX, 0);
-    DrawImageWithTransparency(TextBuffer, NULL, XPos, YPos, TextBuffer->Width, TextBuffer->Height);
+    egDrawImageWithTransparency(TextBuffer, NULL, XPos, YPos, TextBuffer->Width, TextBuffer->Height);
 }
 
 static VOID PaintAll(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, UINTN *itemPosX,
@@ -868,13 +853,49 @@ static VOID PaintIcon(IN EG_EMBEDDED_IMAGE *BuiltInIcon, IN CHAR16 *ExternalFile
    if (Icon != NULL) {
       if (Alignment == ALIGN_RIGHT)
          PosX -= Icon->Width;
-      DrawImageWithTransparency(Icon, NULL, PosX, PosY - (Icon->Height / 2), Icon->Width, Icon->Height);
+      egDrawImageWithTransparency(Icon, NULL, PosX, PosY - (Icon->Height / 2), Icon->Width, Icon->Height);
    }
 } // static VOID PaintIcon()
 
 inline UINTN ComputeRow0PosX(VOID) {
-   return ((UGAHeight / 2) - (5 * ROW0_TILESIZE / 6));
+//   return ((UGAHeight / 2) - (5 * ROW0_TILESIZE / 6));
+   return ((UGAHeight / 2) - ROW0_TILESIZE / 2);
 } // UINTN ComputeRow0PosX()
+
+// Display (or erase) the arrow icons to the left and right of an icon's row,
+// as appropriate.
+static VOID PaintArrows(SCROLL_STATE *State, UINTN PosX, UINTN PosY, UINTN row0Loaders) {
+   CHAR16 FileName[256];
+   EG_IMAGE *TempImage;
+   UINTN Width, Height, RightX, AdjPosY;
+
+   // NOTE: Assume that left and right arrows are of the same size....
+   Width = egemb_arrow_left.Width;
+   Height = egemb_arrow_left.Height;
+   RightX = (UGAWidth + (ROW0_TILESIZE + TILE_XSPACING) * State->MaxVisible) / 2 + TILE_XSPACING;
+   AdjPosY = PosY - (Height / 2);
+
+   // For PaintIcon() calls, the starting Y position is moved to the midpoint
+   // of the surrounding row; PaintIcon() adjusts this back up by half the
+   // icon's height to properly center it.
+   if ((State->FirstVisible > 0) && (!(GlobalConfig.HideUIFlags & HIDEUI_FLAG_ARROWS))) {
+      SPrint(FileName, 255, L"%s\\arrow_left.icns", GlobalConfig.IconsDir ? GlobalConfig.IconsDir : DEFAULT_ICONS_DIR);
+      PaintIcon(&egemb_arrow_left, FileName, PosX, PosY, ALIGN_RIGHT);
+   } else {
+      TempImage = egCropImage(GlobalConfig.ScreenBackground, PosX - Width, AdjPosY, Width, Height);
+      BltImage(TempImage, PosX - Width, AdjPosY);
+      egFreeImage(TempImage);
+   } // if/else
+
+   if ((State->LastVisible < (row0Loaders - 1)) && (!(GlobalConfig.HideUIFlags & HIDEUI_FLAG_ARROWS))) {
+      SPrint(FileName, 255, L"%s\\arrow_right.icns", GlobalConfig.IconsDir ? GlobalConfig.IconsDir : DEFAULT_ICONS_DIR);
+      PaintIcon(&egemb_arrow_right, FileName, RightX, PosY, ALIGN_LEFT);
+   } else {
+      TempImage = egCropImage(GlobalConfig.ScreenBackground, RightX, AdjPosY, Width, Height);
+      BltImage(TempImage, RightX, AdjPosY);
+      egFreeImage(TempImage);
+   } // if/else
+} // VOID PaintArrows()
 
 // Display main menu in graphics mode
 VOID MainMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, IN UINTN Function, IN CHAR16 *ParamText)
@@ -884,7 +905,6 @@ VOID MainMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, IN UINT
     UINTN row0Count, row1Count, row1PosX, row1PosXRunning;
     static UINTN *itemPosX;
     static UINTN row0PosY, textPosY;
-    CHAR16 FileName[256];
 
     State->ScrollMode = SCROLL_MODE_ICONS;
     switch (Function) {
@@ -907,7 +927,6 @@ VOID MainMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, IN UINT
             }
             row0PosX = (UGAWidth + TILE_XSPACING - (ROW0_TILESIZE + TILE_XSPACING) * row0Count) >> 1;
             row0PosY = ComputeRow0PosX();
-//            row0PosY = ((UGAHeight - LAYOUT_TOTAL_HEIGHT) >> 1) + LAYOUT_BANNER_YOFFSET;
             row1PosX = (UGAWidth + TILE_XSPACING - (ROW1_TILESIZE + TILE_XSPACING) * row1Count) >> 1;
             row1PosY = row0PosY + ROW0_TILESIZE + TILE_YSPACING;
             if (row1Count > 0)
@@ -937,22 +956,11 @@ VOID MainMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, IN UINT
             break;
 
         case MENU_FUNCTION_PAINT_ALL:
-            BltClearScreen(TRUE);
             PaintAll(Screen, State, itemPosX, row0PosY, row1PosY, textPosY);
-            // For PaintIcon() calls, the starting Y position is moved to the midpoint
+            // For PaintArrows(), the starting Y position is moved to the midpoint
             // of the surrounding row; PaintIcon() adjusts this back up by half the
             // icon's height to properly center it.
-            if ((State->FirstVisible > 0) && (!(GlobalConfig.HideUIFlags & HIDEUI_FLAG_ARROWS))) {
-               SPrint(FileName, 255, L"%s\\arrow_left.icns", GlobalConfig.IconsDir ? GlobalConfig.IconsDir : DEFAULT_ICONS_DIR);
-               PaintIcon(&egemb_arrow_left, FileName, row0PosX - TILE_XSPACING,
-                         row0PosY + (ROW0_TILESIZE / 2), ALIGN_RIGHT);
-            } // if
-            if ((State->LastVisible < (row0Loaders - 1)) && (!(GlobalConfig.HideUIFlags & HIDEUI_FLAG_ARROWS))) {
-               SPrint(FileName, 255, L"%s\\arrow_right.icns", GlobalConfig.IconsDir ? GlobalConfig.IconsDir : DEFAULT_ICONS_DIR);
-               PaintIcon(&egemb_arrow_right, FileName,
-                         (UGAWidth + (ROW0_TILESIZE + TILE_XSPACING) * State->MaxVisible) / 2 + TILE_XSPACING,
-                         row0PosY + (ROW0_TILESIZE / 2), ALIGN_LEFT);
-            } // if
+            PaintArrows(State, row0PosX - TILE_XSPACING, row0PosY + (ROW0_TILESIZE / 2), row0Loaders);
             break;
 
         case MENU_FUNCTION_PAINT_SELECTION:

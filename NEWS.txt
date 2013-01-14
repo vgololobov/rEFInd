@@ -8,6 +8,9 @@
 
 - Added icon for Haiku (os_haiku.icns).
 
+- Enable transparency of icons & main-menu text when the banner icon is
+  sized to cover these areas.
+
 - Fixed bug that could cause rEFInd to crash if fed a banner image that's
   too big. Note that "too big" can be substantially smaller than the screen
   resolution!
