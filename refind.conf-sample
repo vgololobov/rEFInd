@@ -39,9 +39,10 @@ timeout 20
 # path is relative to the directory where refind.efi is located. The color
 # in the top left corner of the image is used as the background color
 # for the menu screens. Currently uncompressed BMP images with color
-# depths of 24, 8, 4 or 1 bits are supported.
+# depths of 24, 8, 4 or 1 bits are supported, as well as PNG images.
 #
 #banner hostname.bmp
+#banner mybanner.png
 
 # Custom images for the selection background. There is a big one (144 x 144)
 # for the OS icons, and a small one (64 x 64) for the function icons in the
@@ -50,7 +51,9 @@ timeout 20
 # the built-in default will be used for the small icons.
 #
 # Like the banner option above, these options take a filename of an
-# uncompressed BMP image file with a color depth of 24, 8, 4, or 1 bits.
+# uncompressed BMP image file with a color depth of 24, 8, 4, or 1 bits,
+# or a PNG image. The PNG format is required if you need transparency
+# support (to let you "see through" to a full-screen banner).
 #
 #selection_big   selection-big.bmp
 #selection_small selection-small.bmp

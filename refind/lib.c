@@ -93,8 +93,8 @@ UINTN            VolumesCount = 0;
 #define SAMPLE_SIZE 69632 /* 68 KiB -- ReiserFS superblock begins at 64 KiB */
 
 // Default names for volume badges (mini-icon to define disk type) and icons
-#define VOLUME_BADGE_NAME L".VolumeBadge.icns"
-#define VOLUME_ICON_NAME L".VolumeIcon.icns"
+#define VOLUME_BADGE_NAMES L".VolumeBadge.icns,.VolumeBadge.png"
+#define VOLUME_ICON_NAMES L".VolumeIcon.icns,.VolumeIcon.png"
 
 // functions
 
@@ -849,11 +849,10 @@ VOID ScanVolume(REFIT_VOLUME *Volume)
     Volume->VolName = GetVolumeName(Volume);
 
     // get custom volume icon if present
-    if (FileExists(Volume->RootDir, VOLUME_BADGE_NAME))
-        Volume->VolBadgeImage = LoadIcns(Volume->RootDir, VOLUME_BADGE_NAME, 32);
-    if (FileExists(Volume->RootDir, VOLUME_ICON_NAME)) {
-       Volume->VolIconImage = LoadIcns(Volume->RootDir, VOLUME_ICON_NAME, 128);
-    }
+    if (!Volume->VolBadgeImage)
+       Volume->VolBadgeImage = LoadIcns(Volume->RootDir, VOLUME_BADGE_NAMES, 32);
+    if (!Volume->VolIconImage)
+       Volume->VolIconImage = LoadIcns(Volume->RootDir, VOLUME_ICON_NAMES, 128);
 } // ScanVolume()
 
 static VOID ScanExtendedPartition(REFIT_VOLUME *WholeDiskVolume, MBR_PARTITION_INFO *MbrEntry)
@@ -1320,20 +1319,37 @@ CHAR16 * Basename(IN CHAR16 *Path)
     return FileName;
 }
 
+// Remove the .efi extension from FileName -- for instance, if FileName is
+// "fred.efi", returns "fred". If the filename contains no .efi extension,
+// returns a copy of the original input.
+CHAR16 * StripEfiExtension(CHAR16 *FileName) {
+   UINTN  Length;
+   CHAR16 *Copy = NULL;
+
+   if ((FileName != NULL) && ((Copy = StrDuplicate(FileName)) != NULL)) {
+      Length = StrLen(Copy);
+      // Note: Do StriCmp() twice to work around Gigabyte Hybrid EFI case-sensitivity bug....
+      if ((Length >= 4) && ((StriCmp(&Copy[Length - 4], L".efi") == 0) || (StriCmp(&Copy[Length - 4], L".EFI") == 0))) {
+         Copy[Length - 4] = 0;
+      } // if
+   } // if
+   return Copy;
+} // CHAR16 * StripExtension()
+
 // Replaces a filename extension of ".efi" with the specified string
 // (Extension). If the input Path doesn't end in ".efi", Extension
 // is added to the existing filename.
-VOID ReplaceEfiExtension(IN OUT CHAR16 *Path, IN CHAR16 *Extension)
-{
-    UINTN PathLen;
-
-    PathLen = StrLen(Path);
-    // Note: Do StriCmp() twice to work around Gigabyte Hybrid EFI case-sensitivity bug....
-    if ((PathLen >= 4) && ((StriCmp(&Path[PathLen - 4], L".efi") == 0) || (StriCmp(&Path[PathLen - 4], L".EFI") == 0))) {
-       Path[PathLen - 4] = 0;
-    } // if
-    StrCat(Path, Extension);
-} // VOID ReplaceEfiExtension()
+// VOID ReplaceEfiExtension(IN OUT CHAR16 *Path, IN CHAR16 *Extension)
+// {
+//     UINTN PathLen;
+// 
+//     PathLen = StrLen(Path);
+//     // Note: Do StriCmp() twice to work around Gigabyte Hybrid EFI case-sensitivity bug....
+//     if ((PathLen >= 4) && ((StriCmp(&Path[PathLen - 4], L".efi") == 0) || (StriCmp(&Path[PathLen - 4], L".EFI") == 0))) {
+//        Path[PathLen - 4] = 0;
+//     } // if
+//     StrCat(Path, Extension);
+// } // VOID ReplaceEfiExtension()
 
 //
 // memory string search

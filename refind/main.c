@@ -128,7 +128,7 @@ static VOID AboutrEFInd(VOID)
 
     if (AboutMenu.EntryCount == 0) {
         AboutMenu.TitleImage = BuiltinIcon(BUILTIN_ICON_FUNC_ABOUT);
-        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.6.4.4");
+        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.6.4.5");
         AddMenuInfoLine(&AboutMenu, L"");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2006-2010 Christoph Pfisterer");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2012 Roderick W. Smith");
@@ -711,23 +711,25 @@ static CHAR16 * GetMainLinuxOptions(IN CHAR16 * LoaderPath, IN REFIT_VOLUME *Vol
 // code and shortcut letter. For Linux EFI stub loaders, also sets kernel options
 // that will (with luck) work fairly automatically.
 VOID SetLoaderDefaults(LOADER_ENTRY *Entry, CHAR16 *LoaderPath, REFIT_VOLUME *Volume) {
-   CHAR16      IconFileName[256];
-   CHAR16      *FileName, *PathOnly, *OSIconName = NULL, *Temp, *SubString;
+   CHAR16      *FileName, *PathOnly, *IconNames = NULL, *NoExtension, *OSIconName = NULL, *Temp, *SubString;
    CHAR16      ShortcutLetter = 0;
-   UINTN       i, Length;
+   UINTN       i = 0, Length;
 
    FileName = Basename(LoaderPath);
    PathOnly = FindPath(LoaderPath);
+   NoExtension = StripEfiExtension(FileName);
 
    // locate a custom icon for the loader
    // Anything found here takes precedence over the "hints" in the OSIconName variable
-   StrCpy(IconFileName, LoaderPath);
-   ReplaceEfiExtension(IconFileName, L".icns");
-   if (FileExists(Volume->RootDir, IconFileName)) {
-      Entry->me.Image = LoadIcns(Volume->RootDir, IconFileName, 128);
-   } else if ((StrLen(PathOnly) == 0) && (Volume->VolIconImage != NULL)) {
+   while ((Temp = FindCommaDelimited(ICON_EXTENSIONS, i++)) != NULL) {
+      MergeStrings(&IconNames, NoExtension, L',');
+      MergeStrings(&IconNames, Temp, L'.');
+      MyFreePool(Temp);
+   }
+   Entry->me.Image = LoadIcns(Volume->RootDir, IconNames, 128);
+   if (!Entry->me.Image)
       Entry->me.Image = Volume->VolIconImage;
-   } // icon matched to loader or volume
+   MyFreePool(IconNames);
 
    // Begin creating icon "hints" by using last part of directory path leading
    // to the loader
@@ -953,6 +955,7 @@ static VOID ScanLoaderDir(IN REFIT_VOLUME *Volume, IN CHAR16 *Path, IN CHAR16 *P
           Extension = FindExtension(DirEntry->FileName);
           if (DirEntry->FileName[0] == '.' ||
               StriCmp(Extension, L".icns") == 0 ||
+              StriCmp(Extension, L".png") == 0 ||
               StriSubCmp(L"shell", DirEntry->FileName) ||
               IsIn(DirEntry->FileName, GlobalConfig.DontScanFiles))
                 continue;   // skip this

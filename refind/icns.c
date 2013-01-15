@@ -140,16 +140,22 @@ EG_IMAGE * LoadOSIcon(IN CHAR16 *OSIconName OPTIONAL, IN CHAR16 *FallbackIconNam
 } /* EG_IMAGE * LoadOSIcon() */
 
 
-//
-// Load an image from a .icns file
-//
+// Load an image from a .icns or .png file. FileNames contains a comma-delimited
+// list of potential filanems; the function tries each in turn until it finds
+// a loadable icon. If no file has a valid icon, it returns NULL.
+EG_IMAGE * LoadIcns(IN EFI_FILE_HANDLE BaseDir, IN CHAR16 *FileNames, IN UINTN PixelSize) {
+   CHAR16   *FileName;
+   EG_IMAGE *Image = NULL;
+   UINTN    Index = 0;
 
-EG_IMAGE * LoadIcns(IN EFI_FILE_HANDLE BaseDir, IN CHAR16 *FileName, IN UINTN PixelSize)
-{
-    if (GlobalConfig.TextOnly)      // skip loading if it's not used anyway
-        return NULL;
-    return egLoadIcon(BaseDir, FileName, PixelSize);
-}
+   if (GlobalConfig.TextOnly)      // skip loading if it's not used anyway
+      return NULL;
+
+   while (((FileName = FindCommaDelimited(FileNames, Index++)) != NULL) && (Image == NULL)) {
+      Image = egLoadIcon(BaseDir, FileName, PixelSize);
+   }
+   return Image;
+} // EG_IMAGE * LoadIcns()
 
 static EG_PIXEL BlackPixel  = { 0x00, 0x00, 0x00, 0 };
 //static EG_PIXEL YellowPixel = { 0x00, 0xff, 0xff, 0 };
