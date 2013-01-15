@@ -5,7 +5,7 @@
 
 include ../Make.tiano
 
-SOURCE_NAMES     = image load_bmp load_icns screen text
+SOURCE_NAMES     = image load_bmp load_icns lodepng screen text
 OBJS             = $(SOURCE_NAMES:=.obj)
 #DRIVERNAME      = ext2
 #BUILDME          = $(DRIVERNAME)_$(FILENAME_CODE).efi

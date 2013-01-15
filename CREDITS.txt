@@ -53,6 +53,10 @@ Program (C source code) files:
   functionality in rEFInd. Most of the files in the mok subdirectory are
   based on Bottomley's PreBootloader code.
 
+* The PNG support, in the files libeg/lodepng.c and libeg/lodepng.h, is a
+  slightly modified version of LodePNG (http://lodev.org/lodepng/) by Lode
+  Vandevenne.
+
 Icons and graphics:
 -------------------
 

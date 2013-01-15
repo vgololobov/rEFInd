@@ -39,6 +39,7 @@
 #include "../refind/lib.h"
 #include "../refind/screen.h"
 #include "../include/refit_call_wrapper.h"
+#include "lodepng.h"
 
 #define MAX_FILE_SIZE (1024*1024*1024)
 
@@ -246,6 +247,8 @@ static EG_IMAGE * egDecodeAny(IN UINT8 *FileData, IN UINTN FileDataLength,
       NewImage = egDecodeBMP(FileData, FileDataLength, IconSize, WantAlpha);
    } else if ((StriCmp(Format, L"ICNS") == 0) || (StriCmp(Format, L"icns") == 0)) {
       NewImage = egDecodeICNS(FileData, FileDataLength, IconSize, WantAlpha);
+   } else if ((StriCmp(Format, L"PNG") == 0) || (StriCmp(Format, L"png") == 0)) {
+      NewImage = egDecodePNG(FileData, FileDataLength, IconSize, WantAlpha);
    } // if/else
 
    return NewImage;
@@ -304,6 +307,11 @@ EG_IMAGE * egLoadIcon(IN EFI_FILE* BaseDir, IN CHAR16 *Path, IN UINTN IconSize)
     // decode it
     NewImage = egDecodeAny(FileData, FileDataLength, egFindExtension(Path), IconSize, TRUE);
     FreePool(FileData);
+    if ((NewImage->Width != IconSize) || (NewImage->Height != IconSize)) {
+       Print(L"Warning: Attempt to load icon of the wrong size from '%s'\n", Path);
+       MyFreePool(NewImage);
+       NewImage = NULL;
+    }
 
     return NewImage;
 } // EG_IMAGE *egLoadIcon()

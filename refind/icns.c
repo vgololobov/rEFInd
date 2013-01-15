@@ -81,48 +81,64 @@ EG_IMAGE * BuiltinIcon(IN UINTN Id)
     return BuiltinIconTable[Id].Image;
 }
 
+// Construct filename for all valid icon extensions and try to load it.
+// Returns image data or NULL if it can't be found.
+static EG_IMAGE * LoadIconAnyFormat(IN CHAR16 *IconsDir, IN CHAR16 *BaseName, IN CHAR16 *OsName) {
+   CHAR16     FileName[256];
+   CHAR16     *Extension;
+   EG_IMAGE   *Image = NULL;
+   UINTN      Index = 0;
+
+   while (((Extension = FindCommaDelimited(ICON_EXTENSIONS, Index++)) != NULL) && (Image == NULL)) {
+      SPrint(FileName, 255, L"%s\\%s_%s.%s", IconsDir, BaseName, OsName, Extension);
+
+      // try to load it
+      Image = egLoadIcon(SelfDir, FileName, 128);
+      MyFreePool(Extension);
+   } // while()
+   return Image;
+} // EG_IMAGE * LoadIconAnyFormat()
+
 //
 // Load an icon for an operating system
 //
 
 // Load an OS icon from among the comma-delimited list provided in OSIconName.
+// Searches for icons with extensions in the ICON_EXTENSIONS list (via
+// LoadIconAnyFormat()).
+// Returns image data. On failure, returns an ugly "dummy" icon.
 EG_IMAGE * LoadOSIcon(IN CHAR16 *OSIconName OPTIONAL, IN CHAR16 *FallbackIconName, BOOLEAN BootLogo)
 {
-    EG_IMAGE        *Image;
+    EG_IMAGE        *Image = NULL;
     CHAR16          *CutoutName;
-    CHAR16          FileName[256];
     UINTN           Index = 0;
 
     if (GlobalConfig.TextOnly)      // skip loading if it's not used anyway
         return NULL;
 
     // try the names from OSIconName
-    while ((CutoutName = FindCommaDelimited(OSIconName, Index++)) != NULL) {
-       SPrint(FileName, 255, L"%s\\%s_%s.icns", GlobalConfig.IconsDir ? GlobalConfig.IconsDir : DEFAULT_ICONS_DIR,
-              BootLogo ? L"boot" : L"os", CutoutName);
-
-        // try to load it
-        Image = egLoadIcon(SelfDir, FileName, 128);
-        if (Image != NULL) {
-            MyFreePool(CutoutName);
-            return Image;
-        }
-        MyFreePool(CutoutName);
-    } // while
+    while (((CutoutName = FindCommaDelimited(OSIconName, Index++)) != NULL) && (Image == NULL)) {
+       Image = LoadIconAnyFormat(GlobalConfig.IconsDir ? GlobalConfig.IconsDir : DEFAULT_ICONS_DIR,
+                                 BootLogo ? L"boot" : L"os", CutoutName);
+       MyFreePool(CutoutName);
+    } // while()
 
     // try the fallback name
-    SPrint(FileName, 255, L"%s\\%s_%s.icns", GlobalConfig.IconsDir ? GlobalConfig.IconsDir : DEFAULT_ICONS_DIR,
-           BootLogo ? L"boot" : L"os", FallbackIconName);
-    Image = egLoadIcon(SelfDir, FileName, 128);
-    if (Image != NULL)
-        return Image;
+    if (Image == NULL)
+       Image = LoadIconAnyFormat(GlobalConfig.IconsDir ? GlobalConfig.IconsDir : DEFAULT_ICONS_DIR,
+                                 BootLogo ? L"boot" : L"os", FallbackIconName);
 
     // try the fallback name with os_ instead of boot_
-    if (BootLogo)
-        return LoadOSIcon(NULL, FallbackIconName, FALSE);
+    if (BootLogo && (Image == NULL))
+       Image = LoadIconAnyFormat(GlobalConfig.IconsDir ? GlobalConfig.IconsDir : DEFAULT_ICONS_DIR,
+                                 L"os", FallbackIconName);
 
-    return DummyImage(128);
+    if (Image != NULL)
+        return Image;
+    else
+       return DummyImage(128);
 } /* EG_IMAGE * LoadOSIcon() */
+
 
 //
 // Load an image from a .icns file
@@ -143,11 +159,11 @@ EG_IMAGE * DummyImage(IN UINTN PixelSize)
     EG_IMAGE        *Image;
     UINTN           x, y, LineOffset;
     CHAR8           *Ptr, *YPtr;
-    
+
     Image = egCreateFilledImage(PixelSize, PixelSize, TRUE, &BlackPixel);
-    
+
     LineOffset = PixelSize * 4;
-    
+
     YPtr = (CHAR8 *)Image->PixelData + ((PixelSize - 32) >> 1) * (LineOffset + 4);
     for (y = 0; y < 32; y++) {
         Ptr = YPtr;

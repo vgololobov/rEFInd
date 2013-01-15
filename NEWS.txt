@@ -1,6 +1,8 @@
 0.6.5 (1/??/2013):
 ------------------
 
+- Added support for PNGs as banners, icons, and selectors.
+
 - Added icon for ALT Linux.
 
 - Added "safemode" option to "hideui" token, to hide option to boot into
