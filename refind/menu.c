@@ -86,7 +86,6 @@ static CHAR16 ArrowDown[2] = { ARROW_DOWN, 0 };
 
 static EG_IMAGE *SelectionImages[2] = { NULL, NULL };
 static EG_PIXEL SelectionBackgroundPixel = { 0xff, 0xff, 0xff, 0 };
-static EG_IMAGE *TextBuffer = NULL;
 
 //
 // Graphics helper functions
@@ -637,69 +636,142 @@ static VOID TextMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, 
 
 
 // Display a submenu
-static VOID DrawSubmenuText(IN CHAR16 *Text, IN UINTN SelectedWidth, IN UINTN XPos, IN UINTN YPos)
+static VOID DrawSubmenuText(IN CHAR16 *Text, IN BOOLEAN Selected, IN UINTN FieldWidth, IN UINTN XPos, IN UINTN YPos)
 {
-    if (TextBuffer == NULL)
-        TextBuffer = egCreateImage(LAYOUT_TEXT_WIDTH, TEXT_LINE_HEIGHT, TRUE);
+//   UINTN TextWidth = TEXT_XMARGIN * 2 + StrLen(Text) * FONT_CELL_WIDTH;
+   EG_IMAGE *TextBuffer;
 
-    egFillImage(TextBuffer, &MenuBackgroundPixel);
-    if (SelectedWidth > 0) {
-        // draw selection bar background
-        egFillImageArea(TextBuffer, 0, 0, SelectedWidth, TextBuffer->Height,
-                        &SelectionBackgroundPixel);
-    }
+   TextBuffer = egCreateImage(FieldWidth, TEXT_LINE_HEIGHT, FALSE);
 
-    // render the text
-    egRenderText(Text, TextBuffer, TEXT_XMARGIN, TEXT_YMARGIN);
-    egDrawImageWithTransparency(TextBuffer, NULL, XPos, YPos, TextBuffer->Width, TextBuffer->Height);
+   egFillImage(TextBuffer, &MenuBackgroundPixel);
+   if (Selected) {
+       // draw selection bar background
+       egFillImageArea(TextBuffer, 0, 0, FieldWidth, TextBuffer->Height, &SelectionBackgroundPixel);
+   }
+
+   // render the text
+   egRenderText(Text, TextBuffer, TEXT_XMARGIN, TEXT_YMARGIN);
+   egDrawImageWithTransparency(TextBuffer, NULL, XPos, YPos, TextBuffer->Width, TextBuffer->Height);
 //    BltImage(TextBuffer, XPos, YPos);
 }
+
+static VOID DrawMainMenuText(IN CHAR16 *Text, IN UINTN XPos, IN UINTN YPos)
+{
+    UINTN TextWidth, TextPosX;
+    EG_IMAGE *TextBuffer;
+
+    TextBuffer = egCropImage(GlobalConfig.ScreenBackground, XPos, YPos, LAYOUT_TEXT_WIDTH, TEXT_LINE_HEIGHT);
+
+    // render the text
+    egMeasureText(Text, &TextWidth, NULL);
+    if (TextWidth > TextBuffer->Width)
+       TextPosX = 0;
+    else
+       TextPosX = (TextBuffer->Width - TextWidth) / 2;
+    egRenderText(Text, TextBuffer, TextPosX, 0);
+    egDrawImageWithTransparency(TextBuffer, NULL, XPos, YPos, TextBuffer->Width, TextBuffer->Height);
+}
+
+// Compute the size & position of the window that will hold a subscreen's information.
+static VOID ComputeSubScreenWindowSize(REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, UINTN *XPos, UINTN *YPos, UINTN *Width, UINTN *Height, UINTN *LineWidth) {
+   UINTN i, ItemWidth, HintTop, BannerBottomEdge, TitleWidth, CenteredTop;
+
+   *Width = 1;
+   *Height = 5;
+   TitleWidth = StrLen(Screen->Title);
+   if ((Screen->TitleImage) && (TitleWidth > (Screen->TitleImage->Width / FONT_CELL_WIDTH))) {
+      TitleWidth -= (Screen->TitleImage->Width / FONT_CELL_WIDTH);
+   }
+   if (TitleWidth > *Width) {
+      *Width = TitleWidth;
+   }
+   for (i = 0; i < Screen->InfoLineCount; i++) {
+       ItemWidth = StrLen(Screen->InfoLines[i]);
+       if (*Width < ItemWidth) {
+           *Width = ItemWidth;
+       }
+       (*Height)++;
+   }
+   for (i = 0; i <= State->MaxIndex; i++) {
+       ItemWidth = StrLen(Screen->Entries[i]->Title);
+       if (*Width < ItemWidth) {
+           *Width = ItemWidth;
+       }
+       (*Height)++;
+   }
+   *Width = TEXT_XMARGIN * 2 + *Width * FONT_CELL_WIDTH;
+   *LineWidth = *Width;
+   if (Screen->TitleImage)
+      *Width += (Screen->TitleImage->Width + TITLEICON_SPACING + FONT_CELL_WIDTH);
+   else
+      *Width += FONT_CELL_WIDTH;
+
+   // Keep it within the bounds of the screen, or 2/3 of the screen's width
+   // for screens over 800 pixels wide
+   if (*Width > UGAWidth)
+      *Width = UGAWidth;
+   if ((*Width > (2 * UGAWidth) / 3) && (UGAWidth > 800))
+      *Width = (2 * UGAWidth) / 3;
+
+   *XPos = (UGAWidth - *Width) / 2;
+
+   HintTop = UGAHeight - (FONT_CELL_HEIGHT * 3); // top of hint text
+   *Height *= TEXT_LINE_HEIGHT;
+   if (Screen->TitleImage && (*Height < (Screen->TitleImage->Height + TEXT_LINE_HEIGHT * 3)))
+      *Height = Screen->TitleImage->Height + TEXT_LINE_HEIGHT * 3;
+
+   if (GlobalConfig.BannerBottomEdge >= HintTop) { // probably a full-screen image; treat it as an empty banner
+      BannerBottomEdge = 0;
+   } else {
+      BannerBottomEdge = GlobalConfig.BannerBottomEdge;
+   }
+   if (*Height > (HintTop -BannerBottomEdge - FONT_CELL_HEIGHT * 2)) {
+      BannerBottomEdge = 0;
+   }
+   if (*Height > (HintTop -BannerBottomEdge - FONT_CELL_HEIGHT * 2)) {
+      // TODO: Implement scrolling in text screen.
+      *Height = (HintTop - BannerBottomEdge - FONT_CELL_HEIGHT * 2);
+   }
+   *YPos = BannerBottomEdge + FONT_CELL_HEIGHT + (HintTop - BannerBottomEdge - *Height) / 2;
+   // Above often produces a text field that feels bottom-weighted, so adjust
+   // upward a bit, if possible....
+   CenteredTop = ((UGAHeight - *Height) / 2);
+   if ((*YPos > CenteredTop) && (CenteredTop > BannerBottomEdge))
+      *YPos = CenteredTop;
+} // VOID ComputeSubScreenWindowSize()
 
 // Displays sub-menus
 static VOID GraphicsMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, IN UINTN Function, IN CHAR16 *ParamText)
 {
     INTN i;
     UINTN ItemWidth;
-    static UINTN MenuWidth, EntriesPosX, EntriesPosY, TimeoutPosY;
+    static UINTN LineWidth, MenuWidth, MenuHeight, EntriesPosX, EntriesPosY, TimeoutPosY;
+    EG_IMAGE *Window;
+    EG_PIXEL *BackgroundPixel = &(GlobalConfig.ScreenBackground->PixelData[0]);
 
     State->ScrollMode = SCROLL_MODE_TEXT;
     switch (Function) {
 
         case MENU_FUNCTION_INIT:
             InitScroll(State, Screen->EntryCount, 0);
-
-            // determine width of the menu
-            MenuWidth = 20;  // minimum
-            for (i = 0; i < (INTN)Screen->InfoLineCount; i++) {
-                ItemWidth = StrLen(Screen->InfoLines[i]);
-                if (MenuWidth < ItemWidth)
-                    MenuWidth = ItemWidth;
-            }
-            for (i = 0; i <= State->MaxIndex; i++) {
-                ItemWidth = StrLen(Screen->Entries[i]->Title);
-                if (MenuWidth < ItemWidth)
-                    MenuWidth = ItemWidth;
-            }
-            MenuWidth = TEXT_XMARGIN * 2 + MenuWidth * FONT_CELL_WIDTH;
-            if (MenuWidth > LAYOUT_TEXT_WIDTH)
-                MenuWidth = LAYOUT_TEXT_WIDTH;
-
-            if (Screen->TitleImage)
-                EntriesPosX = (UGAWidth + (Screen->TitleImage->Width + TITLEICON_SPACING) - MenuWidth) >> 1;
-            else
-                EntriesPosX = (UGAWidth - MenuWidth) >> 1;
-            EntriesPosY = ComputeRow0PosX() + TEXT_LINE_HEIGHT * 2;
+            ComputeSubScreenWindowSize(Screen, State, &EntriesPosX, &EntriesPosY, &MenuWidth, &MenuHeight, &LineWidth);
             TimeoutPosY = EntriesPosY + (Screen->EntryCount + 1) * TEXT_LINE_HEIGHT;
 
             // initial painting
             SwitchToGraphicsAndClear();
+            Window = egCreateFilledImage(MenuWidth, MenuHeight, FALSE, BackgroundPixel);
+            egDrawImage(Window, EntriesPosX, EntriesPosY);
             egMeasureText(Screen->Title, &ItemWidth, NULL);
-            DrawSubmenuText(Screen->Title, 0, ((UGAWidth - ItemWidth) >> 1) - TEXT_XMARGIN, EntriesPosY - TEXT_LINE_HEIGHT * 2);
-            if (Screen->TitleImage)
-               BltImage(Screen->TitleImage, EntriesPosX - (Screen->TitleImage->Width + TITLEICON_SPACING), EntriesPosY);
+            DrawSubmenuText(Screen->Title, FALSE, (StrLen(Screen->Title) + 2) * FONT_CELL_WIDTH,
+                            EntriesPosX + (MenuWidth - ItemWidth) / 2, EntriesPosY += TEXT_LINE_HEIGHT);
+            if (Screen->TitleImage) {
+               BltImageAlpha(Screen->TitleImage, EntriesPosX, EntriesPosY + TEXT_LINE_HEIGHT * 2, BackgroundPixel);
+               EntriesPosX += (Screen->TitleImage->Width + TITLEICON_SPACING);
+            }
+            EntriesPosY += (TEXT_LINE_HEIGHT * 2);
             if (Screen->InfoLineCount > 0) {
                 for (i = 0; i < (INTN)Screen->InfoLineCount; i++) {
-                    DrawSubmenuText(Screen->InfoLines[i], 0, EntriesPosX, EntriesPosY);
+                    DrawSubmenuText(Screen->InfoLines[i], FALSE, LineWidth, EntriesPosX, EntriesPosY);
                     EntriesPosY += TEXT_LINE_HEIGHT;
                 }
                 EntriesPosY += TEXT_LINE_HEIGHT;  // also add a blank line
@@ -713,31 +785,27 @@ static VOID GraphicsMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *Sta
 
         case MENU_FUNCTION_PAINT_ALL:
             for (i = 0; i <= State->MaxIndex; i++) {
-                DrawSubmenuText(Screen->Entries[i]->Title, (i == State->CurrentSelection) ? MenuWidth : 0,
-                             EntriesPosX, EntriesPosY + i * TEXT_LINE_HEIGHT);
+               DrawSubmenuText(Screen->Entries[i]->Title, (i == State->CurrentSelection), LineWidth,
+                               EntriesPosX, EntriesPosY + i * TEXT_LINE_HEIGHT);
             }
             if (!(GlobalConfig.HideUIFlags & HIDEUI_FLAG_HINTS)) {
-               if ((Screen->Hint1 != NULL) && (StrLen(Screen->Hint1) > 0)) {
-                  DrawSubmenuText(Screen->Hint1, 0, (UGAWidth - (StrLen(Screen->Hint1) * FONT_CELL_WIDTH)) / 2,
-                               UGAHeight - (FONT_CELL_HEIGHT * 3));
-               }
-               if ((Screen->Hint2 != NULL) && (StrLen(Screen->Hint2) > 0)) {
-                  DrawSubmenuText(Screen->Hint2, 0, (UGAWidth - (StrLen(Screen->Hint2) * FONT_CELL_WIDTH)) / 2,
-                               UGAHeight - (FONT_CELL_HEIGHT * 2));
-               } // if
+               if ((Screen->Hint1 != NULL) && (StrLen(Screen->Hint1) > 0))
+                  DrawMainMenuText(Screen->Hint1, (UGAWidth - LAYOUT_TEXT_WIDTH) / 2, UGAHeight - (FONT_CELL_HEIGHT * 3));
+               if ((Screen->Hint2 != NULL) && (StrLen(Screen->Hint2) > 0))
+                  DrawMainMenuText(Screen->Hint2, (UGAWidth - LAYOUT_TEXT_WIDTH) / 2, UGAHeight - (FONT_CELL_HEIGHT * 2));
             } // if
             break;
 
         case MENU_FUNCTION_PAINT_SELECTION:
             // redraw selection cursor
-            DrawSubmenuText(Screen->Entries[State->PreviousSelection]->Title, 0,
+            DrawSubmenuText(Screen->Entries[State->PreviousSelection]->Title, FALSE, LineWidth,
                          EntriesPosX, EntriesPosY + State->PreviousSelection * TEXT_LINE_HEIGHT);
-            DrawSubmenuText(Screen->Entries[State->CurrentSelection]->Title, MenuWidth,
+            DrawSubmenuText(Screen->Entries[State->CurrentSelection]->Title, TRUE, LineWidth,
                          EntriesPosX, EntriesPosY + State->CurrentSelection * TEXT_LINE_HEIGHT);
             break;
 
         case MENU_FUNCTION_PAINT_TIMEOUT:
-            DrawSubmenuText(ParamText, 0, EntriesPosX, TimeoutPosY);
+            DrawSubmenuText(ParamText, FALSE, LineWidth, EntriesPosX, TimeoutPosY);
             break;
 
     }
@@ -763,22 +831,6 @@ static VOID DrawMainMenuEntry(REFIT_MENU_ENTRY *Entry, BOOLEAN selected, UINTN X
       } // if/else
    } // if
 } // VOID DrawMainMenuEntry()
-
-static VOID DrawMainMenuText(IN CHAR16 *Text, IN UINTN XPos, IN UINTN YPos)
-{
-    UINTN TextWidth, TextPosX;
-
-    TextBuffer = egCropImage(GlobalConfig.ScreenBackground, XPos, YPos, LAYOUT_TEXT_WIDTH, TEXT_LINE_HEIGHT);
-
-    // render the text
-    egMeasureText(Text, &TextWidth, NULL);
-    if (TextWidth > TextBuffer->Width)
-       TextPosX = 0;
-    else
-       TextPosX = (TextBuffer->Width - TextWidth) / 2;
-    egRenderText(Text, TextBuffer, TextPosX, 0);
-    egDrawImageWithTransparency(TextBuffer, NULL, XPos, YPos, TextBuffer->Width, TextBuffer->Height);
-}
 
 static VOID PaintAll(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, UINTN *itemPosX,
                      UINTN row0PosY, UINTN row1PosY, UINTN textPosY) {

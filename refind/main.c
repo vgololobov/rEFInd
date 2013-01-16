@@ -106,7 +106,7 @@ static REFIT_MENU_SCREEN MainMenu       = { L"Main Menu", NULL, 0, NULL, 0, NULL
                                             L"Insert or F2 for more options; Esc to refresh" };
 static REFIT_MENU_SCREEN AboutMenu      = { L"About", NULL, 0, NULL, 0, NULL, 0, NULL, L"Press Enter to return to main menu", L"" };
 
-REFIT_CONFIG GlobalConfig = { FALSE, FALSE, 0, 0, DONT_CHANGE_TEXT_MODE, 20, 0, 0, GRAPHICS_FOR_OSX, LEGACY_TYPE_MAC, 0,
+REFIT_CONFIG GlobalConfig = { FALSE, FALSE, 0, 0, 0, DONT_CHANGE_TEXT_MODE, 20, 0, 0, GRAPHICS_FOR_OSX, LEGACY_TYPE_MAC, 0,
                               NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
                               {TAG_SHELL, TAG_APPLE_RECOVERY, TAG_MOK_TOOL, TAG_ABOUT, TAG_SHUTDOWN, TAG_REBOOT, 0, 0, 0, 0, 0 }};
 
@@ -128,7 +128,7 @@ static VOID AboutrEFInd(VOID)
 
     if (AboutMenu.EntryCount == 0) {
         AboutMenu.TitleImage = BuiltinIcon(BUILTIN_ICON_FUNC_ABOUT);
-        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.6.4.5");
+        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.6.4.6");
         AddMenuInfoLine(&AboutMenu, L"");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2006-2010 Christoph Pfisterer");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2012 Roderick W. Smith");

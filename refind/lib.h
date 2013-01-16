@@ -102,7 +102,6 @@ EFI_STATUS DirIterClose(IN OUT REFIT_DIR_ITER *DirIter);
 
 CHAR16 * Basename(IN CHAR16 *Path);
 CHAR16 * StripEfiExtension(CHAR16 *FileName);
-//VOID ReplaceEfiExtension(IN OUT CHAR16 *Path, IN CHAR16 *Extension);
 
 INTN FindMem(IN VOID *Buffer, IN UINTN BufferLength, IN VOID *SearchString, IN UINTN SearchStringLength);
 VOID ReinitVolumes(VOID);

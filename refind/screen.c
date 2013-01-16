@@ -464,9 +464,9 @@ VOID BltClearScreen(IN BOOLEAN ShowBanner)
         if (Banner != NULL) {
             BannerPosX = (Banner->Width < UGAWidth) ? ((UGAWidth - Banner->Width) / 2) : 0;
             BannerPosY = (ComputeRow0PosX() / 2) - Banner->Height;
-//            BannerPosY = ComputeRow0PosX() - Banner->Height - LAYOUT_BANNER_YGAP;
             if (BannerPosY < 0)
                BannerPosY = 0;
+            GlobalConfig.BannerBottomEdge = BannerPosY + Banner->Height;
             BltImage(Banner, (UINTN) BannerPosX, (UINTN) BannerPosY);
         }
 

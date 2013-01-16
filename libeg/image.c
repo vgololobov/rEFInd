@@ -233,6 +233,9 @@ static CHAR16 * egFindExtension(IN CHAR16 *FileName)
     return FileName + StrLen(FileName);
 }
 
+// Decode the specified data as the specified format. The IconSize parameter is
+// relevant only for ICNS, for which it selects which ICNS sub-image is decoded.
+// Returns a pointer to the resulting EG_IMAGE or NULL if decoding failed.
 static EG_IMAGE * egDecodeAny(IN UINT8 *FileData, IN UINTN FileDataLength,
                               IN CHAR16 *Format, IN UINTN IconSize, IN BOOLEAN WantAlpha)
 {

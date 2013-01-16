@@ -6273,18 +6273,11 @@ unsigned encode(const std::string& filename,
 
 
 typedef struct _lode_color {
-   UINT16 red;
-   UINT16 green;
-   UINT16 blue;
-   UINT16 alpha;
+   UINT8 red;
+   UINT8 green;
+   UINT8 blue;
+   UINT8 alpha;
 } lode_color;
-
-// typedef struct _lode_color8 {
-//    UINT16 red;
-//    UINT16 green;
-//    UINT16 blue;
-//    UINT16 alpha;
-// } lode_color8;
 
 EG_IMAGE * egDecodePNG(IN UINT8 *FileData, IN UINTN FileDataLength, IN UINTN IconSize, IN BOOLEAN WantAlpha) {
    EG_IMAGE *NewImage = NULL;
@@ -6294,7 +6287,7 @@ EG_IMAGE * egDecodePNG(IN UINT8 *FileData, IN UINTN FileDataLength, IN UINTN Ico
    UINTN i;
 
    Error = lodepng_decode_memory((unsigned char **) &PixelData, &Width, &Height, (unsigned char*) FileData,
-                                 (size_t) FileDataLength, LCT_RGBA, 16);
+                                 (size_t) FileDataLength, LCT_RGBA, 8);
 
    if (Error) {
       return NULL;
@@ -6302,9 +6295,6 @@ EG_IMAGE * egDecodePNG(IN UINT8 *FileData, IN UINTN FileDataLength, IN UINTN Ico
 
    // allocate image structure and buffer
    NewImage = egCreateImage(Width, Height, WantAlpha);
-//    Print(L"Have created image; it %s NULL\n", NewImage ? L"is not" : L"is");
-//    Print(L"NewImage's size is %d x %d\n", NewImage->Width, NewImage->Height);
-//    PauseForKey();
    if ((NewImage == NULL) || (NewImage->Width != Width) || (NewImage->Height != Height))
       return NULL;
 

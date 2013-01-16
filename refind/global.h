@@ -215,6 +215,7 @@ typedef struct {
    BOOLEAN     ScanAllLinux;
    UINTN       RequestedScreenWidth;
    UINTN       RequestedScreenHeight;
+   UINTN       BannerBottomEdge;
    UINTN       RequestedTextMode;
    UINTN       Timeout;
    UINTN       HideUIFlags;

@@ -1336,21 +1336,6 @@ CHAR16 * StripEfiExtension(CHAR16 *FileName) {
    return Copy;
 } // CHAR16 * StripExtension()
 
-// Replaces a filename extension of ".efi" with the specified string
-// (Extension). If the input Path doesn't end in ".efi", Extension
-// is added to the existing filename.
-// VOID ReplaceEfiExtension(IN OUT CHAR16 *Path, IN CHAR16 *Extension)
-// {
-//     UINTN PathLen;
-// 
-//     PathLen = StrLen(Path);
-//     // Note: Do StriCmp() twice to work around Gigabyte Hybrid EFI case-sensitivity bug....
-//     if ((PathLen >= 4) && ((StriCmp(&Path[PathLen - 4], L".efi") == 0) || (StriCmp(&Path[PathLen - 4], L".EFI") == 0))) {
-//        Path[PathLen - 4] = 0;
-//     } // if
-//     StrCat(Path, Extension);
-// } // VOID ReplaceEfiExtension()
-
 //
 // memory string search
 //
