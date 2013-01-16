@@ -41,7 +41,8 @@
 #define FONT_CELL_WIDTH (7)
 #define FONT_CELL_HEIGHT (12)
 
-static EG_IMAGE *FontImage = NULL;
+static EG_IMAGE *BlackFontImage = NULL;
+static EG_IMAGE *WhiteFontImage = NULL;
 
 //
 // Text rendering
@@ -55,8 +56,9 @@ VOID egMeasureText(IN CHAR16 *Text, OUT UINTN *Width, OUT UINTN *Height)
         *Height = FONT_CELL_HEIGHT;
 }
 
-VOID egRenderText(IN CHAR16 *Text, IN OUT EG_IMAGE *CompImage, IN UINTN PosX, IN UINTN PosY)
+VOID egRenderText(IN CHAR16 *Text, IN OUT EG_IMAGE *CompImage, IN UINTN PosX, IN UINTN PosY, IN UINT8 BGBrightness)
 {
+    EG_IMAGE        *FontImage;
     EG_PIXEL        *BufferPtr;
     EG_PIXEL        *FontPixelData;
     UINTN           BufferLineOffset, FontLineOffset;
@@ -72,9 +74,31 @@ VOID egRenderText(IN CHAR16 *Text, IN OUT EG_IMAGE *CompImage, IN UINTN PosX, IN
     if (TextLength * FONT_CELL_WIDTH + PosX > CompImage->Width)
         TextLength = (CompImage->Width - PosX) / FONT_CELL_WIDTH;
 
-    // load the font
-    if (FontImage == NULL)
-        FontImage = egPrepareEmbeddedImage(&egemb_font, TRUE);
+    if (BGBrightness < 128) {
+       if (WhiteFontImage == NULL) {
+          WhiteFontImage = egPrepareEmbeddedImage(&egemb_font, TRUE);
+          if (WhiteFontImage == NULL)
+             return;
+          for (i = 0; i < (WhiteFontImage->Width * WhiteFontImage->Height); i++) {
+             WhiteFontImage->PixelData[i].r = 255 - WhiteFontImage->PixelData[i].r;
+             WhiteFontImage->PixelData[i].g = 255 - WhiteFontImage->PixelData[i].g;
+             WhiteFontImage->PixelData[i].b = 255 - WhiteFontImage->PixelData[i].b;
+//             WhiteFontImage->PixelData[i].a = 255 - WhiteFontImage->PixelData[i].a;
+          } // for
+       } // if
+       FontImage = WhiteFontImage;
+    } else {
+       if (BlackFontImage == NULL)
+          BlackFontImage = egPrepareEmbeddedImage(&egemb_font, TRUE);
+       if (BlackFontImage == NULL)
+          return;
+       FontImage = BlackFontImage;
+    } // if/else
+
+//     // load the font
+//     if (FontImage == NULL) {
+//         FontImage = egPrepareEmbeddedImage(&egemb_font, TRUE);
+//     } // if font not yet loaded.
 
     // render it
     BufferPtr = CompImage->PixelData;

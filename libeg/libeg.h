@@ -43,6 +43,11 @@
 
 /* types */
 
+typedef enum ColorTypes {
+   white,
+   black
+} Colors;
+
 /* This should be compatible with EFI_UGA_PIXEL */
 typedef struct {
     UINT8 b, g, r, a;
@@ -115,7 +120,7 @@ VOID egFillImageArea(IN OUT EG_IMAGE *CompImage,
 VOID egComposeImage(IN OUT EG_IMAGE *CompImage, IN EG_IMAGE *TopImage, IN UINTN PosX, IN UINTN PosY);
 
 VOID egMeasureText(IN CHAR16 *Text, OUT UINTN *Width, OUT UINTN *Height);
-VOID egRenderText(IN CHAR16 *Text, IN OUT EG_IMAGE *CompImage, IN UINTN PosX, IN UINTN PosY);
+VOID egRenderText(IN CHAR16 *Text, IN OUT EG_IMAGE *CompImage, IN UINTN PosX, IN UINTN PosY, IN UINT8 BGBrightness);
 
 VOID egClearScreen(IN EG_PIXEL *Color);
 VOID egDrawImage(IN EG_IMAGE *Image, IN UINTN ScreenPosX, IN UINTN ScreenPosY);

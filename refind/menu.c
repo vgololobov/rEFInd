@@ -636,26 +636,46 @@ static VOID TextMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, 
 
 
 // Display a submenu
-static VOID DrawSubmenuText(IN CHAR16 *Text, IN BOOLEAN Selected, IN UINTN FieldWidth, IN UINTN XPos, IN UINTN YPos)
+static VOID DrawText(IN CHAR16 *Text, IN BOOLEAN Selected, IN UINTN FieldWidth, IN UINTN XPos, IN UINTN YPos)
 {
-//   UINTN TextWidth = TEXT_XMARGIN * 2 + StrLen(Text) * FONT_CELL_WIDTH;
    EG_IMAGE *TextBuffer;
+   EG_PIXEL Bg;
 
    TextBuffer = egCreateImage(FieldWidth, TEXT_LINE_HEIGHT, FALSE);
 
    egFillImage(TextBuffer, &MenuBackgroundPixel);
+   Bg = MenuBackgroundPixel;
    if (Selected) {
        // draw selection bar background
        egFillImageArea(TextBuffer, 0, 0, FieldWidth, TextBuffer->Height, &SelectionBackgroundPixel);
+       Bg = SelectionBackgroundPixel;
    }
 
    // render the text
-   egRenderText(Text, TextBuffer, TEXT_XMARGIN, TEXT_YMARGIN);
+   egRenderText(Text, TextBuffer, TEXT_XMARGIN, TEXT_YMARGIN, (Bg.r + Bg.g + Bg.b) / 3);
    egDrawImageWithTransparency(TextBuffer, NULL, XPos, YPos, TextBuffer->Width, TextBuffer->Height);
 //    BltImage(TextBuffer, XPos, YPos);
 }
 
-static VOID DrawMainMenuText(IN CHAR16 *Text, IN UINTN XPos, IN UINTN YPos)
+// Finds the average brightness of the input Image.
+// NOTE: Passing an Image that covers the whole screen can strain the
+// capacity of a UINTN on a 32-bit system with a very large display.
+// As the intended use for this function is to handle a single text
+// string's background, this shouldn't be a problem, but it may need
+// addressing if it's applied more broadly....
+static UINT8 AverageBrightness(EG_IMAGE *Image) {
+   UINTN i;
+   UINTN Sum = 0;
+
+   if (Image != NULL) {
+      for (i = 0; i < (Image->Width * Image->Height); i++) {
+         Sum += (Image->PixelData[i].r + Image->PixelData[i].g + Image->PixelData[i].b);
+      }
+   } // if
+   return (UINT8) (Sum / (Image->Width * Image->Height * 3));
+} // UINT8 AverageBrightness()
+
+static VOID DrawTextWithTransparency(IN CHAR16 *Text, IN UINTN XPos, IN UINTN YPos)
 {
     UINTN TextWidth, TextPosX;
     EG_IMAGE *TextBuffer;
@@ -668,7 +688,7 @@ static VOID DrawMainMenuText(IN CHAR16 *Text, IN UINTN XPos, IN UINTN YPos)
        TextPosX = 0;
     else
        TextPosX = (TextBuffer->Width - TextWidth) / 2;
-    egRenderText(Text, TextBuffer, TextPosX, 0);
+    egRenderText(Text, TextBuffer, TextPosX, 0, AverageBrightness(TextBuffer));
     egDrawImageWithTransparency(TextBuffer, NULL, XPos, YPos, TextBuffer->Width, TextBuffer->Height);
 }
 
@@ -762,8 +782,8 @@ static VOID GraphicsMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *Sta
             Window = egCreateFilledImage(MenuWidth, MenuHeight, FALSE, BackgroundPixel);
             egDrawImage(Window, EntriesPosX, EntriesPosY);
             egMeasureText(Screen->Title, &ItemWidth, NULL);
-            DrawSubmenuText(Screen->Title, FALSE, (StrLen(Screen->Title) + 2) * FONT_CELL_WIDTH,
-                            EntriesPosX + (MenuWidth - ItemWidth) / 2, EntriesPosY += TEXT_LINE_HEIGHT);
+            DrawText(Screen->Title, FALSE, (StrLen(Screen->Title) + 2) * FONT_CELL_WIDTH,
+                     EntriesPosX + (MenuWidth - ItemWidth) / 2, EntriesPosY += TEXT_LINE_HEIGHT);
             if (Screen->TitleImage) {
                BltImageAlpha(Screen->TitleImage, EntriesPosX, EntriesPosY + TEXT_LINE_HEIGHT * 2, BackgroundPixel);
                EntriesPosX += (Screen->TitleImage->Width + TITLEICON_SPACING);
@@ -771,7 +791,7 @@ static VOID GraphicsMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *Sta
             EntriesPosY += (TEXT_LINE_HEIGHT * 2);
             if (Screen->InfoLineCount > 0) {
                 for (i = 0; i < (INTN)Screen->InfoLineCount; i++) {
-                    DrawSubmenuText(Screen->InfoLines[i], FALSE, LineWidth, EntriesPosX, EntriesPosY);
+                    DrawText(Screen->InfoLines[i], FALSE, LineWidth, EntriesPosX, EntriesPosY);
                     EntriesPosY += TEXT_LINE_HEIGHT;
                 }
                 EntriesPosY += TEXT_LINE_HEIGHT;  // also add a blank line
@@ -785,27 +805,27 @@ static VOID GraphicsMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *Sta
 
         case MENU_FUNCTION_PAINT_ALL:
             for (i = 0; i <= State->MaxIndex; i++) {
-               DrawSubmenuText(Screen->Entries[i]->Title, (i == State->CurrentSelection), LineWidth,
-                               EntriesPosX, EntriesPosY + i * TEXT_LINE_HEIGHT);
+               DrawText(Screen->Entries[i]->Title, (i == State->CurrentSelection), LineWidth, EntriesPosX,
+                        EntriesPosY + i * TEXT_LINE_HEIGHT);
             }
             if (!(GlobalConfig.HideUIFlags & HIDEUI_FLAG_HINTS)) {
                if ((Screen->Hint1 != NULL) && (StrLen(Screen->Hint1) > 0))
-                  DrawMainMenuText(Screen->Hint1, (UGAWidth - LAYOUT_TEXT_WIDTH) / 2, UGAHeight - (FONT_CELL_HEIGHT * 3));
+                  DrawTextWithTransparency(Screen->Hint1, (UGAWidth - LAYOUT_TEXT_WIDTH) / 2, UGAHeight - (FONT_CELL_HEIGHT * 3));
                if ((Screen->Hint2 != NULL) && (StrLen(Screen->Hint2) > 0))
-                  DrawMainMenuText(Screen->Hint2, (UGAWidth - LAYOUT_TEXT_WIDTH) / 2, UGAHeight - (FONT_CELL_HEIGHT * 2));
+                  DrawTextWithTransparency(Screen->Hint2, (UGAWidth - LAYOUT_TEXT_WIDTH) / 2, UGAHeight - (FONT_CELL_HEIGHT * 2));
             } // if
             break;
 
         case MENU_FUNCTION_PAINT_SELECTION:
             // redraw selection cursor
-            DrawSubmenuText(Screen->Entries[State->PreviousSelection]->Title, FALSE, LineWidth,
-                         EntriesPosX, EntriesPosY + State->PreviousSelection * TEXT_LINE_HEIGHT);
-            DrawSubmenuText(Screen->Entries[State->CurrentSelection]->Title, TRUE, LineWidth,
-                         EntriesPosX, EntriesPosY + State->CurrentSelection * TEXT_LINE_HEIGHT);
+            DrawText(Screen->Entries[State->PreviousSelection]->Title, FALSE, LineWidth,
+                     EntriesPosX, EntriesPosY + State->PreviousSelection * TEXT_LINE_HEIGHT);
+            DrawText(Screen->Entries[State->CurrentSelection]->Title, TRUE, LineWidth,
+                     EntriesPosX, EntriesPosY + State->CurrentSelection * TEXT_LINE_HEIGHT);
             break;
 
         case MENU_FUNCTION_PAINT_TIMEOUT:
-            DrawSubmenuText(ParamText, FALSE, LineWidth, EntriesPosX, TimeoutPosY);
+            DrawText(ParamText, FALSE, LineWidth, EntriesPosX, TimeoutPosY);
             break;
 
     }
@@ -849,12 +869,12 @@ static VOID PaintAll(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, UINTN
       }
    }
    if (!(GlobalConfig.HideUIFlags & HIDEUI_FLAG_LABEL))
-      DrawMainMenuText(Screen->Entries[State->CurrentSelection]->Title,
+      DrawTextWithTransparency(Screen->Entries[State->CurrentSelection]->Title,
                        (UGAWidth - LAYOUT_TEXT_WIDTH) >> 1, textPosY);
 
    if (!(GlobalConfig.HideUIFlags & HIDEUI_FLAG_HINTS)) {
-      DrawMainMenuText(Screen->Hint1, (UGAWidth - LAYOUT_TEXT_WIDTH) / 2, UGAHeight - (FONT_CELL_HEIGHT * 3));
-      DrawMainMenuText(Screen->Hint2, (UGAWidth - LAYOUT_TEXT_WIDTH) / 2, UGAHeight - (FONT_CELL_HEIGHT * 2));
+      DrawTextWithTransparency(Screen->Hint1, (UGAWidth - LAYOUT_TEXT_WIDTH) / 2, UGAHeight - (FONT_CELL_HEIGHT * 3));
+      DrawTextWithTransparency(Screen->Hint2, (UGAWidth - LAYOUT_TEXT_WIDTH) / 2, UGAHeight - (FONT_CELL_HEIGHT * 2));
    } // if
 } // static VOID PaintAll()
 
@@ -882,7 +902,7 @@ static VOID PaintSelection(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State,
       DrawMainMenuEntry(Screen->Entries[State->PreviousSelection], FALSE, itemPosX[XSelectPrev], YPosPrev);
       DrawMainMenuEntry(Screen->Entries[State->CurrentSelection], TRUE, itemPosX[XSelectCur], YPosCur);
       if (!(GlobalConfig.HideUIFlags & HIDEUI_FLAG_LABEL))
-         DrawMainMenuText(Screen->Entries[State->CurrentSelection]->Title,
+         DrawTextWithTransparency(Screen->Entries[State->CurrentSelection]->Title,
                           (UGAWidth - LAYOUT_TEXT_WIDTH) >> 1, textPosY);
    } else { // Current selection not visible; must redraw the menu....
       MainMenuStyle(Screen, State, MENU_FUNCTION_PAINT_ALL, NULL);
@@ -1021,7 +1041,7 @@ VOID MainMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, IN UINT
 
         case MENU_FUNCTION_PAINT_TIMEOUT:
             if (!(GlobalConfig.HideUIFlags & HIDEUI_FLAG_LABEL))
-                DrawMainMenuText(ParamText, (UGAWidth - LAYOUT_TEXT_WIDTH) >> 1, textPosY + TEXT_LINE_HEIGHT);
+                DrawTextWithTransparency(ParamText, (UGAWidth - LAYOUT_TEXT_WIDTH) >> 1, textPosY + TEXT_LINE_HEIGHT);
             break;
 
     }

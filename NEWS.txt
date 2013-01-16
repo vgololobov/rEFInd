@@ -1,6 +1,9 @@
 0.6.5 (1/??/2013):
 ------------------
 
+- Improved text color support: rEFInd now uses black text against light
+  backgrounds and white text against dark backgrounds.
+
 - Added support for PNGs as banners, icons, and selectors.
 
 - Added icon for ALT Linux.

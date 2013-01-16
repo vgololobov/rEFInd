@@ -446,7 +446,7 @@ VOID egDisplayMessage(IN CHAR16 *Text, EG_PIXEL *BGColor) {
          BoxWidth = egScreenWidth;
       BoxHeight = 2 * FONT_CELL_HEIGHT;
       Box = egCreateFilledImage(BoxWidth, BoxHeight, FALSE, BGColor);
-      egRenderText(Text, Box, FONT_CELL_WIDTH, FONT_CELL_HEIGHT / 2);
+      egRenderText(Text, Box, FONT_CELL_WIDTH, FONT_CELL_HEIGHT / 2, (BGColor->r + BGColor->g + BGColor->b) / 3);
       egDrawImage(Box, (egScreenWidth - BoxWidth) / 2, (egScreenHeight - BoxHeight) / 2);
    } // if non-NULL inputs
 } // VOID egDisplayMessage()
