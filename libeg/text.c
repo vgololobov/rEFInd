@@ -83,7 +83,6 @@ VOID egRenderText(IN CHAR16 *Text, IN OUT EG_IMAGE *CompImage, IN UINTN PosX, IN
              WhiteFontImage->PixelData[i].r = 255 - WhiteFontImage->PixelData[i].r;
              WhiteFontImage->PixelData[i].g = 255 - WhiteFontImage->PixelData[i].g;
              WhiteFontImage->PixelData[i].b = 255 - WhiteFontImage->PixelData[i].b;
-//             WhiteFontImage->PixelData[i].a = 255 - WhiteFontImage->PixelData[i].a;
           } // for
        } // if
        FontImage = WhiteFontImage;
@@ -94,11 +93,6 @@ VOID egRenderText(IN CHAR16 *Text, IN OUT EG_IMAGE *CompImage, IN UINTN PosX, IN
           return;
        FontImage = BlackFontImage;
     } // if/else
-
-//     // load the font
-//     if (FontImage == NULL) {
-//         FontImage = egPrepareEmbeddedImage(&egemb_font, TRUE);
-//     } // if font not yet loaded.
 
     // render it
     BufferPtr = CompImage->PixelData;

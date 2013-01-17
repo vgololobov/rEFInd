@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 4/19/2012; last Web page update:
-1/8/2013, referencing rEFInd 0.6.4</p>
+1/16/2013, referencing rEFInd 0.6.5</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -92,7 +92,7 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <h2>Theming Basics</h2>
 
-<p>As described on various other pages of this document, rEFInd relies on icon files located in its <tt>icons</tt> subdirectory, and occasionally elsewhere, to define its overall appearance. You can adjust rEFInd's theme in a few ways:</p>
+<p>As described on various other pages of this document, rEFInd relies on icon files located in its <tt>icons</tt> subdirectory, and occasionally elsewhere, to define its overall appearance. It also uses a built-in banner and two selection images, which you may replace by using the <tt>banner</tt>, <tt>selection_big</tt>, and <tt>selection_small</tt> tokens in <tt>refind.conf</tt>. You can adjust rEFInd's theme in a few ways:</p>
 
 <ul>
 
@@ -108,9 +108,15 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <li>You can adjust the selection background (used to highlight a selected icon) by creating new icons in PNG or in Microsoft's <a href="http://en.wikipedia.org/wiki/BMP_file_format">BMP format</a>. You should create both 144x144 and 64x64 images and tell rEFInd about them by using the <tt>selection_big</tt> and <tt>selection_small</tt> tokens, respectively, in <tt>refind.conf</tt>. If you omit the large icon, rEFInd will stretch the small icon to fit the larger space; if you omit the small icon, rEFInd will use the default small icon. Because BMP doesn't support transparency (alpha channels), you must use the PNG format if you want your selection background to show the underlying image beneath it. (You can create the illusion of transparency on a solid background by matching the colors, though.)</li>
 
-<li>You can create a new background image and logo by placing a PNG or BMP file in rEFInd's main directory and passing its filename to rEFInd with the <tt>banner</tt> option in <tt>refind.conf</tt>. If the image is smaller than the screen, the color in the top-left corner of the image will be used for the rest of the display.</li>
+<li>You can create a new background image and logo by placing a PNG or BMP file in rEFInd's main directory and passing its filename to rEFInd with the <tt>banner</tt> option in <tt>refind.conf</tt>. If the image is smaller than the screen, the color in the top-left corner of the image will be used for the rest of the display. This pixel's color is also used as the background color for submenu text. Using a full-screen background image can produce a dramatically different "look" for rEFInd:</li>
 
 </ul>
+
+    <br /><center><img src="refind-background.png" align="center"
+    width="750" height="472" alt="rEFInd provides extensive theming
+    options." border=2> </center><br />
+
+<p>Note that in this example, the text immediately below the icons is white, whereas the hint text at the bottom of the screen is black. The text color is determined by the brightness of the background; rEFInd uses black text against light backgrounds and light text against dark backgrounds. This adjustment is done on a line-by-line basis, so it copes better with horizontal lines than with vertical lines.</p>
 
 <p>Of course, not all of these elements are likely to be included in themes. A minimal rEFInd theme would provide just a new icons subdirectory, to be set via <tt>icons_dir</tt>. A more thorough theme would include a changed background image or selection backgrounds.</p>
 

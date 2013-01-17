@@ -364,11 +364,6 @@ VOID egDrawImage(IN EG_IMAGE *Image, IN UINTN ScreenPosX, IN UINTN ScreenPosY)
         (ScreenPosX > egScreenWidth) || (ScreenPosY > egScreenHeight))
         return;
 
-//     if (Image->HasAlpha) {
-//         Image->HasAlpha = FALSE;
-//         egSetPlane(PLPTR(Image, a), 0, Image->Width * Image->Height);
-//     }
-
     if ((GlobalConfig.ScreenBackground == NULL) || ((Image->Width == egScreenWidth) && (Image->Height == egScreenHeight))) {
        CompImage = Image;
     } else if (GlobalConfig.ScreenBackground == Image) {
@@ -417,11 +412,6 @@ VOID egDrawImageArea(IN EG_IMAGE *Image,
     egRestrictImageArea(Image, AreaPosX, AreaPosY, &AreaWidth, &AreaHeight);
     if (AreaWidth == 0)
         return;
-
-//     if (Image->HasAlpha) {
-//         Image->HasAlpha = FALSE;
-//         egSetPlane(PLPTR(Image, a), 0, Image->Width * Image->Height);
-//     }
 
     if (GraphicsOutput != NULL) {
         refit_call10_wrapper(GraphicsOutput->Blt, GraphicsOutput, (EFI_GRAPHICS_OUTPUT_BLT_PIXEL *)Image->PixelData,

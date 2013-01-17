@@ -66,10 +66,18 @@ with the "LODEPNG_COMPILE_" #defines divide this up further in an intermixed way
 name, so that you can easily change them to others related to your platform in
 this one location if needed. Everything else in the code calls these.*/
 
+// EFI's equivalent of realloc requires the original buffer's size as an
+// input parameter, which the standard libc realloc does not require. Thus,
+// I've modified mymalloc() to allocate more memory to store this data,
+// and myrealloc() can then read it when required. Because the size is
+// stored at the start of the allocated area, these functions are NOT
+// interchangeable with the standard EFI functions; memory allocated via
+// mymalloc() should be freed via myfree(), and myfree() should NOT be
+// used with memory allocated via AllocatePool() or AllocateZeroPool()!
+
 static void *mymalloc(size_t size) {
    void *ptr;
 
-//   size += sizeof (size_t);
    ptr = AllocateZeroPool(size + sizeof(size_t));
    if (ptr) {
       *(size_t *) ptr = size;

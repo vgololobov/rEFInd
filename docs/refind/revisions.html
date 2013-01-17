@@ -14,7 +14,7 @@
 <p class="subhead">by Roderick W. Smith, <a
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
-<p>Last Web page update: 1/8/2013</p>
+<p>Last Web page update: 1/16/2013</p>
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
 
@@ -91,6 +91,8 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 <p>The following summarizes changes in rEFInd's public releases:</p>
 
 <ul>
+
+<li><b>0.6.5 (1/16/2013)</b>&mdash;Most of this version's changes relate to icon, graphics, and theming features. The biggest code change is in support for PNG files for banners, icons, and selection backgrounds. I've also fixed bugs that prevented large banners from being used; you can now use banners as big as the screen (or bigger, but they'll be cropped), as illustrated on the <a href="themes.html">Theming rEFInd</a> page. The text color also now automatically switches between black and white depending on the background over which it's displayed. If you don't use these features, you're likely to notice some changes in where certain elements are displayed. Most obviously, the banner appears higher on the screen than it did previously, so as to minimize the chance of overlap with text displays such as the information screen. These text displays should appear correctly even on tiny 640x480 displays (they were blank on such small displays in the past). I've added icons for <a href="https://www.haiku-os.org/">Haiku</a> and <a href="http://www.altlinux.com/">ALT Linux.</a> Finally, the only non-graphics development is the addition of a "safe mode" boot option for OS X, which you can disable by adding <tt>safemode</tt> to the <tt>hideui</tt> option in <tt>refind.conf</tt>.</li>
 
 <li><b>0.6.4 (1/8/2013)</b>&mdash;Bug fixes motivate this release; it corrects a couple of memory management bugs in 0.6.3 that cause rEFInd to hang at startup on some computers (unfortunately not on any of mine, so I missed this). I've also made a small change to the <tt>install.sh</tt> script so that it installs the ext2fs driver rather than the ext4fs driver if the script detects that a Linux kernel is on an ext2fs or ext3fs partition. This can keep rEFInd from scanning ext4fs partitions and picking up non-functional symbolic links to vmlinuz on such partitions.</li>
 

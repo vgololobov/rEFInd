@@ -107,16 +107,14 @@ static VOID InitSelection(VOID)
     }
     if (SelectionImages[1] == NULL)
         SelectionImages[1] = egPrepareEmbeddedImage(&egemb_back_selected_small, TRUE);
-    SelectionImages[1] = egEnsureImageSize(SelectionImages[1],
-                                           ROW1_TILESIZE, ROW1_TILESIZE, &MenuBackgroundPixel);
+    SelectionImages[1] = egEnsureImageSize(SelectionImages[1], ROW1_TILESIZE, ROW1_TILESIZE, &MenuBackgroundPixel);
     if (SelectionImages[1] == NULL)
         return;
 
     // load big selection image
     if (GlobalConfig.SelectionBigFileName != NULL) {
         SelectionImages[0] = egLoadImage(SelfDir, GlobalConfig.SelectionBigFileName, TRUE);
-        SelectionImages[0] = egEnsureImageSize(SelectionImages[0],
-                                               ROW0_TILESIZE, ROW0_TILESIZE, &MenuBackgroundPixel);
+        SelectionImages[0] = egEnsureImageSize(SelectionImages[0], ROW0_TILESIZE, ROW0_TILESIZE, &MenuBackgroundPixel);
     }
     if (SelectionImages[0] == NULL) {
         // calculate big selection image from small one
@@ -634,8 +632,11 @@ static VOID TextMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, 
 // graphical generic style
 //
 
-
+//
 // Display a submenu
+//
+
+// Display text with a solid background (MenuBackgroundPixel or SelectionBackgroundPixel)
 static VOID DrawText(IN CHAR16 *Text, IN BOOLEAN Selected, IN UINTN FieldWidth, IN UINTN XPos, IN UINTN YPos)
 {
    EG_IMAGE *TextBuffer;
@@ -660,9 +661,10 @@ static VOID DrawText(IN CHAR16 *Text, IN BOOLEAN Selected, IN UINTN FieldWidth, 
 // Finds the average brightness of the input Image.
 // NOTE: Passing an Image that covers the whole screen can strain the
 // capacity of a UINTN on a 32-bit system with a very large display.
-// As the intended use for this function is to handle a single text
-// string's background, this shouldn't be a problem, but it may need
-// addressing if it's applied more broadly....
+// Using UINT64 instead is unworkable, since the code won't compile
+// on a 32-bit system. As the intended use for this function is to handle
+// a single text string's background, this shouldn't be a problem, but it
+// may need addressing if it's applied more broadly....
 static UINT8 AverageBrightness(EG_IMAGE *Image) {
    UINTN i;
    UINTN Sum = 0;
@@ -675,6 +677,7 @@ static UINT8 AverageBrightness(EG_IMAGE *Image) {
    return (UINT8) (Sum / (Image->Width * Image->Height * 3));
 } // UINT8 AverageBrightness()
 
+// Display text against the screen's background image
 static VOID DrawTextWithTransparency(IN CHAR16 *Text, IN UINTN XPos, IN UINTN YPos)
 {
     UINTN TextWidth, TextPosX;
@@ -694,9 +697,9 @@ static VOID DrawTextWithTransparency(IN CHAR16 *Text, IN UINTN XPos, IN UINTN YP
 
 // Compute the size & position of the window that will hold a subscreen's information.
 static VOID ComputeSubScreenWindowSize(REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, UINTN *XPos, UINTN *YPos, UINTN *Width, UINTN *Height, UINTN *LineWidth) {
-   UINTN i, ItemWidth, HintTop, BannerBottomEdge, TitleWidth, CenteredTop;
+   UINTN i, ItemWidth, HintTop, BannerBottomEdge, TitleWidth;
 
-   *Width = 1;
+   *Width = 20;
    *Height = 5;
    TitleWidth = StrLen(Screen->Title);
    if ((Screen->TitleImage) && (TitleWidth > (Screen->TitleImage->Width / FONT_CELL_WIDTH))) {
@@ -722,7 +725,7 @@ static VOID ComputeSubScreenWindowSize(REFIT_MENU_SCREEN *Screen, IN SCROLL_STAT
    *Width = TEXT_XMARGIN * 2 + *Width * FONT_CELL_WIDTH;
    *LineWidth = *Width;
    if (Screen->TitleImage)
-      *Width += (Screen->TitleImage->Width + TITLEICON_SPACING + FONT_CELL_WIDTH);
+      *Width += (Screen->TitleImage->Width + TITLEICON_SPACING * 2 + FONT_CELL_WIDTH);
    else
       *Width += FONT_CELL_WIDTH;
 
@@ -737,27 +740,25 @@ static VOID ComputeSubScreenWindowSize(REFIT_MENU_SCREEN *Screen, IN SCROLL_STAT
 
    HintTop = UGAHeight - (FONT_CELL_HEIGHT * 3); // top of hint text
    *Height *= TEXT_LINE_HEIGHT;
-   if (Screen->TitleImage && (*Height < (Screen->TitleImage->Height + TEXT_LINE_HEIGHT * 3)))
-      *Height = Screen->TitleImage->Height + TEXT_LINE_HEIGHT * 3;
+   if (Screen->TitleImage && (*Height < (Screen->TitleImage->Height + TEXT_LINE_HEIGHT * 4)))
+      *Height = Screen->TitleImage->Height + TEXT_LINE_HEIGHT * 4;
 
    if (GlobalConfig.BannerBottomEdge >= HintTop) { // probably a full-screen image; treat it as an empty banner
       BannerBottomEdge = 0;
    } else {
       BannerBottomEdge = GlobalConfig.BannerBottomEdge;
    }
-   if (*Height > (HintTop -BannerBottomEdge - FONT_CELL_HEIGHT * 2)) {
+   if (*Height > (HintTop - BannerBottomEdge - FONT_CELL_HEIGHT * 2)) {
       BannerBottomEdge = 0;
    }
-   if (*Height > (HintTop -BannerBottomEdge - FONT_CELL_HEIGHT * 2)) {
+   if (*Height > (HintTop - BannerBottomEdge - FONT_CELL_HEIGHT * 2)) {
       // TODO: Implement scrolling in text screen.
       *Height = (HintTop - BannerBottomEdge - FONT_CELL_HEIGHT * 2);
    }
-   *YPos = BannerBottomEdge + FONT_CELL_HEIGHT + (HintTop - BannerBottomEdge - *Height) / 2;
-   // Above often produces a text field that feels bottom-weighted, so adjust
-   // upward a bit, if possible....
-   CenteredTop = ((UGAHeight - *Height) / 2);
-   if ((*YPos > CenteredTop) && (CenteredTop > BannerBottomEdge))
-      *YPos = CenteredTop;
+
+   *YPos = ((UGAHeight - *Height) / 2);
+   if (*YPos < BannerBottomEdge)
+      *YPos = BannerBottomEdge + FONT_CELL_HEIGHT + (HintTop - BannerBottomEdge - *Height) / 2;
 } // VOID ComputeSubScreenWindowSize()
 
 // Displays sub-menus
@@ -785,8 +786,9 @@ static VOID GraphicsMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *Sta
             DrawText(Screen->Title, FALSE, (StrLen(Screen->Title) + 2) * FONT_CELL_WIDTH,
                      EntriesPosX + (MenuWidth - ItemWidth) / 2, EntriesPosY += TEXT_LINE_HEIGHT);
             if (Screen->TitleImage) {
-               BltImageAlpha(Screen->TitleImage, EntriesPosX, EntriesPosY + TEXT_LINE_HEIGHT * 2, BackgroundPixel);
-               EntriesPosX += (Screen->TitleImage->Width + TITLEICON_SPACING);
+               BltImageAlpha(Screen->TitleImage, EntriesPosX + TITLEICON_SPACING, EntriesPosY + TEXT_LINE_HEIGHT * 2,
+                             BackgroundPixel);
+               EntriesPosX += (Screen->TitleImage->Width + TITLEICON_SPACING * 2);
             }
             EntriesPosY += (TEXT_LINE_HEIGHT * 2);
             if (Screen->InfoLineCount > 0) {
@@ -930,7 +932,6 @@ static VOID PaintIcon(IN EG_EMBEDDED_IMAGE *BuiltInIcon, IN CHAR16 *ExternalFile
 } // static VOID PaintIcon()
 
 inline UINTN ComputeRow0PosX(VOID) {
-//   return ((UGAHeight / 2) - (5 * ROW0_TILESIZE / 6));
    return ((UGAHeight / 2) - ROW0_TILESIZE / 2);
 } // UINTN ComputeRow0PosX()
 

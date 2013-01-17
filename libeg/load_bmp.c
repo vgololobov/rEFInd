@@ -86,7 +86,7 @@ EG_IMAGE * egDecodeBMP(IN UINT8 *FileData, IN UINTN FileDataLength, IN UINTN Ico
     UINT8               ImageValue = 0, AlphaValue;
     EG_PIXEL            *PixelPtr;
     UINTN               Index, BitIndex;
-    
+
     // read and check header
     if (FileDataLength < sizeof(BMP_IMAGE_HEADER) || FileData == NULL)
         return NULL;
@@ -98,7 +98,7 @@ EG_IMAGE * egDecodeBMP(IN UINT8 *FileData, IN UINTN FileDataLength, IN UINTN Ico
     if (BmpHeader->BitPerPixel != 1 && BmpHeader->BitPerPixel != 4 &&
         BmpHeader->BitPerPixel != 8 && BmpHeader->BitPerPixel != 24)
         return NULL;
-    
+
     // calculate parameters
     ImageLineOffset = BmpHeader->PixelWidth;
     if (BmpHeader->BitPerPixel == 24)
@@ -112,13 +112,13 @@ EG_IMAGE * egDecodeBMP(IN UINT8 *FileData, IN UINTN FileDataLength, IN UINTN Ico
     // check bounds
     if (BmpHeader->ImageOffset + ImageLineOffset * BmpHeader->PixelHeight > FileDataLength)
         return NULL;
-    
+
     // allocate image structure and buffer
     NewImage = egCreateImage(BmpHeader->PixelWidth, BmpHeader->PixelHeight, WantAlpha);
     if (NewImage == NULL)
         return NULL;
     AlphaValue = WantAlpha ? 255 : 0;
-    
+
     // convert image
     BmpColorMap = (BMP_COLOR_MAP *)(FileData + sizeof(BMP_IMAGE_HEADER));
     ImagePtrBase = FileData + BmpHeader->ImageOffset;

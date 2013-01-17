@@ -1,7 +1,8 @@
 Summary: EFI boot manager software
 Name: refind
-Version: 0.6.4.7
+Version: 0.6.5
 Release: 1%{?dist}
+Summary: EFI boot manager software
 License: GPLv3
 URL: http://www.rodsbooks.com/refind/
 Group: System Environment/Base
@@ -145,7 +146,5 @@ fi
 # wiping out the just-updated files.
 
 %changelog
-* Sun Jan 6 2013 R Smith <rodsmith@rodsbooks.com> - 0.6.3-2
-- Fixed accidental inclusion of "env" as part of installation script
-* Sun Jan 6 2013 R Smith <rodsmith@rodsbooks.com> - 0.6.3
-- Created spec file for 0.6.3 release
+* Wed Jan 16 2013 R Smith <rodsmith@rodsbooks.com> - 0.6.5
+- Created spec file for 0.6.5 release

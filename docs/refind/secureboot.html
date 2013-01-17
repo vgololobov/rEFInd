@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 11/13/2012; last Web page update:
-1/8/2013, referencing rEFInd 0.6.4</p>
+1/16/2013, referencing rEFInd 0.6.5</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -126,7 +126,7 @@ described on this page currently supports only <i>x</i>86-64, not
 
 <p>Through 2012, it became obvious that Secure Boot would be a feature that was controlled, to a large extent, by Microsoft. This is because Microsoft requires that non-server computers that display Windows 8 logos ship with Secure Boot enabled. As a practical matter, this also means that such computers ship with Microsoft's keys in their firmware. In the absence of an industry-standard body to manage the signing of Secure Boot keys, this means that Microsoft's key is the only one that's more-or-less guaranteed to be installed on the computer, thus blocking the ability to boot any OS that lacks a boot path through Microsoft's signing key.</p>
 
-<p>Fortunately, Microsoft will sign third-party binaries with their key&mdash;or more precisely, with a key that Microsoft uses to sign third-party binaries. (Microsoft uses another key to sign its own binaries, and some devices, such as the Microsoft Surface tablet, lack the third-party Microsoft key.) A payment of $99 to Verisign enables a software distributor to sign as many binaries as desired. Red Hat (Fedora), Novell (SUSE), and Canonical (Ubuntu) have all announced plans to take advantage of this system. Unfortunately, using a third-party signing service is an awkward solution for open source software. In fact, for this very reason Red Hat has developed a program that it calls <i>shim</i> that essentially shifts the Secure Boot "train" from Microsoft's proprietary "track" to one that's more friendly to open source authors. Shim is signed by Microsoft and redirects the boot process to another boot loader that can be signed with keys that the distribution maintains and that are built into shim. Fedora 18 is expected to use this system. SUSE has announced that it will use the same system, as does Ubuntu with version 12.10 and later. SUSE has contributed to the shim approach by providing expansions to shim that support a set of keys that users can maintain themselves. These keys are known as Machine Owner Keys (MOKs), and managing them is described later, in <a href="#mok">Managing MOKs.</a> To reiterate, then, there are potentially three ways to sign a binary that will get it launched on a computer that uses shim:</p>
+<p>Fortunately, Microsoft will sign third-party binaries with their key&mdash;or more precisely, with a key that Microsoft uses to sign third-party binaries. (Microsoft uses another key to sign its own binaries, and some devices, such as the Microsoft Surface tablet, lack the third-party Microsoft key.) A payment of $99 to Verisign enables a software distributor to sign as many binaries as desired. Red Hat (Fedora), Novell (SUSE), and Canonical (Ubuntu) have all announced plans to take advantage of this system. Unfortunately, using a third-party signing service is an awkward solution for open source software. In fact, for this very reason Red Hat has developed a program that it calls <i>shim</i> that essentially shifts the Secure Boot "train" from Microsoft's proprietary "track" to one that's more friendly to open source authors. Shim is signed by Microsoft and redirects the boot process to another boot loader that can be signed with keys that the distribution maintains and that are built into shim. Fedora 18 also uses this system. SUSE has announced that it will use the same system, as does Ubuntu with version 12.10 and later. SUSE has contributed to the shim approach by providing expansions to shim that support a set of keys that users can maintain themselves. These keys are known as Machine Owner Keys (MOKs), and managing them is described later, in <a href="#mok">Managing MOKs.</a> To reiterate, then, there are potentially three ways to sign a binary that will get it launched on a computer that uses shim:</p>
 
 <ul>
 
@@ -199,8 +199,8 @@ described on this page currently supports only <i>x</i>86-64, not
     href="http://www.codon.org.uk/~mjg59/shim-signed/">Matthew J. Garrett's
     download site</a> or from your distribution. (Don't use Ubuntu 12.10's
     version, though; as noted earlier, it's inadequate for use with
-    rEFInd.) The most recent beta versions of Fedora 18 reportedly ship
-    with a signed shim, but I've not yet tested them.</li>
+    rEFInd.) Fedora 18 ships with a signed shim, but I've not yet tested
+    it.</li>
 
 <p class="sidebar"><b>Tip:</b> If you're running Linux, you can save some effort by using the <tt>install.sh</tt> script with its <tt>--shim <tt class="variable">/path/to/shim.efi</tt></tt> option rather than installing manually, as in steps 4&ndash;6 of this procedure. If you've installed <tt>openssl</tt> and <tt>sbsign</tt>, using <tt>--localkeys</tt> will generate local signing keys and re-sign the rEFInd binaries with your own key, too. You can then use <tt>sbsign</tt> and the keys in <tt>/etc/refind.d/keys</tt> to sign your kernels or boot loaders.</p>
 

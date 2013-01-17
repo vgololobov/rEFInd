@@ -186,7 +186,7 @@ timeout 20
 # disk's label in various OSes' file browsers.
 # The default is an empty list (all volumes are scanned).
 #
-#dont_scan_volumes
+#dont_scan_volumes "Recovery HD"
 
 # Directories that should NOT be scanned for boot loaders. By default,
 # rEFInd doesn't scan its own directory or the EFI/tools directory.
@@ -225,13 +225,9 @@ timeout 20
 # all files in scanned directories with names that begin with "vmlinuz"
 # or "bzImage" to be included as loaders, even if they lack ".efi"
 # extensions. The drawback to this option is that it can pick up kernels
-# that lack EFI stub loader support and other files. Most notably, if you
-# want to give a kernel a custom icon by placing an icon with the kernel's
-# filename but a ".icns" extension in the same directory as the kernel, this
-# option will cause the icon file to show up as a non-functional loader tag.
-# Passing this option a "0" value causes kernels without ".efi" extensions
-# to NOT be scanned; passing it alone or with any other value causes all
-# kernels to be scanned.
+# that lack EFI stub loader support and other files. Passing this option
+# a "0" value causes kernels without ".efi" extensions to NOT be scanned;
+# passing it alone or with any other value causes all kernels to be scanned.
 # Default is to NOT scan for kernels without ".efi" extensions.
 #
 scan_all_linux_kernels

@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 3/14/2012; last Web page update:
-1/8/2013, referencing rEFInd 0.6.4</p>
+1/16/2013, referencing rEFInd 0.6.5</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -145,16 +145,6 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 	like to add detection for Itanium and ARM systems, but I have no
 	way to test such changes.</li>
 
-    <li>The code could be more flexible in its handling of the sizes of
-	various graphical elements, and particularly drawn text. Prior to
-	version 0.2.2, submenu text was invisible on UEFI-based PCs with
-	800x600 and smaller displays because of an inability to properly
-	crop the graphics fields that hold the text. With version 0.2.2,
-	I've put a band-aid on this problem by reducing the field size so
-	that it now works on 800x600 displays, but smaller displays still
-	suffer from this problem. This is just an example of the
-	inflexibility of certain layout issues within rEFInd.</li>
-
     <li>Although the ICNS file format used by rEFInd supports multiple
 	image sizes, if a size that rEFInd needs isn't present in the file,
 	rEFInd can't use the icon. The ability to scale images to the
@@ -169,14 +159,13 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 	substitutes the size, so you get displays like <tt>boot
 	EFI\foo\bar.efi from 90 GiB volume</tt>. I'd like to add more
 	checks to substitute the GPT <i>partition</i> label if the
-	<i>filesystem</i> label comes up empty, or add a filesystem type
-	identifier to the size.</li>
+	<i>filesystem</i> label comes up empty.</li>
 
-    <li>The default_selection option in refind.conf could be improved by
-	supporting a list of default options, so that if the first item
-	isn't found, rEFInd will try to boot the second one in the list,
-	and so on. This could be handy in case a driver fails to load, or
-	to provide an override in case the user inserts a specific
+    <li>The <tt>default_selection</tt> option in <tt>refind.conf</tt> could
+	be improved by supporting a list of default options, so that if the
+	first item isn't found, rEFInd will try to boot the second one in
+	the list, and so on. This could be handy in case a driver fails to
+	load, or to provide an override in case the user inserts a specific
 	removable disk&mdash;by placing the removable disk's name first in
 	the list, it will take precedence over the normal hard disk
 	default.</li>

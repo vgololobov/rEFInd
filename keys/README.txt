@@ -17,7 +17,9 @@ utility expects its input public keys in this form, so these are the files
 you would use to add a key to the MOK list maintained by MokManager and
 used by shim.
 
-The files in this directory are:
+The files in this directory are, in alphabetical order:
+
+- altlinux.cer -- The public key for ALT Linux (http://www.altlinux.com).
 
 - canonical-uefi-ca.der -- Canonical's public key, used to sign Ubuntu
   boot loaders and kernels.

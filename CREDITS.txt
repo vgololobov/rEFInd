@@ -84,3 +84,5 @@ Icons and graphics:
 * The Fatdog Linux icon was created by the Fatdog developers (see
   http://distro.ibiblio.org/fatdog/web/ for the Fatdog project).
 
+* The ALT Linux icon was donated by the ALT Linux developers (see
+  http://www.altlinux.com).

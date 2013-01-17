@@ -220,39 +220,31 @@ EFI_STATUS egSaveFile(IN EFI_FILE* BaseDir OPTIONAL, IN CHAR16 *FileName,
 // Loading images from files and embedded data
 //
 
-static CHAR16 * egFindExtension(IN CHAR16 *FileName)
-{
-    UINTN i;
+// static CHAR16 * egFindExtension(IN CHAR16 *FileName)
+// {
+//     UINTN i;
+// 
+//     for (i = StrLen(FileName); i >= 0; i--) {
+//         if (FileName[i] == '.')
+//             return FileName + i + 1;
+//         if (FileName[i] == '/' || FileName[i] == '\\')
+//             break;
+//     }
+//     return FileName + StrLen(FileName);
+// }
 
-    for (i = StrLen(FileName); i >= 0; i--) {
-        if (FileName[i] == '.')
-            return FileName + i + 1;
-        if (FileName[i] == '/' || FileName[i] == '\\')
-            break;
-    }
-    return FileName + StrLen(FileName);
-}
-
-// Decode the specified data as the specified format. The IconSize parameter is
-// relevant only for ICNS, for which it selects which ICNS sub-image is decoded.
+// Decode the specified image data. The IconSize parameter is relevant only
+// for ICNS, for which it selects which ICNS sub-image is decoded.
 // Returns a pointer to the resulting EG_IMAGE or NULL if decoding failed.
-static EG_IMAGE * egDecodeAny(IN UINT8 *FileData, IN UINTN FileDataLength,
-                              IN CHAR16 *Format, IN UINTN IconSize, IN BOOLEAN WantAlpha)
+static EG_IMAGE * egDecodeAny(IN UINT8 *FileData, IN UINTN FileDataLength, IN UINTN IconSize, IN BOOLEAN WantAlpha)
 {
    EG_IMAGE        *NewImage = NULL;
 
-   // Note: The UEFI implementation in Gigabyte's Hybrid EFI is buggy and does
-   // a case-sensitive comparison in StriCmp rather than the case-insensitive
-   // comparison that the spec says should be done. As a workaround, we repeat
-   // the comparison twice here.
-   // dispatch by extension
-   if ((StriCmp(Format, L"BMP") == 0) || (StriCmp(Format, L"bmp") == 0)) {
-      NewImage = egDecodeBMP(FileData, FileDataLength, IconSize, WantAlpha);
-   } else if ((StriCmp(Format, L"ICNS") == 0) || (StriCmp(Format, L"icns") == 0)) {
-      NewImage = egDecodeICNS(FileData, FileDataLength, IconSize, WantAlpha);
-   } else if ((StriCmp(Format, L"PNG") == 0) || (StriCmp(Format, L"png") == 0)) {
+   NewImage = egDecodeICNS(FileData, FileDataLength, IconSize, WantAlpha);
+   if (NewImage == NULL)
       NewImage = egDecodePNG(FileData, FileDataLength, IconSize, WantAlpha);
-   } // if/else
+   if (NewImage == NULL)
+      NewImage = egDecodeBMP(FileData, FileDataLength, IconSize, WantAlpha);
 
    return NewImage;
 }
@@ -273,7 +265,7 @@ EG_IMAGE * egLoadImage(IN EFI_FILE* BaseDir, IN CHAR16 *FileName, IN BOOLEAN Wan
         return NULL;
 
     // decode it
-    NewImage = egDecodeAny(FileData, FileDataLength, egFindExtension(FileName), 128, WantAlpha);
+    NewImage = egDecodeAny(FileData, FileDataLength, 128, WantAlpha);
     FreePool(FileData);
 
     return NewImage;
@@ -308,7 +300,7 @@ EG_IMAGE * egLoadIcon(IN EFI_FILE* BaseDir, IN CHAR16 *Path, IN UINTN IconSize)
     }
 
     // decode it
-    NewImage = egDecodeAny(FileData, FileDataLength, egFindExtension(Path), IconSize, TRUE);
+    NewImage = egDecodeAny(FileData, FileDataLength, IconSize, TRUE);
     FreePool(FileData);
     if ((NewImage->Width != IconSize) || (NewImage->Height != IconSize)) {
        Print(L"Warning: Attempt to load icon of the wrong size from '%s'\n", Path);
@@ -318,11 +310,6 @@ EG_IMAGE * egLoadIcon(IN EFI_FILE* BaseDir, IN CHAR16 *Path, IN UINTN IconSize)
 
     return NewImage;
 } // EG_IMAGE *egLoadIcon()
-
-EG_IMAGE * egDecodeImage(IN UINT8 *FileData, IN UINTN FileDataLength, IN CHAR16 *Format, IN BOOLEAN WantAlpha)
-{
-    return egDecodeAny(FileData, FileDataLength, Format, 128, WantAlpha);
-}
 
 EG_IMAGE * egPrepareEmbeddedImage(IN EG_EMBEDDED_IMAGE *EmbeddedImage, IN BOOLEAN WantAlpha)
 {
@@ -531,11 +518,6 @@ VOID egComposeImage(IN OUT EG_IMAGE *CompImage, IN EG_IMAGE *TopImage, IN UINTN 
 
     // compose
     if (CompWidth > 0) {
-//         if (CompImage->HasAlpha) {
-//             CompImage->HasAlpha = FALSE;
-//             egSetPlane(PLPTR(CompImage, a), 0, CompImage->Width * CompImage->Height);
-//         }
-
         if (TopImage->HasAlpha) {
             egRawCompose(CompImage->PixelData + PosY * CompImage->Width + PosX, TopImage->PixelData,
                          CompWidth, CompHeight, CompImage->Width, TopImage->Width);
@@ -544,7 +526,7 @@ VOID egComposeImage(IN OUT EG_IMAGE *CompImage, IN EG_IMAGE *TopImage, IN UINTN 
                       CompWidth, CompHeight, CompImage->Width, TopImage->Width);
         }
     }
-}
+} /* VOID egComposeImage() */
 
 EG_IMAGE * egEnsureImageSize(IN EG_IMAGE *Image, IN UINTN Width, IN UINTN Height, IN EG_PIXEL *Color)
 {
@@ -560,6 +542,7 @@ EG_IMAGE * egEnsureImageSize(IN EG_IMAGE *Image, IN UINTN Width, IN UINTN Height
         egFreeImage(Image);
         return NULL;
     }
+    Image->HasAlpha = FALSE;
     egComposeImage(NewImage, Image, 0, 0);
     egFreeImage(Image);
 
