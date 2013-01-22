@@ -1,3 +1,12 @@
+0.6.6 (?/??/2013):
+------------------
+
+- Fixed bug that caused rEFInd to ignore the "icon" token in refind.conf
+  manual boot stanzas.
+
+- Fixed bug in install.sh that caused the script to fail to update
+  drivers when rEFInd was installed in EFI/BOOT/.
+
 0.6.5 (1/16/2013):
 ------------------
 

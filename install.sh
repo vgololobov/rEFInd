@@ -29,6 +29,7 @@
 #
 # Revision history:
 #
+# 0.6.6   -- Bug fix: Upgrade drivers when installed to EFI/BOOT.
 # 0.6.4   -- Copies ext2 driver rather than ext4 driver for ext2/3fs
 # 0.6.3   -- Support for detecting rEFInd in EFI/BOOT and EFI/Microsoft/Boot
 #            directories & for installing to EFI/BOOT in BIOS mode
@@ -261,6 +262,12 @@ CopyRefindFiles() {
       if [[ $InstallDrivers == "all" ]] ; then
          cp -r $RefindDir/drivers_* $InstallDir/$TargetDir/ 2> /dev/null
          cp -r $ThisDir/drivers_* $InstallDir/$TargetDir/ 2> /dev/null
+      elif [[ $Upgrade == 1 ]] ; then
+         if [[ $Platform == 'EFI64' ]] ; then
+            CopyDrivers x64
+         else
+            CopyDrivers ia32
+         fi
       fi
       Refind=""
       CopyKeys

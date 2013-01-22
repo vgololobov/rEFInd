@@ -10,7 +10,7 @@ timeout 20
 
 # Hide user interface elements for personal preference or to increase
 # security:
-#  banner      - the rEFInd title banner
+#  banner      - the rEFInd title banner (built-in or loaded via "banner")
 #  label       - boot option text label in the menu
 #  singleuser  - remove the submenu options to boot Mac OS X in single-user
 #                or verbose modes; affects ONLY MacOS X

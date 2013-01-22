@@ -130,8 +130,7 @@ EG_IMAGE * LoadOSIcon(IN CHAR16 *OSIconName OPTIONAL, IN CHAR16 *FallbackIconNam
 
     // try the fallback name with os_ instead of boot_
     if (BootLogo && (Image == NULL))
-       Image = LoadIconAnyFormat(GlobalConfig.IconsDir ? GlobalConfig.IconsDir : DEFAULT_ICONS_DIR,
-                                 L"os", FallbackIconName);
+       Image = LoadIconAnyFormat(GlobalConfig.IconsDir ? GlobalConfig.IconsDir : DEFAULT_ICONS_DIR, L"os", FallbackIconName);
 
     if (Image != NULL)
         return Image;

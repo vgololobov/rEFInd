@@ -128,7 +128,7 @@ static VOID AboutrEFInd(VOID)
 
     if (AboutMenu.EntryCount == 0) {
         AboutMenu.TitleImage = BuiltinIcon(BUILTIN_ICON_FUNC_ABOUT);
-        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.6.5");
+        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.6.5.2");
         AddMenuInfoLine(&AboutMenu, L"");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2006-2010 Christoph Pfisterer");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2012 Roderick W. Smith");
@@ -726,7 +726,8 @@ VOID SetLoaderDefaults(LOADER_ENTRY *Entry, CHAR16 *LoaderPath, REFIT_VOLUME *Vo
       MergeStrings(&IconNames, Temp, L'.');
       MyFreePool(Temp);
    }
-   Entry->me.Image = LoadIcns(Volume->RootDir, IconNames, 128);
+   if (!Entry->me.Image)
+      Entry->me.Image = LoadIcns(Volume->RootDir, IconNames, 128);
    if (!Entry->me.Image)
       Entry->me.Image = Volume->VolIconImage;
    MyFreePool(IconNames);

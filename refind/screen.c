@@ -463,7 +463,7 @@ VOID BltClearScreen(IN BOOLEAN ShowBanner)
         egClearScreen(&MenuBackgroundPixel);
         if (Banner != NULL) {
             BannerPosX = (Banner->Width < UGAWidth) ? ((UGAWidth - Banner->Width) / 2) : 0;
-            BannerPosY = (ComputeRow0PosX() / 2) - Banner->Height;
+            BannerPosY = (INTN) (ComputeRow0PosY() / 2) - (INTN) Banner->Height;
             if (BannerPosY < 0)
                BannerPosY = 0;
             GlobalConfig.BannerBottomEdge = BannerPosY + Banner->Height;
@@ -478,7 +478,7 @@ VOID BltClearScreen(IN BOOLEAN ShowBanner)
     GraphicsScreenDirty = FALSE;
     egFreeImage(GlobalConfig.ScreenBackground);
     GlobalConfig.ScreenBackground = egCopyScreen();
-}
+} /* VOID BltClearScreen() */
 
 VOID BltImage(IN EG_IMAGE *Image, IN UINTN XPos, IN UINTN YPos)
 {

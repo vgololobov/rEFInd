@@ -931,9 +931,9 @@ static VOID PaintIcon(IN EG_EMBEDDED_IMAGE *BuiltInIcon, IN CHAR16 *ExternalFile
    }
 } // static VOID PaintIcon()
 
-inline UINTN ComputeRow0PosX(VOID) {
+inline UINTN ComputeRow0PosY(VOID) {
    return ((UGAHeight / 2) - ROW0_TILESIZE / 2);
-} // UINTN ComputeRow0PosX()
+} // UINTN ComputeRow0PosY()
 
 // Display (or erase) the arrow icons to the left and right of an icon's row,
 // as appropriate.
@@ -999,7 +999,7 @@ VOID MainMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, IN UINT
                }
             }
             row0PosX = (UGAWidth + TILE_XSPACING - (ROW0_TILESIZE + TILE_XSPACING) * row0Count) >> 1;
-            row0PosY = ComputeRow0PosX();
+            row0PosY = ComputeRow0PosY();
             row1PosX = (UGAWidth + TILE_XSPACING - (ROW1_TILESIZE + TILE_XSPACING) * row1Count) >> 1;
             row1PosY = row0PosY + ROW0_TILESIZE + TILE_YSPACING;
             if (row1Count > 0)
