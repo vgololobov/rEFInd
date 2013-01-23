@@ -1,6 +1,9 @@
 0.6.6 (?/??/2013):
 ------------------
 
+- Fixed bug that caused "Binary is whitelisted" message to persist on
+  screen after loading MOK-signed drivers in Secure Boot mode.
+
 - Fixed bug that caused rEFInd to ignore the "icon" token in refind.conf
   manual boot stanzas.
 

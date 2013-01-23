@@ -2043,12 +2043,12 @@ efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
     refit_call4_wrapper(BS->SetWatchdogTimer, 0x0000, 0x0000, 0x0000, NULL);
 
     // further bootstrap (now with config available)
-    SetupScreen();
     MokProtocol = SecureBootSetup();
 //    ScanVolumes();
     LoadDrivers();
     ScanForBootloaders();
     ScanForTools();
+    SetupScreen();
 
     if (GlobalConfig.ScanDelay > 0) {
        BGColor.b = 255;
