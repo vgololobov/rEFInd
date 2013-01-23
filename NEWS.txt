@@ -1,6 +1,10 @@
 0.6.6 (?/??/2013):
 ------------------
 
+- Fixed bug that caused ASSERT error on some systems (and conceivably a
+  crash on startup on some) when default_selection line in refind.conf was
+  commented out or empty.
+
 - Fixed bug that caused "Binary is whitelisted" message to persist on
   screen after loading MOK-signed drivers in Secure Boot mode.
 

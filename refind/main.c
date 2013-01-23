@@ -128,7 +128,7 @@ static VOID AboutrEFInd(VOID)
 
     if (AboutMenu.EntryCount == 0) {
         AboutMenu.TitleImage = BuiltinIcon(BUILTIN_ICON_FUNC_ABOUT);
-        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.6.5.2");
+        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.6.5.4");
         AddMenuInfoLine(&AboutMenu, L"");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2006-2010 Christoph Pfisterer");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2012 Roderick W. Smith");
@@ -604,12 +604,12 @@ VOID GenerateSubScreen(LOADER_ENTRY *Entry, IN REFIT_VOLUME *Volume) {
          // earlier....
          if ((SubScreen->Entries != NULL) && (SubScreen->Entries[0] != NULL)) {
             MyFreePool(SubScreen->Entries[0]->Title);
-            SubScreen->Entries[0]->Title = StrDuplicate(TokenList[0]);
+            SubScreen->Entries[0]->Title = TokenList[0] ? StrDuplicate(TokenList[0]) : StrDuplicate(L"Boot Linux");
          } // if
          FreeTokenLine(&TokenList, &TokenCount);
          while ((TokenCount = ReadTokenLine(File, &TokenList)) > 1) {
             SubEntry = InitializeLoaderEntry(Entry);
-            SubEntry->me.Title = StrDuplicate(TokenList[0]);
+            SubEntry->me.Title = TokenList[0] ? StrDuplicate(TokenList[0]) : StrDuplicate(L"Boot Linux");
             MyFreePool(SubEntry->LoadOptions);
             SubEntry->LoadOptions = AddInitrdToOptions(TokenList[1], InitrdName);
             FreeTokenLine(&TokenList, &TokenCount);
@@ -1921,7 +1921,7 @@ static VOID ScanForTools(VOID) {
             } // while
             if (FileExists(SelfDir, L"MokManager.efi")) {
                MyFreePool(FileName);
-               FileName = StrDuplicate(SelfDirPath);
+               FileName = SelfDirPath ? StrDuplicate(SelfDirPath) : NULL;
                MergeStrings(&FileName, L"\\MokManager.efi", 0);
                SPrint(Description, 255, L"MOK Key Manager at %s", FileName);
                AddToolEntry(SelfLoadedImage->DeviceHandle, FileName, Description,
@@ -2018,7 +2018,7 @@ efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
     BOOLEAN            MokProtocol;
     REFIT_MENU_ENTRY   *ChosenEntry;
     UINTN              MenuExit, i;
-    CHAR16             *Selection;
+    CHAR16             *Selection = NULL;
     EG_PIXEL           BGColor;
 
     // bootstrap
@@ -2061,7 +2061,9 @@ efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
        RescanAll();
     } // if
 
-    Selection = StrDuplicate(GlobalConfig.DefaultSelection);
+    if (GlobalConfig.DefaultSelection)
+       Selection = StrDuplicate(GlobalConfig.DefaultSelection);
+
     while (MainLoopRunning) {
         MenuExit = RunMainMenu(&MainMenu, Selection, &ChosenEntry);
 
