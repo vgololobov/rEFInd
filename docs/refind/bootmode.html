@@ -177,6 +177,8 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 <h2>Identifying Your Windows Boot Mode</h2>
 </a>
 
+<!-- NOTE: I have serious doubts about this method's reliability, so I'm commenting it out for now....
+
 <p>The easiest way to determine your boot mode in Windows is probably to use the <tt>bcdedit</tt> program to examine your boot loader configuration. To do so, launch an administrative Command Prompt (by right-clicking a Command Prompt icon and selecting Run As Administrator from the context menu) and then type <tt class="userinput">bcdedit</tt> in the window. The result will include two blocks of information, on the boot manager and the boot loader. The latter is more diagnostic. On an EFI-booted system, it will resemble the following:</p>
 
 <pre class="listing">Windows Boot Loader
@@ -193,8 +195,9 @@ systemroot              \Windows
 resumeobject            {3aa4c728-9935-11e0-9f12-806e6f6e6963}</pre>
 
 <p>The important part is the value of the <tt>path</tt> line. Note that it identifies an EFI executable&mdash;<tt>\Windows\system32\winload.efi</tt>. On a BIOS-based computer, by contrast, this line refers to <tt>\Windows\system32\winload.exe</tt>&mdash;a standard Windows <tt>.exe</tt> file, not an EFI <tt>.efi</tt> file.</p>
+-->
 
-<p>Another way to identify your boot mode is to examine your partitions. Microsoft has tied use of the GUID Partition Table (GPT) to EFI booting. If you've booted from a GPT disk, then you <i>must</i> be using EFI, and if you've booted from a Master Boot Record (MBR) disk, you <i>must</i> have booted in BIOS mode. Therefore, you can check your partition table type as a proxy for your boot mode. To do this in Windows 7, follow these steps:</p>
+<p>The most reliable way I know of to identify your boot mode is to examine your partitions. Microsoft has tied use of the GUID Partition Table (GPT) to EFI booting. If you've booted from a GPT disk, then you <i>must</i> be using EFI, and if you've booted from a Master Boot Record (MBR) disk, you <i>must</i> have booted in BIOS mode. Therefore, you can check your partition table type as a proxy for your boot mode. To do this in Windows 7, follow these steps:</p>
 
 <ol>
 

@@ -128,7 +128,7 @@ static VOID AboutrEFInd(VOID)
 
     if (AboutMenu.EntryCount == 0) {
         AboutMenu.TitleImage = BuiltinIcon(BUILTIN_ICON_FUNC_ABOUT);
-        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.6.5.4");
+        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.6.5.5");
         AddMenuInfoLine(&AboutMenu, L"");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2006-2010 Christoph Pfisterer");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2012 Roderick W. Smith");
@@ -1828,7 +1828,7 @@ static VOID ScanForBootloaders(VOID) {
             ScanLegacyExternal();
             break;
          case 'm': case 'M':
-            ScanUserConfigured();
+            ScanUserConfigured(CONFIG_FILE_NAME);
             break;
          case 'e': case 'E':
             ScanExternal();

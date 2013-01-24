@@ -362,7 +362,7 @@ VOID ReadConfig(CHAR16 *FileName)
        GlobalConfig.DontScanDirs = SelfPath;
        MyFreePool(GlobalConfig.DontScanFiles);
        GlobalConfig.DontScanFiles = StrDuplicate(DONT_SCAN_FILES);
-    }
+    } // if
 
     if (!FileExists(SelfDir, FileName)) {
         Print(L"Configuration file '%s' missing!\n", FileName);
@@ -731,7 +731,7 @@ static LOADER_ENTRY * AddStanzaEntries(REFIT_FILE *File, REFIT_VOLUME *Volume, C
 
 // Read the user-configured menu entries from refind.conf and add or delete
 // entries based on the contents of that file....
-VOID ScanUserConfigured(VOID)
+VOID ScanUserConfigured(CHAR16 *FileName)
 {
    EFI_STATUS        Status;
    REFIT_FILE        File;
@@ -741,8 +741,8 @@ VOID ScanUserConfigured(VOID)
    UINTN             TokenCount, size;
    LOADER_ENTRY      *Entry;
 
-   if (FileExists(SelfDir, CONFIG_FILE_NAME)) {
-      Status = ReadFile(SelfDir, CONFIG_FILE_NAME, &File, &size);
+   if (FileExists(SelfDir, FileName)) {
+      Status = ReadFile(SelfDir, FileName, &File, &size);
       if (EFI_ERROR(Status))
          return;
 
@@ -760,7 +760,13 @@ VOID ScanUserConfigured(VOID)
                MyFreePool(Entry);
             } // if/else
             MyFreePool(Title);
-         } // if
+
+         } else if ((StriCmp(TokenList[0], L"include") == 0) && (TokenCount == 2) && (StriCmp(FileName, CONFIG_FILE_NAME) == 0)) {
+            if (StriCmp(TokenList[1], FileName) != 0) {
+               ScanUserConfigured(TokenList[1]);
+            }
+
+         } // if/else if...
          FreeTokenLine(&TokenList, &TokenCount);
       } // while()
    } // if()

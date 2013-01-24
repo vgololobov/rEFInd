@@ -1,6 +1,9 @@
 0.6.6 (?/??/2013):
 ------------------
 
+- Fixed bug that caused rEFInd to ignore manual boot stanzas in files
+  included via the "include" token in refind.conf.
+
 - Fixed bug that caused ASSERT error on some systems (and conceivably a
   crash on startup on some) when default_selection line in refind.conf was
   commented out or empty.
