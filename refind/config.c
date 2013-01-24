@@ -220,7 +220,6 @@ static CHAR16 *ReadLine(REFIT_FILE *File)
 static BOOLEAN KeepReading(IN OUT CHAR16 *p, IN OUT BOOLEAN *IsQuoted) {
    BOOLEAN MoreToRead = FALSE;
    CHAR16  *Temp = NULL;
-//            while (*p && *p != '"' && ((*p != ' ' && *p != '\t' && *p != '=' && *p != '#' && *p != ',') || IsQuoted)) {
 
    if ((p == NULL) || (IsQuoted == NULL))
       return FALSE;
@@ -351,7 +350,7 @@ VOID ReadConfig(CHAR16 *FileName)
        MyFreePool(GlobalConfig.DontScanDirs);
        if (SelfVolume) {
           if (SelfVolume->VolName) {
-             SelfPath = StrDuplicate(SelfVolume->VolName);
+             SelfPath = SelfVolume->VolName ? StrDuplicate(SelfVolume->VolName) : NULL;
           } else {
              SelfPath = AllocateZeroPool(256 * sizeof(CHAR16));
              if (SelfPath != NULL)
@@ -724,7 +723,7 @@ static LOADER_ENTRY * AddStanzaEntries(REFIT_FILE *File, REFIT_VOLUME *Volume, C
    } // if
 
    if (!DefaultsSet)
-      SetLoaderDefaults(Entry, L"\\EFI\\BOOT\\nemo.efi", CurrentVolume); // user included no entry; use bogus one
+      SetLoaderDefaults(Entry, L"\\EFI\\BOOT\\nemo.efi", CurrentVolume); // user included no "loader" line; use bogus one
 
    return(Entry);
 } // static VOID AddStanzaEntries()

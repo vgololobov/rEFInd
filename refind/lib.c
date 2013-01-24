@@ -153,24 +153,26 @@ VOID CleanUpPathNameSlashes(IN OUT CHAR16 *PathName) {
 // after that string (after some cleanup) as the return value, and truncating the original
 // input value.
 // If InString contains no ")" character, this function leaves the original input string
-// unmodified and also returns that string.
+// unmodified and also returns that string. If InString is NULL, this function returns NULL.
 static CHAR16* SplitDeviceString(IN OUT CHAR16 *InString) {
    INTN i;
    CHAR16 *FileName = NULL;
    BOOLEAN Found = FALSE;
 
-   i = StrLen(InString) - 1;
-   while ((i >= 0) && (!Found)) {
-      if (InString[i] == L')') {
-         Found = TRUE;
-         FileName = StrDuplicate(&InString[i + 1]);
-         CleanUpPathNameSlashes(FileName);
-         InString[i + 1] = '\0';
-      } // if
-      i--;
-   } // while
-   if (FileName == NULL)
-      FileName = StrDuplicate(InString);
+   if (InString != NULL) {
+      i = StrLen(InString) - 1;
+      while ((i >= 0) && (!Found)) {
+         if (InString[i] == L')') {
+            Found = TRUE;
+            FileName = StrDuplicate(&InString[i + 1]);
+            CleanUpPathNameSlashes(FileName);
+            InString[i + 1] = '\0';
+         } // if
+         i--;
+      } // while
+      if (FileName == NULL)
+         FileName = StrDuplicate(InString);
+   } // if
    return FileName;
 } // static CHAR16* SplitDeviceString()
 
@@ -1456,6 +1458,9 @@ CHAR16 *FindLastDirName(IN CHAR16 *Path) {
    UINTN i, StartOfElement = 0, EndOfElement = 0, PathLength, CopyLength;
    CHAR16 *Found = NULL;
 
+   if (Path == NULL)
+      return NULL;
+
    PathLength = StrLen(Path);
    // Find start & end of target element
    for (i = 0; i < PathLength; i++) {
@@ -1486,14 +1491,16 @@ CHAR16 *FindLastDirName(IN CHAR16 *Path) {
 // freeing the returned string's memory.
 CHAR16 *FindPath(IN CHAR16* FullPath) {
    UINTN i, LastBackslash = 0;
-   CHAR16 *PathOnly;
+   CHAR16 *PathOnly = NULL;
 
-   for (i = 0; i < StrLen(FullPath); i++) {
-      if (FullPath[i] == '\\')
-         LastBackslash = i;
-   } // for
-   PathOnly = StrDuplicate(FullPath);
-   PathOnly[LastBackslash] = 0;
+   if (FullPath != NULL) {
+      for (i = 0; i < StrLen(FullPath); i++) {
+         if (FullPath[i] == '\\')
+            LastBackslash = i;
+      } // for
+      PathOnly = StrDuplicate(FullPath);
+      PathOnly[LastBackslash] = 0;
+   } // if
    return (PathOnly);
 }
 
@@ -1565,6 +1572,9 @@ BOOLEAN SplitVolumeAndFilename(IN OUT CHAR16 **Path, OUT CHAR16 **VolName) {
 CHAR16 *FindNumbers(IN CHAR16 *InString) {
    UINTN i, StartOfElement, EndOfElement = 0, InLength, CopyLength;
    CHAR16 *Found = NULL;
+
+   if (InString == NULL)
+      return NULL;
 
    InLength = StartOfElement = StrLen(InString);
    // Find start & end of target element
