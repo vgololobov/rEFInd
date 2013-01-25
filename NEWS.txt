@@ -1,6 +1,15 @@
 0.6.6 (?/??/2013):
 ------------------
 
+- Added new "font" token to refind.conf, which enables specifying a font in
+  the form of a PNG file. This file must contain monospace glyphs for the
+  95 characters from ASCII 32 to 126 (space through tilde), inclusive, plus
+  a glyph to be displayed for characters outside of this range, for a total
+  of 96 glyphs.
+
+- Replaced the old font (inherited from rEFInd) with an anti-aliased
+  version of Luxi Mono Regular 14 point.
+
 - Fixed bug that caused rEFInd to ignore manual boot stanzas in files
   included via the "include" token in refind.conf.
 

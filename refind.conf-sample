@@ -58,6 +58,17 @@ timeout 20
 #selection_big   selection-big.bmp
 #selection_small selection-small.bmp
 
+# Set the font to be used for all textual displays in graphics mode.
+# The font must be a PNG file with alpha channel transparency. It must
+# contain ASCII characters 32-126 (space through tilde), inclusive, plus
+# a glyph to be displayed in place of characters outside of this range,
+# for a total of 96 glyphs. Only monospaced fonts are supported. Fonts
+# may be of any size, although large fonts can produce display
+# irregularities.
+# The default is rEFInd's built-in font, Luxi Mono Regular 12 point.
+#
+#font myfont.png
+
 # Use text mode only. When enabled, this option forces rEFInd into text mode.
 # Passing this option a "0" value causes graphics mode to be used. Pasing
 # it no value or any non-0 value causes text mode to be used.

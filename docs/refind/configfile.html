@@ -327,7 +327,7 @@ default_selection elilo
 <tr>
    <td><tt>loader</tt></td>
    <td>filename</td>
-   <td>Sets the filename for the boot loader. You may use either Unix-style slashes (<tt>/</tt>) or Windows/EFI-style backslashes (<tt>\</tt>) to separate directory elements. In either case, the references are to files on the ESP from which rEFInd launched or to the one identified by a preceding <tt>volume</tt> token. This option should normally be the first in the body of an OS stanza; if it's not, some other options may be ignored. An exception is if you want to boot a loader from a volume other than the one on which rEFInd resides, in which case <tt>volume</tt> should precede <tt>loader</tt>.</td>
+   <td>Sets the filename for the boot loader. You may use either Unix-style slashes (<tt>/</tt>) or Windows/EFI-style backslashes (<tt>\</tt>) to separate directory elements. In either case, the references are to files on the ESP from which rEFInd launched or to the one identified by a preceding <tt>volume</tt> token. The filename is specified as a path relative to the root of the filesystem, so if the file is in a directory, you must include its complete path, as in <tt>\EFI\myloader\loader.efi</tt>. This option should normally be the first in the body of an OS stanza; if it's not, some other options may be ignored. An exception is if you want to boot a loader from a volume other than the one on which rEFInd resides, in which case <tt>volume</tt> should precede <tt>loader</tt>.</td>
 </tr>
 <tr>
    <td><tt>initrd</tt></td>

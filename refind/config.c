@@ -511,6 +511,9 @@ VOID ReadConfig(CHAR16 *FileName)
               }
            } // for (graphics_on tokens)
 
+        } else if ((StriCmp(TokenList[0], L"font") == 0) && (TokenCount == 2)) {
+           egLoadFont(TokenList[1]);
+
         } else if (StriCmp(TokenList[0], L"scan_all_linux_kernels") == 0) {
            if ((TokenCount >= 2) && (StriCmp(TokenList[1], L"0") == 0)) {
               GlobalConfig.ScanAllLinux = FALSE;

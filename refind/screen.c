@@ -394,7 +394,6 @@ BOOLEAN CheckFatalError(IN EFI_STATUS Status, IN CHAR16 *where)
     if (!EFI_ERROR(Status))
         return FALSE;
 
-//    StatusToString(ErrorName, Status);
     gST->ConOut->SetAttribute (gST->ConOut, ATTR_ERROR);
     Print(L"Fatal Error: %r %s\n", Status, where);
     gST->ConOut->SetAttribute (gST->ConOut, ATTR_BASIC);
@@ -407,12 +406,9 @@ BOOLEAN CheckFatalError(IN EFI_STATUS Status, IN CHAR16 *where)
 
 BOOLEAN CheckError(IN EFI_STATUS Status, IN CHAR16 *where)
 {
-//    CHAR16 ErrorName[64];
-
     if (!EFI_ERROR(Status))
         return FALSE;
 
-//    StatusToString(ErrorName, Status);
     gST->ConOut->SetAttribute (gST->ConOut, ATTR_ERROR);
     Print(L"Error: %r %s\n", Status, where);
     gST->ConOut->SetAttribute (gST->ConOut, ATTR_BASIC);

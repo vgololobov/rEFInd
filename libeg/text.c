@@ -38,22 +38,52 @@
 //#include "../refind/screen.h"
 
 #include "egemb_font.h"
-#define FONT_CELL_WIDTH (7)
-#define FONT_CELL_HEIGHT (12)
+#define FONT_NUM_CHARS 96
 
-static EG_IMAGE *BlackFontImage = NULL;
-static EG_IMAGE *WhiteFontImage = NULL;
+static EG_IMAGE *BaseFontImage = NULL;
+static EG_IMAGE *DarkFontImage = NULL;
+static EG_IMAGE *LightFontImage = NULL;
+
+static UINTN FontCellWidth = 7;
 
 //
 // Text rendering
 //
 
+static VOID egPrepareFont() {
+   if (BaseFontImage == NULL) {
+      BaseFontImage = egPrepareEmbeddedImage(&egemb_font, TRUE);
+   }
+   if (BaseFontImage != NULL)
+      FontCellWidth = BaseFontImage->Width / FONT_NUM_CHARS;
+} // VOID egPrepareFont();
+
+UINTN egGetFontHeight(VOID) {
+   egPrepareFont();
+   return BaseFontImage->Height;
+} // UINTN egGetFontHeight()
+
+UINTN egGetFontCellWidth(VOID) {
+   return FontCellWidth;
+}
+
+UINTN egComputeTextWidth(IN CHAR16 *Text) {
+   UINTN Width = 0;
+
+   egPrepareFont();
+   if (Text != NULL)
+      Width = FontCellWidth * StrLen(Text);
+   return Width;
+} // UINTN egComputeTextWidth()
+
 VOID egMeasureText(IN CHAR16 *Text, OUT UINTN *Width, OUT UINTN *Height)
 {
+    egPrepareFont();
+
     if (Width != NULL)
-        *Width = StrLen(Text) * FONT_CELL_WIDTH;
+        *Width = StrLen(Text) * FontCellWidth;
     if (Height != NULL)
-        *Height = FONT_CELL_HEIGHT;
+        *Height = BaseFontImage->Height;
 }
 
 VOID egRenderText(IN CHAR16 *Text, IN OUT EG_IMAGE *CompImage, IN UINTN PosX, IN UINTN PosY, IN UINT8 BGBrightness)
@@ -65,33 +95,35 @@ VOID egRenderText(IN CHAR16 *Text, IN OUT EG_IMAGE *CompImage, IN UINTN PosX, IN
     UINTN           TextLength;
     UINTN           i, c;
 
+    egPrepareFont();
+
     // clip the text
     if (Text)
        TextLength = StrLen(Text);
     else
        TextLength = 0;
 
-    if (TextLength * FONT_CELL_WIDTH + PosX > CompImage->Width)
-        TextLength = (CompImage->Width - PosX) / FONT_CELL_WIDTH;
+    if (TextLength * FontCellWidth + PosX > CompImage->Width)
+        TextLength = (CompImage->Width - PosX) / FontCellWidth;
 
     if (BGBrightness < 128) {
-       if (WhiteFontImage == NULL) {
-          WhiteFontImage = egPrepareEmbeddedImage(&egemb_font, TRUE);
-          if (WhiteFontImage == NULL)
+       if (LightFontImage == NULL) {
+          LightFontImage = egCopyImage(BaseFontImage);
+          if (LightFontImage == NULL)
              return;
-          for (i = 0; i < (WhiteFontImage->Width * WhiteFontImage->Height); i++) {
-             WhiteFontImage->PixelData[i].r = 255 - WhiteFontImage->PixelData[i].r;
-             WhiteFontImage->PixelData[i].g = 255 - WhiteFontImage->PixelData[i].g;
-             WhiteFontImage->PixelData[i].b = 255 - WhiteFontImage->PixelData[i].b;
+          for (i = 0; i < (LightFontImage->Width * LightFontImage->Height); i++) {
+             LightFontImage->PixelData[i].r = 255 - LightFontImage->PixelData[i].r;
+             LightFontImage->PixelData[i].g = 255 - LightFontImage->PixelData[i].g;
+             LightFontImage->PixelData[i].b = 255 - LightFontImage->PixelData[i].b;
           } // for
        } // if
-       FontImage = WhiteFontImage;
+       FontImage = LightFontImage;
     } else {
-       if (BlackFontImage == NULL)
-          BlackFontImage = egPrepareEmbeddedImage(&egemb_font, TRUE);
-       if (BlackFontImage == NULL)
+       if (DarkFontImage == NULL)
+          DarkFontImage = egCopyImage(BaseFontImage);
+       if (DarkFontImage == NULL)
           return;
-       FontImage = BlackFontImage;
+       FontImage = DarkFontImage;
     } // if/else
 
     // render it
@@ -106,11 +138,22 @@ VOID egRenderText(IN CHAR16 *Text, IN OUT EG_IMAGE *CompImage, IN UINTN PosX, IN
             c = 95;
         else
             c -= 32;
-        egRawCompose(BufferPtr, FontPixelData + c * FONT_CELL_WIDTH,
-                     FONT_CELL_WIDTH, FONT_CELL_HEIGHT,
+        egRawCompose(BufferPtr, FontPixelData + c * FontCellWidth,
+                     FontCellWidth, FontImage->Height,
                      BufferLineOffset, FontLineOffset);
-        BufferPtr += FONT_CELL_WIDTH;
+        BufferPtr += FontCellWidth;
     }
 }
+
+// Load a font bitmap from the specified file
+VOID egLoadFont(IN CHAR16 *Filename) {
+   if (BaseFontImage)
+      egFreeImage(BaseFontImage);
+
+   BaseFontImage = egLoadImage(SelfDir, Filename, TRUE);
+   if (BaseFontImage == NULL)
+      Print(L"Note: Font image file %s is invalid! Using default font!\n");
+    egPrepareFont();
+} // BOOLEAN egLoadFont()
 
 /* EOF */

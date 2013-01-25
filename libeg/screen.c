@@ -236,7 +236,6 @@ BOOLEAN egSetTextMode(UINT32 RequestedMode) {
    BOOLEAN       ChangedIt = FALSE;
 
    if ((RequestedMode != DONT_CHANGE_TEXT_MODE) && (RequestedMode != ST->ConOut->Mode->Mode)) {
-//      SwitchToGraphics();
       Status = refit_call2_wrapper(ST->ConOut->SetMode, ST->ConOut, RequestedMode);
       if (Status == EFI_SUCCESS) {
          ChangedIt = TRUE;
@@ -431,12 +430,13 @@ VOID egDisplayMessage(IN CHAR16 *Text, EG_PIXEL *BGColor) {
    EG_IMAGE *Box;
 
    if ((Text != NULL) && (BGColor != NULL)) {
-      BoxWidth = (StrLen(Text) + 2) * FONT_CELL_WIDTH;
+      egMeasureText(Text, &BoxWidth, &BoxHeight);
+      BoxWidth += 14;
+      BoxHeight *= 2;
       if (BoxWidth > egScreenWidth)
          BoxWidth = egScreenWidth;
-      BoxHeight = 2 * FONT_CELL_HEIGHT;
       Box = egCreateFilledImage(BoxWidth, BoxHeight, FALSE, BGColor);
-      egRenderText(Text, Box, FONT_CELL_WIDTH, FONT_CELL_HEIGHT / 2, (BGColor->r + BGColor->g + BGColor->b) / 3);
+      egRenderText(Text, Box, 7, BoxHeight / 4, (BGColor->r + BGColor->g + BGColor->b) / 3);
       egDrawImage(Box, (egScreenWidth - BoxWidth) / 2, (egScreenHeight - BoxHeight) / 2);
    } // if non-NULL inputs
 } // VOID egDisplayMessage()
