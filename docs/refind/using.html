@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 3/14/2012; last Web page update:
-1/16/2013, referencing rEFInd 0.6.5</p>
+1/26/2013, referencing rEFInd 0.6.6</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -120,21 +120,19 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Assuming rEFInd starts up correctly, you should see its main screen, which resembles the following:</p>
 
-    <br /><center><img src="refind.png" align="center" width="608"
-    height="377" alt="rEFInd presents a GUI menu for selecting your boot
+    <br /><center><img src="refind.png" align="center" width="712"
+    height="550" alt="rEFInd presents a GUI menu for selecting your boot
     OS." border=2 /></center> <br />
 
-<p>If you don't press any key before the timeout (shown on the last line) expires, the default boot loader will launch. This is normally the first item in the menu, but you can adjust the default by editing the configuration file. (In this example, it's the SUSE loader, which is further identified by text above the timeout as <i>vmlinuz-3.4.6-2.10-desktop from SUSE boot.</i>)</p>
+<p>If you don't press any key before the timeout (shown on the last line) expires, the default boot loader will launch. This is normally the first item in the menu, but you can adjust the default by editing the configuration file. (In this example, it's the Linux Mint loader, which is further identified by text above the timeout as <i>vmlinuz-3.5.0-17-generic from LINUXMINT.</i>)</p>
 
-<p>This display is dominated by the central set of OS <i>tags</i> (icons), which in this example includes tags for OS X, Windows, SUSE, and an unkown boot loader. All but the last of these are on hard disks, but the unknown boot loader is on an optical disc, as revealed by the small icons (known as <i>badges</i>) in the lower-right corner of the OS icons.</p>
+<p>This display is dominated by the central set of OS <i>tags</i> (icons), which in this example includes tags for OS X, Windows, Mint, and an unkown boot loader. All but the last of these are on hard disks, but the unknown boot loader is on an optical disc, as revealed by the small icons (known as <i>badges</i>) in the lower-right corner of the OS icons.</p>
 
-<p>In this example, the SUSE tag is selected. You can move the selection left by pressing the left arrow key and right by pressing the right arrow key. If your system has many boot loaders, an arrow icon will appear to the right of the boot loader list, indicating that the boot loader list will scroll when you move off the right edge. If you do this, an arrow icon will appear to the left of the icon list, indicating that you can scroll back in a similar manner. You can scroll the list by one line full of icons by using the Page Up or Page Down keys to move left and right, respectively. Moving past the final selection or using the down arrow key moves the selection to the second row of small tags, which launch ancillary programs or perform special actions. If you've moved the selection cursor to the second row, pressing the up arrow key or scrolling past the left edge of the second row moves the cursor to the top row. In this figure, these five tags are present:</p>
+<p>In this example, the Linux Mint tag is selected. You can move the selection left by pressing the left arrow key and right by pressing the right arrow key. If your system has many boot loaders, an arrow icon will appear to the right and/or left of the boot loader list, indicating that the boot loader list will scroll when you move off the edge. (Such an arrow is visible to the right in the sample screen, but not to the left.) You can scroll the list by one line full of icons by using the Page Up or Page Down keys to move left and right, respectively. Moving past the final selection or using the down arrow key moves the selection to the second row of small tags, which launch ancillary programs or perform special actions. If you've moved the selection cursor to the second row, pressing the up arrow key or scrolling past the left edge of the second row moves the cursor to the top row. In this figure, these four tags are present:</p>
 
 <ul>
 
 <li>Launch the EFI shell</li>
-
-<li>Launch the <tt>MokManager</tt> utility</li>
 
 <li>Produce an information page</li>
 
@@ -144,13 +142,9 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 </ul>
 
-<p>The last three of these options are always available by default, but the first depends on the presence of the EFI shell program file, as described earlier. To get the <tt>MokManager</tt> icon, you must install <tt>MokManager.efi</tt>, as well. Other ancillary tags may be present on other computers.</p>
+<p>The last three of these options are always available by default, but the first depends on the presence of the EFI shell program file, as described earlier. Other ancillary tags may be present on some computers.</p>
 
-<p>To launch an OS or utility, you should select its tag and then press the Enter key. If you press the Insert, F2, or + key, rEFInd will show a menu that may hold additional options, depending on the OS type. The following figure shows the submenu for Mac OS X. You can use this menu much like the main menu; move the cursor to select the option you want to use, then press the Enter key to launch the boot loader with the selected options. Press the Esc key or select <tt>Return to Main Menu</tt> to return to the main menu. You can also press the Insert key again to edit your boot loader options. A simple text-mode line editor opens, enabling you to move a cursor back and forth in the line with your arrow keys, delete text, and type in new text. If you want to boot with your edited options, press the Enter key. If you decide you picked the wrong entry, press the Esc key.</p>
-
-    <br /><center><img src="submenu.png" align="center" width="442"
-    height="269" alt="rEFInd submenus enable you to set session-specific
-    options." border=2></center> <br />
+<p>To launch an OS or utility, you should select its tag and then press the Enter key or the space bar.</p>
 
 <p class="sidebar"><b>Note:</b>On UEFI-based PCs, rEFInd defaults to scanning for EFI, but <i>not</i> for BIOS, boot loaders. If you want to launch BIOS-mode OSes from rEFInd, you must edit the <tt>scanfor</tt> line in <tt>refind.conf</tt>, as described on the <a href="configfile.html">Configuring the Boot Manager</a> page. On Macs, rEFInd scans for BIOS-based OSes by default, since such configurations are a common way to launch Windows on Macs.</p>
 
@@ -158,6 +152,23 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>On some computers, the firmware doesn't mount external USB media unless you adjust a firmware option or use the EFI's own boot manager prior to launching rEFInd. If you don't see external media appear in rEFInd's list, consult your computer's manual or examine its firmware to locate a relevant option.</p>
 
+<a name="boot_options">
+<h2>Adjusting Boot Options</h2>
+</a>
+
+<p>If you press the Insert, F2, or + key, rEFInd will show a menu that may hold additional options, depending on the OS type. (OS X and Linux are most likely to hold interesting options on their submenus.) The following figure shows the submenu for Mac OS X. You can use this menu much like the main menu; move the cursor to select the option you want to use, then press the Enter key to launch the boot loader with the selected options. Press the Esc key or select <tt>Return to Main Menu</tt> to return to the main menu.</p>
+
+    <br /><center><img src="submenu.png" align="center" width="499"
+    height="259" alt="rEFInd submenus enable you to set session-specific
+    options." border=2></center> <br />
+
+<p>From the options submenu, you can press the Insert, F2, or + key again to edit your boot loader options. You're most likely to want to do this when booting Linux via its EFI stub loader, since you can then enter arbitrary kernel options. A simple text-mode line editor opens (shown below), enabling you to move a cursor back and forth in the line with your arrow keys, delete text, and type in new text. If you want to boot with your edited options, press the Enter key. If you decide you picked the wrong entry, press the Esc key. Note that long option lists, as shown in the figure, scroll off the edge of the screen. Moving the cursor past the screen edge scrolls the entire line of text.</p>
+
+    <br /><center><img src="editor.png" align="center" width="646"
+    height="486" alt="You can edit options passed to the boot loader on a
+    single-boot basis." border=2></center> <br />
+
+ 
 <p>If your computer supports Secure Boot, you may find that some of your OSes and tools won't work; they'll produce <tt>Access Denied</tt> error messages. You can overcome this problem by creating a signing key, signing your binaries with it, and adding the public version of that key to your machine owner key (MOK) list. This process is described on the <a href="secureboot.html">Managing Secure Boot</a> page.</p>
 
 <a name="keyboard">

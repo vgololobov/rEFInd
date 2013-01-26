@@ -1,6 +1,6 @@
 Summary: EFI boot manager software
 Name: refind
-Version: 0.6.5.4
+Version: 0.6.6
 Release: 1%{?dist}
 Summary: EFI boot manager software
 License: GPLv3
@@ -96,6 +96,10 @@ mkdir -p $RPM_BUILD_ROOT/usr/sbin
 install -Dp -m0755 mkrlconf.sh $RPM_BUILD_ROOT/usr/sbin/
 install -Dp -m0755 mvrefind.sh $RPM_BUILD_ROOT/usr/sbin/
 
+# Copy banners and fonts to /usr/share/refind-%{version}
+cp -a banners $RPM_BUILD_ROOT/usr/share/refind-%{version}/
+cp -a fonts $RPM_BUILD_ROOT/usr/share/refind-%{version}/
+
 %clean
 #rm -rf $RPM_BUILD_ROOT
 
@@ -118,7 +122,7 @@ fi
 cd /usr/share/refind-%{version}
 
 declare VarFile=`ls -d /sys/firmware/efi/vars/SecureBoot* 2> /dev/null`
-declare ShimFile=`find /boot -name shim\.efi 2> /dev/null | grep -v refind | head -n 1`
+declare ShimFile=`find /boot -name shim\.efi 2> /dev/null | head -n 1`
 declare SBSign=`which sbsign 2> /dev/null`
 declare OpenSSL=`which openssl 2> /dev/null`
 
@@ -146,5 +150,5 @@ fi
 # wiping out the just-updated files.
 
 %changelog
-* Wed Jan 16 2013 R Smith <rodsmith@rodsbooks.com> - 0.6.5
-- Created spec file for 0.6.5 release
+* Sat Jan 26 2013 R Smith <rodsmith@rodsbooks.com> - 0.6.6
+- Created spec file for 0.6.6 release

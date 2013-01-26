@@ -68,12 +68,18 @@
 #if defined (EFIX64)
 #define SHELL_NAMES             L"\\EFI\\tools\\shell.efi,\\EFI\\tools\\shellx64.efi,\\shellx64.efi"
 #define DRIVER_DIRS             L"drivers,drivers_x64"
+#define FALLBACK_FULLNAME       L"EFI\\BOOT\\bootx64.efi"
+#define FALLBACK_BASENAME       L"bootx64.efi"
 #elif defined (EFI32)
 #define SHELL_NAMES             L"\\EFI\\tools\\shell.efi,\\EFI\\tools\\shellia32.efi,\\shellia32.efi"
 #define DRIVER_DIRS             L"drivers,drivers_ia32"
+#define FALLBACK_FULLNAME       L"EFI\\BOOT\\bootia32.efi"
+#define FALLBACK_BASENAME       L"bootia32.efi"
 #else
 #define SHELL_NAMES             L"\\EFI\\tools\\shell.efi"
 #define DRIVER_DIRS             L"drivers"
+#define FALLBACK_FULLNAME       L"EFI\\BOOT\\boot.efi" /* Not really correct */
+#define FALLBACK_BASENAME       L"boot.efi"            /* Not really correct */
 #endif
 
 #define MOK_NAMES               L"\\EFI\\tools\\MokManager.efi,\\EFI\\redhat\\MokManager.efi,\\EFI\\ubuntu\\MokManager.efi,\\EFI\\suse\\MokManager"
@@ -128,7 +134,7 @@ static VOID AboutrEFInd(VOID)
 
     if (AboutMenu.EntryCount == 0) {
         AboutMenu.TitleImage = BuiltinIcon(BUILTIN_ICON_FUNC_ABOUT);
-        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.6.5.6");
+        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.6.6");
         AddMenuInfoLine(&AboutMenu, L"");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2006-2010 Christoph Pfisterer");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2012 Roderick W. Smith");
@@ -936,16 +942,77 @@ static BOOLEAN ShouldScan(REFIT_VOLUME *Volume, CHAR16 *Path) {
    return ScanIt;
 } // BOOLEAN ShouldScan()
 
+// Returns TRUE if the file is byte-for-byte identical with the fallback file
+// on the volume AND if the file is not itself the fallback file; returns
+// FALSE if the file is not identical to the fallback file OR if the file
+// IS the fallback file. Intended for use in excluding the fallback boot
+// loader when it's a duplicate of another boot loader.
+BOOLEAN DuplicatesFallback(IN REFIT_VOLUME *Volume, IN CHAR16 *FileName) {
+   CHAR8           *FileContents, *FallbackContents;
+   EFI_FILE_HANDLE FileHandle, FallbackHandle;
+   EFI_FILE_INFO   *FileInfo, *FallbackInfo;
+   UINTN           FileSize = 0, FallbackSize = 0;
+   EFI_STATUS      Status;
+   BOOLEAN         AreIdentical = FALSE;
+
+   CleanUpPathNameSlashes(FileName);
+
+   if (StriCmp(FileName, FALLBACK_FULLNAME) == 0)
+      return FALSE; // identical filenames, so not a duplicate....
+
+   Status = refit_call5_wrapper(Volume->RootDir->Open, Volume->RootDir, &FileHandle, FileName, EFI_FILE_MODE_READ, 0);
+   if (Status == EFI_SUCCESS) {
+      FileInfo = LibFileInfo(FileHandle);
+      FileSize = FileInfo->FileSize;
+   } else {
+      return FALSE;
+   }
+
+   Status = refit_call5_wrapper(Volume->RootDir->Open, Volume->RootDir, &FallbackHandle, FALLBACK_FULLNAME, EFI_FILE_MODE_READ, 0);
+   if (Status == EFI_SUCCESS) {
+      FallbackInfo = LibFileInfo(FallbackHandle);
+      FallbackSize = FallbackInfo->FileSize;
+   } else {
+      refit_call1_wrapper(FileHandle->Close, FileHandle);
+      return FALSE;
+   }
+
+   if (FallbackSize != FileSize) { // not same size, so can't be identical
+      AreIdentical = FALSE;
+   } else { // could be identical; do full check....
+      FileContents = AllocatePool(FileSize);
+      FallbackContents = AllocatePool(FallbackSize);
+      if (FileContents && FallbackContents) {
+         Status = refit_call3_wrapper(FileHandle->Read, FileHandle, &FileSize, FileContents);
+         if (Status == EFI_SUCCESS)
+            Status = refit_call3_wrapper(FallbackHandle->Read, FallbackHandle, &FallbackSize, FallbackContents);
+         if (Status == EFI_SUCCESS) {
+            AreIdentical = (CompareMem(FileContents, FallbackContents, FileSize) == 0);
+         } // if
+      } // if
+      MyFreePool(FileContents);
+      MyFreePool(FallbackContents);
+   } // if/else
+
+   refit_call1_wrapper(FileHandle->Close, FileHandle);
+   refit_call1_wrapper(FileHandle->Close, FallbackHandle);
+   return AreIdentical;
+
+} // BOOLEAN DuplicatesFallback()
+
 // Scan an individual directory for EFI boot loader files and, if found,
-// add them to the list. Sorts the entries within the loader directory
-// so that the most recent one appears first in the list.
-static VOID ScanLoaderDir(IN REFIT_VOLUME *Volume, IN CHAR16 *Path, IN CHAR16 *Pattern)
+// add them to the list. Exception: Ignores FALLBACK_FULLNAME, which is picked
+// up in ScanEfiFiles(). Sorts the entries within the loader directory so that
+// the most recent one appears first in the list.
+// Returns TRUE if a duplicate for FALLBACK_FILENAME was found, FALSE if not.
+static BOOLEAN ScanLoaderDir(IN REFIT_VOLUME *Volume, IN CHAR16 *Path, IN CHAR16 *Pattern)
 {
     EFI_STATUS              Status;
     REFIT_DIR_ITER          DirIter;
     EFI_FILE_INFO           *DirEntry;
     CHAR16                  FileName[256], *Extension;
     struct LOADER_LIST      *LoaderList = NULL, *NewLoader;
+    BOOLEAN                 FoundFallbackDuplicate = FALSE;
 
     if ((!SelfDirPath || !Path || ((StriCmp(Path, SelfDirPath) == 0) && (Volume->DeviceHandle != SelfVolume->DeviceHandle)) ||
            (StriCmp(Path, SelfDirPath) != 0)) &&
@@ -957,6 +1024,7 @@ static VOID ScanLoaderDir(IN REFIT_VOLUME *Volume, IN CHAR16 *Path, IN CHAR16 *P
           if (DirEntry->FileName[0] == '.' ||
               StriCmp(Extension, L".icns") == 0 ||
               StriCmp(Extension, L".png") == 0 ||
+              (StriCmp(DirEntry->FileName, FALLBACK_BASENAME) == 0 && (StriCmp(Path, L"EFI\\BOOT") == 0)) ||
               StriSubCmp(L"shell", DirEntry->FileName) ||
               IsIn(DirEntry->FileName, GlobalConfig.DontScanFiles))
                 continue;   // skip this
@@ -971,6 +1039,8 @@ static VOID ScanLoaderDir(IN REFIT_VOLUME *Volume, IN CHAR16 *Path, IN CHAR16 *P
              NewLoader->FileName = StrDuplicate(FileName);
              NewLoader->TimeStamp = DirEntry->ModificationTime;
              LoaderList = AddLoaderListEntry(LoaderList, NewLoader);
+             if (DuplicatesFallback(Volume, FileName))
+                FoundFallbackDuplicate = TRUE;
           } // if
           MyFreePool(Extension);
        } // while
@@ -989,6 +1059,7 @@ static VOID ScanLoaderDir(IN REFIT_VOLUME *Volume, IN CHAR16 *Path, IN CHAR16 *P
           CheckError(Status, FileName);
        } // if (Status != EFI_NOT_FOUND)
     } // if not scanning our own directory
+    return FoundFallbackDuplicate;
 } /* static VOID ScanLoaderDir() */
 
 static VOID ScanEfiFiles(REFIT_VOLUME *Volume) {
@@ -997,6 +1068,7 @@ static VOID ScanEfiFiles(REFIT_VOLUME *Volume) {
    EFI_FILE_INFO           *EfiDirEntry;
    CHAR16                  FileName[256], *Directory, *MatchPatterns, *VolName = NULL;
    UINTN                   i, Length, VolNum;
+   BOOLEAN                 ScanFallbackLoader = TRUE;
 
    MatchPatterns = StrDuplicate(LOADER_MATCH_PATTERNS);
    if (GlobalConfig.ScanAllLinux)
@@ -1008,12 +1080,16 @@ static VOID ScanEfiFiles(REFIT_VOLUME *Volume) {
          StrCpy(FileName, MACOSX_LOADER_PATH);
          if (FileExists(Volume->RootDir, FileName) && !IsIn(L"boot.efi", GlobalConfig.DontScanFiles)) {
             AddLoaderEntry(FileName, L"Mac OS X", Volume);
+            if (DuplicatesFallback(Volume, FileName))
+               ScanFallbackLoader = FALSE;
          }
 
          // check for XOM
          StrCpy(FileName, L"System\\Library\\CoreServices\\xom.efi");
          if (FileExists(Volume->RootDir, FileName) && !IsIn(L"boot.efi", GlobalConfig.DontScanFiles)) {
             AddLoaderEntry(FileName, L"Windows XP (XoM)", Volume);
+            if (DuplicatesFallback(Volume, FileName))
+               ScanFallbackLoader = FALSE;
          }
       } // if Mac directory not in GlobalConfig.DontScanDirs list
 
@@ -1022,18 +1098,22 @@ static VOID ScanEfiFiles(REFIT_VOLUME *Volume) {
       if (FileExists(Volume->RootDir, FileName) && !IsIn(L"EFI\\Microsoft\\Boot", GlobalConfig.DontScanDirs) &&
           !IsIn(L"bootmgfw.efi", GlobalConfig.DontScanFiles)) {
          AddLoaderEntry(FileName, L"Microsoft EFI boot", Volume);
+         if (DuplicatesFallback(Volume, FileName))
+            ScanFallbackLoader = FALSE;
       }
 
       // scan the root directory for EFI executables
-      ScanLoaderDir(Volume, L"\\", MatchPatterns);
+      if (ScanLoaderDir(Volume, L"\\", MatchPatterns))
+         ScanFallbackLoader = FALSE;
 
       // scan subdirectories of the EFI directory (as per the standard)
       DirIterOpen(Volume->RootDir, L"EFI", &EfiDirIter);
       while (DirIterNext(&EfiDirIter, 1, NULL, &EfiDirEntry)) {
          if (StriCmp(EfiDirEntry->FileName, L"tools") == 0 || EfiDirEntry->FileName[0] == '.')
-            continue;   // skip this, doesn't contain boot loaders
+            continue;   // skip this, doesn't contain boot loaders or is scanned later
          SPrint(FileName, 255, L"EFI\\%s", EfiDirEntry->FileName);
-         ScanLoaderDir(Volume, FileName, MatchPatterns);
+         if (ScanLoaderDir(Volume, FileName, MatchPatterns))
+            ScanFallbackLoader = FALSE;
       } // while()
       Status = DirIterClose(&EfiDirIter);
       if (Status != EFI_NOT_FOUND)
@@ -1050,10 +1130,18 @@ static VOID ScanEfiFiles(REFIT_VOLUME *Volume) {
              (VolName[2] >= L'0') && (VolName[2] <= L'9'))
             VolNum = Atoi(VolName + 2);
          if ((Length > 0) && ((VolName == NULL) || (StriCmp(VolName, Volume->VolName) == 0) || (Volume->VolNumber == VolNum)))
-            ScanLoaderDir(Volume, Directory, MatchPatterns);
+            if (ScanLoaderDir(Volume, Directory, MatchPatterns))
+               ScanFallbackLoader = FALSE;
          MyFreePool(Directory);
          MyFreePool(VolName);
       } // while
+
+      // If not a duplicate & if it exists & if it's not us, create an entry
+      // for the fallback boot loader
+      if (ScanFallbackLoader && FileExists(Volume->RootDir, FALLBACK_FULLNAME) &&
+          ((StriCmp(SelfDirPath, L"EFI\\BOOT") != 0) || (Volume->DeviceHandle != SelfVolume->DeviceHandle))) {
+         AddLoaderEntry(FALLBACK_FULLNAME, L"Fallback boot loader", Volume);
+      }
    } // if
 } // static VOID ScanEfiFiles()
 
@@ -1892,7 +1980,6 @@ static VOID ScanForTools(VOID) {
          case TAG_GPTSYNC:
             MyFreePool(FileName);
             FileName = StrDuplicate(L"\\efi\\tools\\gptsync.efi");
-//            MergeStrings(&FileName, L"\\efi\\tools\\gptsync.efi", 0);
             if (FileExists(SelfRootDir, FileName)) {
                AddToolEntry(SelfLoadedImage->DeviceHandle, FileName, L"Make Hybrid MBR", BuiltinIcon(BUILTIN_ICON_TOOL_PART), 'P', FALSE);
             }
@@ -1900,7 +1987,6 @@ static VOID ScanForTools(VOID) {
          case TAG_APPLE_RECOVERY:
             MyFreePool(FileName);
             FileName = StrDuplicate(L"\\com.apple.recovery.boot\\boot.efi");
-//            MergeStrings(&FileName, L"\\com.apple.recovery.boot\\boot.efi", 0);
             for (VolumeIndex = 0; VolumeIndex < VolumesCount; VolumeIndex++) {
                if ((Volumes[VolumeIndex]->RootDir != NULL) && (FileExists(Volumes[VolumeIndex]->RootDir, FileName))) {
                   SPrint(Description, 255, L"Apple Recovery on %s", Volumes[VolumeIndex]->VolName);

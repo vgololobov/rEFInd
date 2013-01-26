@@ -35,7 +35,7 @@
  */
 
 #include "libegint.h"
-//#include "../refind/screen.h"
+#include "../refind/global.h"
 
 #include "egemb_font.h"
 #define FONT_NUM_CHARS 96

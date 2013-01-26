@@ -29,7 +29,8 @@
 #
 # Revision history:
 #
-# 0.6.6   -- Bug fix: Upgrade drivers when installed to EFI/BOOT.
+# 0.6.6   -- Bug fix: Upgrade drivers when installed to EFI/BOOT. Also enable
+#            copying shim.efi and MokManager.efi over themselves.
 # 0.6.4   -- Copies ext2 driver rather than ext4 driver for ext2/3fs
 # 0.6.3   -- Support for detecting rEFInd in EFI/BOOT and EFI/Microsoft/Boot
 #            directories & for installing to EFI/BOOT in BIOS mode
@@ -184,12 +185,12 @@ CheckForFiles() {
 # Helper for CopyRefindFiles; copies shim files (including MokManager, if it's
 # available) to target.
 CopyShimFiles() {
-   cp $ShimSource $InstallDir/$TargetDir/$TargetShim
+   cp -fb $ShimSource $InstallDir/$TargetDir/$TargetShim
    if [[ $? != 0 ]] ; then
       Problems=1
    fi
    if [[ -f $MokManagerSource ]] ; then
-      cp $MokManagerSource $InstallDir/$TargetDir/
+      cp -fb $MokManagerSource $InstallDir/$TargetDir/
    fi
    if [[ $? != 0 ]] ; then
       Problems=1

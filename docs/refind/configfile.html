@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 3/14/2012; last Web page update:
-1/16/2013, referencing rEFInd 0.6.5</p>
+1/26/2013, referencing rEFInd 0.6.6</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -204,6 +204,11 @@ timeout 20
    <td>Specifies which tool tags to display on the second row. <tt>shell</tt> launches an EFI shell, <tt>gptsync</tt> launches a tool that creates a hybrid MBR, <tt>apple_recovery</tt> boots the OS X Recovery HD, <tt>mok_tool</tt> launches a tool to manage Machine Owner Keys (MOKs) on systems with Secure Boot active, <tt>about</tt> displays information about the program, <tt>exit</tt> terminates rEFInd, <tt>shutdown</tt> shuts down the computer (or reboots it, on UEFI PCs), and <tt>reboot</tt> reboots the computer. The tags appear in the order in which you specify them. The default is <tt>shell, apple_recovery, mok_tool, about, shutdown, reboot</tt>. Note that the <tt>shell</tt>, <tt>apple_recovery</tt>, <tt>mok_tool</tt>, and <tt>gptsync</tt> options all require the presence of programs not included with rEFInd. See the <a href="installing.html#addons">"Installing Additional Components"</a> section of the <a href="installing.html">Installing rEFInd</a> page for pointers to the shell and <tt>gptsync</tt> programs. The <tt>apple_recovery</tt> option will appear only if you've got an Apple Recovery HD partition (which has a boot loader called <tt>com.apple.recovery.boot/boot.efi</tt>). See the <a href="secureboot.html">Secure Boot</a> page for information on Secure Boot and MOK management.</td>
 </tr>
 <tr>
+   <td><tt>font</tt></td>
+   <td>font (PNG) filename</td>
+   <td>You can change the font that rEFInd uses in graphics mode by specifying the font file with this token. The font file should exist in rEFInd's main directory and must be a PNG-format graphics file holding glyphs for all the characters between ASCII 32 (space) through 126 (tilde, <tt>~</tt>), plus a glyph used for all characters outside of this range. See the <a href="themes.html">Theming rEFInd</a> page for more details.</td>
+</tr>
+<tr>
    <td><tt>textonly</tt></td>
    <td>none or <tt>0</tt></td>
    <td>rEFInd defaults to a graphical mode; however, if you prefer to do without the flashy graphics, you can run it in text mode by including this option. Passing any option but <tt>0</tt> causes text mode to be used; passing a <tt>0</tt> causes graphics mode to be used. (This could be useful if you want to override a text-mode setting in an included secondary configuration file.)</td>
@@ -251,7 +256,7 @@ timeout 20
 <tr>
    <td><tt>dont_scan_dirs</tt> or <tt>don't_scan_dirs</tt></td>
    <td>directory path(s)</td>
-   <td>Adds the specified directory or directories to a directory "blacklist"&mdash;these directories are <i>not</i> scanned for boot loaders. You may optionally precede a directory path with a volume name and a colon to limit the blacklist to that volume; otherwise all volumes are affected. For instance, <tt>EFI/BOOT</tt> prevents scanning the <tt>EFI/BOOT</tt> directory on <i>all</i> volumes, whereas <tt>ESP:EFI/BOOT</tt> blocks scans of <tt>EFI/BOOT</tt> on the volume called <tt>ESP</tt> but not on other volumes. You can use a filesystem number, as in <tt>fs0</tt>, in place of a volume name. This token may be useful to keep duplicate boot loaders out of the menu (say, if <tt>EFI/BOOT/bootx64.efi</tt> is a duplicate of another boot loader); or to keep drivers or utilities out of the boot menu, if you've stored them in a subdirectory of <tt>EFI</tt>. This option takes precedence over <tt>also_scan_dirs</tt>; if a directory appears in both lists, it will <i>not</i> be scanned.</td>
+   <td>Adds the specified directory or directories to a directory "blacklist"&mdash;these directories are <i>not</i> scanned for boot loaders. You may optionally precede a directory path with a volume name and a colon to limit the blacklist to that volume; otherwise all volumes are affected. For instance, <tt>EFI/BOOT</tt> prevents scanning the <tt>EFI/BOOT</tt> directory on <i>all</i> volumes, whereas <tt>ESP:EFI/BOOT</tt> blocks scans of <tt>EFI/BOOT</tt> on the volume called <tt>ESP</tt> but not on other volumes. You can use a filesystem number, as in <tt>fs0</tt>, in place of a volume name. This token may be useful to keep duplicate boot loaders out of the menu; or to keep drivers or utilities out of the boot menu, if you've stored them in a subdirectory of <tt>EFI</tt>. This option takes precedence over <tt>also_scan_dirs</tt>; if a directory appears in both lists, it will <i>not</i> be scanned.</td>
 </tr>
 <tr>
    <td><tt>dont_scan_files</tt> or <tt>don't_scan_files</tt></td>

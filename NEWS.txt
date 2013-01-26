@@ -1,5 +1,11 @@
-0.6.6 (?/??/2013):
+0.6.6 (1/26/2013):
 ------------------
+
+- rEFInd now ignores the fallback boot loader (EFI/BOOT/bootx64.efi or
+  EFI/BOOT/bootia32.efi) if it's identical to another boot loader on
+  the same volume. This is intended to help unclutter the display on
+  systems that run Windows, since Windows tends to duplicate its own boot
+  loader under the fallback name.
 
 - Added new "font" token to refind.conf, which enables specifying a font in
   the form of a PNG file. This file must contain monospace glyphs for the

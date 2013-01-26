@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 4/19/2012; last Web page update:
-1/16/2013, referencing rEFInd 0.6.5</p>
+1/26/2013, referencing rEFInd 0.6.6</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -90,9 +90,75 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <hr />
 
-<h2>Theming Basics</h2>
+<div style="float:right; width:55%">
 
-<p>As described on various other pages of this document, rEFInd relies on icon files located in its <tt>icons</tt> subdirectory, and occasionally elsewhere, to define its overall appearance. It also uses a built-in banner and two selection images, which you may replace by using the <tt>banner</tt>, <tt>selection_big</tt>, and <tt>selection_small</tt> tokens in <tt>refind.conf</tt>. You can adjust rEFInd's theme in a few ways:</p>
+<p>rEFInd relies on both built-in and external graphical elements in its user interface, and all of these elements can be replaced by user-specified files. This fact makes rEFInd's "look and feel" highly adjustable even by non-programmers. This page will help you get started in making such changes to each of the major sets of features: banners and backgrounds, icons, and fonts. I conclude this page with pointers to a few themes that users have created for rEFInd.</p>
+
+</div>
+
+<div class="navbar">
+
+<h4 class="tight">Contents</h4>
+
+<ul>
+
+<li class="tight"><a href="#basics">Theming Basics</li>
+
+<li class="tight"><a href="#banners">Banner and Backgrounds</a></li>
+
+<li class="tight"><a href="#icons">Icons</a></li>
+
+<li class="tight"><a href="#icon_backgrounds">Icon Backgrounds</a></li>
+
+<li class="tight"><a href="#fonts">Fonts</a></li>
+
+<li class="tight"><a href="#known_themes">Known Themes</a></li>
+
+</ul>
+
+</div>
+
+<a name="basics">
+<h2>Theming Basics</h2>
+</a>
+
+<p>Broadly speaking, rEFInd's graphical elements fall into four categories:</p>
+
+<ul>
+
+<li><b>Banners and backgrounds</b>&mdash;A <i>banner</i> is a logo or small graphical element that rEFInd displays horizontally centered in the top half of the screen. The rest of the screen is filled with a solid color derived from the color used in the top-left pixel of the banner image. rEFInd includes a built-in banner image that's used if you don't specify another image with the <tt>banner</tt> token in <tt>refind.conf</tt>. A <i>background</i> is simply a banner image that fills the screen.</li>
+
+<li><b>Icons</b>&mdash;rEFInd uses icons for its OSes and utilities. The vast majority of these icons are loaded from disk files and so are easily replaced without adjusting the <tt>refind.conf</tt> file. Alternatively, you can specify a new icons directory with the <tt>icons_dir</tt> token in <tt>refind.conf</tt>.</li>
+
+<li><b>Icon backgrounds</b>&mdash;When an icon is selected, it's merged with a slightly larger selection icon, which you can change by specifying a new file with the <tt>selection_big</tt> and <tt>selection_small</tt> tokens in <tt>refind.conf</tt>.</li>
+
+<li><b>fonts</b>&mdash;rEFInd uses a 14-point monospaced serif font by default. If you don't like this font, you can change it to another monospaced font by using the <tt>font</tt> token in <tt>refind.conf</tt>; however, the font file is a simple PNG image of the font's characters, which limits rEFInd's font capabilities.</li>
+
+</ul>
+
+<p>Of course, not all of these elements are likely to be included in all themes. You might want to change just one or two elements&mdash;say, to add an icon for your OS or to change the banner or background.</p>
+
+<p><b>Note:</b> If you'd like to design a banner logo for rEFInd, please do so! I lack the sort of artistic talent required for creating logos, so I just used plain text. I'd like to have something more eye-catching, though. I don't promise to use the first logo I'm given, but if you have some ideas, or would like to discuss some ideas, feel free to <a href="mailto:rodsmith@rodsbooks.com">e-mail me.</a> I'm currently distributing one proposed alternative in the <tt>banners</tt> subdirectory.</p>
+
+<a name="banners">
+<h2>Banners and Backgrounds</h2>
+</a>
+
+<p>You can create a new background image and logo by placing a PNG or BMP file in rEFInd's main directory and passing its filename to rEFInd with the <tt>banner</tt> option in <tt>refind.conf</tt>. If the image is smaller than the screen, the color in the top-left pixel of the image will be used for the rest of the display. This pixel's color is also used as the background color for submenu text, even for full-screen backgrounds. Using a full-screen background image can produce a dramatically different "look" for rEFInd:</p>
+
+    <br /><center><img src="refind-background.png" align="center"
+    width="750" height="472" alt="rEFInd provides extensive theming
+    options." border=2> </center><br />
+
+<p>Note that in this example, the text immediately below the icons is white, whereas the hint text at the bottom of the screen is black. The text color is determined by the brightness of the background; rEFInd uses black text against light backgrounds and light text against dark backgrounds. This adjustment is done on a line-by-line basis, so it copes better with horizontal lines than with vertical lines.</p>
+
+<p>If you want to use a full-screen background but also include the rEFInd logo, you can merge the two in a graphics editor by including the <tt>refind_banner-alpha.png</tt> image from the <tt>banners</tt> subdirectory of the rEFInd package in your background.</p>
+
+<a name="icons">
+<h2>Icons</h2>
+</a>
+
+<p>As described on various other pages of this document, rEFInd relies on icon files located in its <tt>icons</tt> subdirectory, and occasionally elsewhere, to define its overall appearance. You can adjust rEFInd's icons in a few ways:</p>
 
 <ul>
 
@@ -104,25 +170,63 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <li>You can provide an icon for boot loaders stored in the root directory of a filesystem by placing a file called <tt>.VolumeIcon.icns</tt> or <tt>.VolumeIcon.png</tt> in that volume's root.</li>
 
-<li>You can set a custom badge (the small icon that identifies the disk type) by creating a file called <tt>.VolumeBadge.icns</tt> or <tt>.VolumeBadge.png</tt> in that volume's root. This setting applies to all the boot loaders found on this volume, even if they're in subdirectories.</li>
-
-<li>You can adjust the selection background (used to highlight a selected icon) by creating new icons in PNG or in Microsoft's <a href="http://en.wikipedia.org/wiki/BMP_file_format">BMP format</a>. You should create both 144x144 and 64x64 images and tell rEFInd about them by using the <tt>selection_big</tt> and <tt>selection_small</tt> tokens, respectively, in <tt>refind.conf</tt>. If you omit the large icon, rEFInd will stretch the small icon to fit the larger space; if you omit the small icon, rEFInd will use the default small icon. Because BMP doesn't support transparency (alpha channels), you must use the PNG format if you want your selection background to show the underlying image beneath it. (You can create the illusion of transparency on a solid background by matching the colors, though.)</li>
-
-<li>You can create a new background image and logo by placing a PNG or BMP file in rEFInd's main directory and passing its filename to rEFInd with the <tt>banner</tt> option in <tt>refind.conf</tt>. If the image is smaller than the screen, the color in the top-left corner of the image will be used for the rest of the display. This pixel's color is also used as the background color for submenu text. Using a full-screen background image can produce a dramatically different "look" for rEFInd:</li>
+<li>You can set a custom badge (the 48x48-pixel icon that identifies the disk type) by creating a file called <tt>.VolumeBadge.icns</tt> or <tt>.VolumeBadge.png</tt> in that volume's root. This setting applies to all the boot loaders found on this volume, even if they're in subdirectories.</li>
 
 </ul>
 
-    <br /><center><img src="refind-background.png" align="center"
-    width="750" height="472" alt="rEFInd provides extensive theming
-    options." border=2> </center><br />
+<a name="icon_backgrounds">
+<h2>Icon Backgrounds</h2>
+</a>
 
-<p>Note that in this example, the text immediately below the icons is white, whereas the hint text at the bottom of the screen is black. The text color is determined by the brightness of the background; rEFInd uses black text against light backgrounds and light text against dark backgrounds. This adjustment is done on a line-by-line basis, so it copes better with horizontal lines than with vertical lines.</p>
+<p>rEFInd identifies the current selection by displaying a partially-transparent icon "between" the OS or tool icon and the background image. The default icon works reasonably well on both solid and image backgrounds, but if you like, you can customize it by creating new icons in PNG or in Microsoft's <a href="http://en.wikipedia.org/wiki/BMP_file_format">BMP format</a>. You should create both 144x144 and 64x64 images and tell rEFInd about them by using the <tt>selection_big</tt> and <tt>selection_small</tt> tokens, respectively, in <tt>refind.conf</tt>. If you omit the large icon, rEFInd will stretch the small icon to fit the larger space; if you omit the small icon, rEFInd will use the default small icon. Because BMP doesn't support transparency (alpha channels), you must use the PNG format if you want your selection background to show the underlying image beneath it. (You can create the illusion of transparency on a solid background by matching the colors, though.)</p>
 
-<p>Of course, not all of these elements are likely to be included in themes. A minimal rEFInd theme would provide just a new icons subdirectory, to be set via <tt>icons_dir</tt>. A more thorough theme would include a changed background image or selection backgrounds.</p>
+<a name="fonts">
+<h2>Fonts</h2>
+</a>
 
-<p><b>Note:</b> If you'd like to design a logo for rEFInd, please do so! I lack the sort of artistic talent required for creating logos, so I just used plain text. I'd like to have something more eye-catching, though. I don't promise to use the first logo I'm given, but if you have some ideas, or would like to discuss some ideas, feel free to <a href="mailto:rodsmith@rodsbooks.com">e-mail me.</a></p>
+<p>rEFInd's default font is a 14-point (12-point in 0.6.5 and earlier) serif monospaced font. I also include a handful of alternatives in the <tt>fonts</tt> subdirectory. rEFInd's font support is extremely rudimentary, though; it reads a PNG file that holds the glyphs from ASCII 32 (space) through ASCII 126 (tilde, <tt>~</tt>), plus a glyph that's displayed for all characters outside of this range. Thus, rEFInd can't currently display non-ASCII characters or use proportional (variable-width) fonts. You can change the font from one monospaced font to another and change the font size, though.</p>
 
+<p>If you want to create your own fonts, you can do so. If you're using Linux, the <tt>mkfont.sh</tt> script in the <tt>fonts</tt> subdirectory will convert an installed <i>monospace</i> font into a suitable format. You can use it like this:</p>
+
+<pre class="listing">
+$ <tt class="userinput">./mkfont.sh Liberation-Mono-Italic 14 -1 liberation-mono-italic-14.png</tt>
+</pre>
+
+<p>The result is a PNG file, <tt>liberation-mono-italic-14.png</tt>, that you can copy to your rEFInd directory and load with the <tt>font</tt> token in <tt>refind.conf</tt>, as in:</p>
+
+<pre class="listing">font liberation-mono-italic-14.png</pre>
+
+<p>The <tt>mkfont.sh</tt> script takes four arguments:</p>
+
+<ul>
+
+<li><b>The font name</b>&mdash;Type <tt class="userinput">convert -list font | less</tt> to obtain a list of fonts available on your computer. Note, however, that rEFInd requires <tt>monospaced</tt> (fixed-width) fonts, and most of the fonts installed on most computers are variable-width.</li>
+
+<li><b>The font size in points</b></li>
+
+<li><b>A y offset</b>&mdash;Many fonts require an adjustment up (negative values), or occasionally down (positive values) to fit in the PNG image area. You'll have to use trial and error to get this to work.</li>
+
+<li><b>The output filename</b></li>
+
+</ul>
+
+<p>I recommend checking the PNG file in a graphics program like <tt>eog</tt> before using it. Note that the font files should have an alpha layer, which many graphics programs display as a gray-and-white checkered background.</p>
+
+<p>If you're not using Linux, or if you want to use some other method of
+generating fonts, you can do so. The font files must be in PNG format (the
+BMP format doesn't support an alpha layer, which is required for proper
+transparency). They must contain glyphs for the 95 characters between ASCII
+32 (space) and ASCII 126 (tilde, ~), inclusive, plus a 96th glyph that
+rEFInd displays for out-of-range characters. To work properly, the
+characters must be evenly spaced and the PNG image area must be a multiple
+of 96 pixels wide, with divisions at appropriate points. In theory, you
+should be able to take a screen shot of a program displaying the relevant
+characters and then crop it to suit your needs. In practice, this is likely
+to be tedious.</p>
+
+<a name="known_themes">
 <h2>Known Themes</h2>
+</a>
 
 <p>I used icons from the Oxygen Icons project, both from the <a href="http://deviantdark.deviantart.com/art/Oxygen-Refit-70199755">Oxygen Refit</a> package and from Gentoo's <tt>oxygen-icons</tt> package. These icons supplemented or replaced icons that rEFIt used; however, many OS icons (such as those for Windows and Mac OS) are carried over from rEFIt. I've also used a handful of icons for individual Linux distributions from other sources&mdash;usually documentation associated with the distribution in question.</p>
 

@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 3/14/2012; last Web page update:
-1/16/2013, referencing rEFInd 0.6.5</p>
+1/26/2013, referencing rEFInd 0.6.6</p>
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
 
@@ -161,6 +161,8 @@ lack a usable CSM.</li>
 
 <li>Additional OS icons (all of which are Linux distributions, at least so far). This can make it easier to find a specific distribution in the boot list if you've installed multiple Linux distributions.</li>
 
+<li>Beginning with version 0.6.6, support for loading user-defined fonts, in the form of PNG files containing ASCII characters 32 through 126 plus a glyph to be used for values outside that range.</li>
+
 <li>The ability to auto-detect Linux initial RAM disk files and to read Linux kernel options from a <tt>refind_linux.conf</tt> file. These features support (nearly) automatic handling of Linux kernels with embedded EFI stub loader support (a new feature with Linux 3.3.0).</li>
 
 <li>Fixes to display problems on many UEFI-based PCs.</li>
@@ -168,6 +170,8 @@ lack a usable CSM.</li>
 <li>Workarounds to file detection bugs in at least one type of UEFI firmware.</li>
 
 <li>Improved detection of itself, to keep rEFInd out of its own boot menu.</li>
+
+<li>Detection of a fallback boot loader (<tt>EFI/BOOT/bootx64.efi</tt> or <tt>EFI/BOOT/bootia32.efi</tt>) that's redundant with another boot loader, to keep the fallback boot loader out of menus when it's unnecessary.</li>
 
 <li>An "exit" option (disabled by default), so that you can return to whatever shell or boot manager you used to launch rEFInd, should this ability be desirable. (This feature first appeared in rEFInd 0.2.4.)</li>
 

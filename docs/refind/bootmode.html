@@ -15,7 +15,7 @@
 href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>Originally written: 3/14/2013; last Web page update:
-1/16/2012, referencing rEFInd 0.6.5</p>
+1/26/2012, referencing rEFInd 0.6.6</p>
 
 
 <p>I'm a technical writer and consultant specializing in Linux technologies. This Web page is provided free of charge and with no annoying outside ads; however, I did take time to prepare it, and Web hosting does cost money. If you find this Web page useful, please consider making a small donation to help keep this site up and running. Thanks!</p>
@@ -171,7 +171,7 @@ href="mailto:rodsmith@rodsbooks.com">rodsmith@rodsbooks.com</a></p>
 
 <p>I've actually cut quite a few lines from this output; there are a total of 60 <tt>EFI: mem<i>##</i></tt> lines on this computer. (Another of my computers has 148 such lines!) A BIOS-based computer will lack most or all of these lines, and certainly the <tt>EFI: mem<i>##</i></tt> lines. I've heard of some BIOS-based computers that produce the final <tt>EFI Variables Facility</tt> line, though.</p>
 
-<p>One caveat exists to these tests: It's possible to boot Linux in EFI mode but disable the EFI features that create the <tt>/sys/firmware/efi</tt> directory and the copious EFI output in <tt>dmesg</tt>. This can happen because your kernel was compiled without EFI support or because you've added the <tt>noefi</tt> line to your existing BIOS boot loader configuration. To the best of my knowledge, no major Linux distribution ships with EFI support disabled in either of these ways, so chances are your tests won't mislead you to thinking you're using BIOS mode unless you've recompiled your kernel or deliberately added a <tt>noefi</tt> parameter to your boot loader configuration.</p>
+<p>One caveat exists to these tests: It's possible to boot Linux in EFI mode but disable the EFI features that create the <tt>/sys/firmware/efi</tt> directory and the copious EFI output in <tt>dmesg</tt>. This can happen because your kernel was compiled without EFI support or because you've added the <tt>noefi</tt> line to your existing BIOS boot loader configuration. Some of these features will also be absent if the <tt>efivars</tt> driver is not built into the kernel and is not loaded as a module. Typing <tt class="userinput">modprobe efivars</tt> should load this module, so you might try that before concluding you've booted in BIOS mode. To the best of my knowledge, no major Linux distribution ships with EFI support disabled in any of these ways, so chances are your tests won't mislead you to thinking you're using BIOS mode unless you've recompiled your kernel or deliberately added a <tt>noefi</tt> parameter to your boot loader configuration.</p>
 
 <a name="windows">
 <h2>Identifying Your Windows Boot Mode</h2>

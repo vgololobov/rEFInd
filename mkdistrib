@@ -47,7 +47,7 @@ make clean
 # Prepare a place and copy files there....
 mkdir -p ../snapshots/$1/refind-$1/icons
 cp --preserve=timestamps icons/*.icns ../snapshots/$1/refind-$1/icons/
-cp -a docs images keys include EfiLib libeg mok refind filesystems refind.spec install.sh mkrlconf.sh mvrefind.sh CREDITS.txt NEWS.txt BUILDING.txt COPYING.txt LICENSE.txt README.txt refind.inf Make.tiano Make.common Makefile refind.conf-sample ../snapshots/$1/refind-$1
+cp -a docs images keys fonts banners include EfiLib libeg mok refind filesystems refind.spec install.sh mkrlconf.sh mvrefind.sh CREDITS.txt NEWS.txt BUILDING.txt COPYING.txt LICENSE.txt README.txt refind.inf Make.tiano Make.common Makefile refind.conf-sample ../snapshots/$1/refind-$1
 
 # Go there and prepare a souce code zip file....
 cd ../snapshots/$1/
@@ -84,7 +84,7 @@ else
    cp refind/refind_x64.efi refind-bin-$1/refind/refind_x64.efi
 fi
 cp refind-bin-$1/refind/refind_x64.efi $StartDir
-cp -a docs keys COPYING.txt LICENSE.txt README.txt CREDITS.txt NEWS.txt install.sh mkrlconf.sh mvrefind.sh refind-bin-$1
+cp -a docs keys banners fonts COPYING.txt LICENSE.txt README.txt CREDITS.txt NEWS.txt install.sh mkrlconf.sh mvrefind.sh refind-bin-$1
 
 # Prepare the final .zip file
 zip -9r ../refind-bin-$1.zip refind-bin-$1
