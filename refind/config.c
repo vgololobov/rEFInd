@@ -683,7 +683,8 @@ static LOADER_ENTRY * AddStanzaEntries(REFIT_FILE *File, REFIT_VOLUME *Volume, C
 
       } else if ((StriCmp(TokenList[0], L"icon") == 0) && (TokenCount > 1)) {
          MyFreePool(Entry->me.Image);
-         Entry->me.Image = LoadIcns(CurrentVolume->RootDir, TokenList[1], 128);
+//         Entry->me.Image = LoadIcns(CurrentVolume->RootDir, TokenList[1], 128);
+         Entry->me.Image = egLoadIcon(CurrentVolume->RootDir, TokenList[1], 128);
          if (Entry->me.Image == NULL) {
             Entry->me.Image = DummyImage(128);
          }

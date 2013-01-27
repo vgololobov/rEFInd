@@ -1275,11 +1275,12 @@ BOOLEAN DirIterNext(IN OUT REFIT_DIR_ITER *DirIter, IN UINTN FilterMode, IN CHAR
             while (KeepGoing && (OnePattern = FindCommaDelimited(FilePattern, i++)) != NULL) {
                if (MetaiMatch(DirIter->LastFileInfo->FileName, OnePattern))
                    KeepGoing = FALSE;
+//               Print(L"%s did%s match %s\n", DirIter->LastFileInfo->FileName, KeepGoing ? L" not" : L"", OnePattern);
             } // while
             // else continue loop
         } else
             break;
-   } while (KeepGoing);
+   } while (KeepGoing && FilePattern);
 
     *DirEntry = DirIter->LastFileInfo;
     return TRUE;

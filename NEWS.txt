@@ -1,3 +1,10 @@
+0.6.7 (?/??/2013):
+------------------
+
+- Fixed broken mixing of PNG and ICNS icons when using a user-specified
+  icons directory -- previously, an ICNS file in the default directory
+  would override a PNG file in the user-specified directory.
+
 0.6.6 (1/26/2013):
 ------------------
 

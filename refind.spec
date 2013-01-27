@@ -1,6 +1,6 @@
 Summary: EFI boot manager software
 Name: refind
-Version: 0.6.6
+Version: 0.6.6.1
 Release: 1%{?dist}
 Summary: EFI boot manager software
 License: GPLv3

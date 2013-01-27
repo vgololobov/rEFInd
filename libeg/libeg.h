@@ -71,6 +71,8 @@ typedef struct {
 #define EG_EICOMPMODE_RLE           (1)
 #define EG_EICOMPMODE_EFICOMPRESS   (2)
 
+#define ICON_EXTENSIONS L"icns,png"
+
 typedef struct {
     UINTN       Width;
     UINTN       Height;
@@ -102,6 +104,7 @@ VOID egFreeImage(IN EG_IMAGE *Image);
 
 EG_IMAGE * egLoadImage(IN EFI_FILE* BaseDir, IN CHAR16 *FileName, IN BOOLEAN WantAlpha);
 EG_IMAGE * egLoadIcon(IN EFI_FILE* BaseDir, IN CHAR16 *FileName, IN UINTN IconSize);
+EG_IMAGE * egFindIcon(IN CHAR16 *BaseName, IN UINTN IconSize);
 EG_IMAGE * egPrepareEmbeddedImage(IN EG_EMBEDDED_IMAGE *EmbeddedImage, IN BOOLEAN WantAlpha);
 
 EG_IMAGE * egEnsureImageSize(IN EG_IMAGE *Image, IN UINTN Width, IN UINTN Height, IN EG_PIXEL *Color);

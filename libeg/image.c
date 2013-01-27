@@ -129,8 +129,7 @@ VOID egFreeImage(IN EG_IMAGE *Image)
 // Basic file operations
 //
 
-EFI_STATUS egLoadFile(IN EFI_FILE* BaseDir, IN CHAR16 *FileName,
-                      OUT UINT8 **FileData, OUT UINTN *FileDataLength)
+EFI_STATUS egLoadFile(IN EFI_FILE* BaseDir, IN CHAR16 *FileName, OUT UINT8 **FileData, OUT UINTN *FileDataLength)
 {
     EFI_STATUS          Status;
     EFI_FILE_HANDLE     FileHandle;
@@ -220,19 +219,6 @@ EFI_STATUS egSaveFile(IN EFI_FILE* BaseDir OPTIONAL, IN CHAR16 *FileName,
 // Loading images from files and embedded data
 //
 
-// static CHAR16 * egFindExtension(IN CHAR16 *FileName)
-// {
-//     UINTN i;
-// 
-//     for (i = StrLen(FileName); i >= 0; i--) {
-//         if (FileName[i] == '.')
-//             return FileName + i + 1;
-//         if (FileName[i] == '/' || FileName[i] == '\\')
-//             break;
-//     }
-//     return FileName + StrLen(FileName);
-// }
-
 // Decode the specified image data. The IconSize parameter is relevant only
 // for ICNS, for which it selects which ICNS sub-image is decoded.
 // Returns a pointer to the resulting EG_IMAGE or NULL if decoding failed.
@@ -272,18 +258,12 @@ EG_IMAGE * egLoadImage(IN EFI_FILE* BaseDir, IN CHAR16 *FileName, IN BOOLEAN Wan
 }
 
 // Load an icon from (BaseDir)/Path, extracting the icon of size IconSize x IconSize.
-// If the initial attempt is unsuccessful, try again, replacing the directory
-// component of Path with DEFAULT_ICONS_DIR.
-// Note: The assumption is that BaseDir points to rEFInd's home directory and Path
-// includes one subdirectory level. If this changes in future revisions, it may be
-// necessary to alter the code that tries again with DEFAULT_ICONS_DIR.
 // Returns a pointer to the image data, or NULL if the icon could not be loaded.
 EG_IMAGE * egLoadIcon(IN EFI_FILE* BaseDir, IN CHAR16 *Path, IN UINTN IconSize)
 {
     EFI_STATUS      Status;
     UINT8           *FileData;
     UINTN           FileDataLength;
-    CHAR16          *FileName, FileName2[256];
     EG_IMAGE        *NewImage;
 
     if (BaseDir == NULL || Path == NULL)
@@ -291,13 +271,8 @@ EG_IMAGE * egLoadIcon(IN EFI_FILE* BaseDir, IN CHAR16 *Path, IN UINTN IconSize)
 
     // load file
     Status = egLoadFile(BaseDir, Path, &FileData, &FileDataLength);
-    if (EFI_ERROR(Status)) {
-        FileName = Basename(Path); // Note: FileName is a pointer within Path; DON'T FREE IT!
-        SPrint(FileName2, 255, L"%s\\%s", DEFAULT_ICONS_DIR, FileName);
-        Status = egLoadFile(BaseDir, FileName2, &FileData, &FileDataLength);
-        if (EFI_ERROR(Status))
-           return NULL;
-    }
+    if (EFI_ERROR(Status))
+       return NULL;
 
     // decode it
     NewImage = egDecodeAny(FileData, FileDataLength, IconSize, TRUE);
@@ -310,6 +285,42 @@ EG_IMAGE * egLoadIcon(IN EFI_FILE* BaseDir, IN CHAR16 *Path, IN UINTN IconSize)
 
     return NewImage;
 } // EG_IMAGE *egLoadIcon()
+
+// Returns an icon with any extension in ICON_EXTENSIONS from either the directory
+// specified by GlobalConfig.IconsDir or DEFAULT_ICONS_DIR. The input BaseName
+// should be the icon name without an extension. For instance, if BaseName is
+// os_linux, GlobalConfig.IconsDir is myicons, DEFAULT_ICONS_DIR is icons, and
+// ICON_EXTENSIONS is "icns,png", this function will return myicons/os_linux.icns,
+// myicons/os_linux.png, icons/os_linux.icns, or icons/os_linux.png, in that
+// order of preference. Returns NULL if no such icon can be found. All file
+// references are relative to SelfDir.
+EG_IMAGE * egFindIcon(IN CHAR16 *BaseName, IN UINTN IconSize) {
+   CHAR16 *LoadDir, *Extension;
+   CHAR16 FileName[256];
+   UINTN i;
+   EG_IMAGE *Image = NULL;
+
+   if (GlobalConfig.IconsDir != NULL)
+      LoadDir = GlobalConfig.IconsDir;
+   else
+      LoadDir = StrDuplicate(DEFAULT_ICONS_DIR);
+
+   while ((LoadDir != NULL) && (Image == NULL)) {
+      i = 0;
+      while (((Extension = FindCommaDelimited(ICON_EXTENSIONS, i++)) != NULL) && (Image == NULL)) {
+         SPrint(FileName, 255, L"%s\\%s.%s", LoadDir, BaseName, Extension);
+         Image = egLoadIcon(SelfDir, FileName, IconSize);
+         MyFreePool(Extension);
+      } // while()
+      if (LoadDir == GlobalConfig.IconsDir) {
+         LoadDir = StrDuplicate(DEFAULT_ICONS_DIR);
+      } else {
+         MyFreePool(LoadDir);
+         LoadDir = NULL;
+      } // if/else
+   } // while()
+   return Image;
+} // EG_IMAGE * egFindIcon()
 
 EG_IMAGE * egPrepareEmbeddedImage(IN EG_EMBEDDED_IMAGE *EmbeddedImage, IN BOOLEAN WantAlpha)
 {

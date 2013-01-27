@@ -51,53 +51,33 @@ typedef struct {
 } BUILTIN_ICON;
 
 BUILTIN_ICON BuiltinIconTable[BUILTIN_ICON_COUNT] = {
-   { NULL, L"func_about.icns", 48 },
-   { NULL, L"func_reset.icns", 48 },
-   { NULL, L"func_shutdown.icns", 48 },
-   { NULL, L"func_exit.icns", 48 },
-   { NULL, L"tool_shell.icns", 48 },
-   { NULL, L"tool_part.icns", 48 },
-   { NULL, L"tool_rescue.icns", 48 },
-   { NULL, L"tool_apple_rescue.icns", 48 },
-   { NULL, L"tool_mok_tool.icns", 48 },
-   { NULL, L"vol_internal.icns", 32 },
-   { NULL, L"vol_external.icns", 32 },
-   { NULL, L"vol_optical.icns", 32 },
+   { NULL, L"func_about", 48 },
+   { NULL, L"func_reset", 48 },
+   { NULL, L"func_shutdown", 48 },
+   { NULL, L"func_exit", 48 },
+   { NULL, L"tool_shell", 48 },
+   { NULL, L"tool_part", 48 },
+   { NULL, L"tool_rescue", 48 },
+   { NULL, L"tool_apple_rescue", 48 },
+   { NULL, L"tool_mok_tool", 48 },
+   { NULL, L"vol_internal", 32 },
+   { NULL, L"vol_external", 32 },
+   { NULL, L"vol_optical", 32 },
 };
 
 EG_IMAGE * BuiltinIcon(IN UINTN Id)
 {
-    CHAR16 FileName[256];
-
     if (Id >= BUILTIN_ICON_COUNT)
         return NULL;
 
     if (BuiltinIconTable[Id].Image == NULL) {
-        SPrint(FileName, 255, L"%s\\%s", GlobalConfig.IconsDir ? GlobalConfig.IconsDir : DEFAULT_ICONS_DIR,
-               BuiltinIconTable[Id].FileName);
-        BuiltinIconTable[Id].Image = LoadIcnsFallback(SelfDir, FileName, BuiltinIconTable[Id].PixelSize);
+       BuiltinIconTable[Id].Image = egFindIcon(BuiltinIconTable[Id].FileName, BuiltinIconTable[Id].PixelSize);
+       if (BuiltinIconTable[Id].Image == NULL)
+          BuiltinIconTable[Id].Image = DummyImage(BuiltinIconTable[Id].PixelSize);
     } // if
 
     return BuiltinIconTable[Id].Image;
 }
-
-// Construct filename for all valid icon extensions and try to load it.
-// Returns image data or NULL if it can't be found.
-static EG_IMAGE * LoadIconAnyFormat(IN CHAR16 *IconsDir, IN CHAR16 *BaseName, IN CHAR16 *OsName) {
-   CHAR16     FileName[256];
-   CHAR16     *Extension;
-   EG_IMAGE   *Image = NULL;
-   UINTN      Index = 0;
-
-   while (((Extension = FindCommaDelimited(ICON_EXTENSIONS, Index++)) != NULL) && (Image == NULL)) {
-      SPrint(FileName, 255, L"%s\\%s_%s.%s", IconsDir, BaseName, OsName, Extension);
-
-      // try to load it
-      Image = egLoadIcon(SelfDir, FileName, 128);
-      MyFreePool(Extension);
-   } // while()
-   return Image;
-} // EG_IMAGE * LoadIconAnyFormat()
 
 //
 // Load an icon for an operating system
@@ -105,37 +85,40 @@ static EG_IMAGE * LoadIconAnyFormat(IN CHAR16 *IconsDir, IN CHAR16 *BaseName, IN
 
 // Load an OS icon from among the comma-delimited list provided in OSIconName.
 // Searches for icons with extensions in the ICON_EXTENSIONS list (via
-// LoadIconAnyFormat()).
+// egFindIcon()).
 // Returns image data. On failure, returns an ugly "dummy" icon.
 EG_IMAGE * LoadOSIcon(IN CHAR16 *OSIconName OPTIONAL, IN CHAR16 *FallbackIconName, BOOLEAN BootLogo)
 {
     EG_IMAGE        *Image = NULL;
-    CHAR16          *CutoutName;
+    CHAR16          *CutoutName, BaseName[256];
     UINTN           Index = 0;
 
     if (GlobalConfig.TextOnly)      // skip loading if it's not used anyway
         return NULL;
 
-    // try the names from OSIconName
+    // First, try to find an icon from the OSIconName list....
     while (((CutoutName = FindCommaDelimited(OSIconName, Index++)) != NULL) && (Image == NULL)) {
-       Image = LoadIconAnyFormat(GlobalConfig.IconsDir ? GlobalConfig.IconsDir : DEFAULT_ICONS_DIR,
-                                 BootLogo ? L"boot" : L"os", CutoutName);
-       MyFreePool(CutoutName);
-    } // while()
+       SPrint(BaseName, 255, L"%s_%s", BootLogo ? L"boot" : L"os", CutoutName);
+       Image = egFindIcon(BaseName, 128);
+    }
 
-    // try the fallback name
+    // If that fails, try again using the FallbackIconName....
+    if (Image == NULL) {
+       SPrint(BaseName, 255, L"%s_%s", BootLogo ? L"boot" : L"os", FallbackIconName);
+       Image = egFindIcon(BaseName, 128);
+    }
+
+    // If that fails and if BootLogo was set, try again using the "os_" start of the name....
+    if (BootLogo && (Image == NULL)) {
+       SPrint(BaseName, 255, L"os_%s", FallbackIconName);
+       Image = egFindIcon(BaseName, 128);
+    }
+
+    // If all of these fail, return the dummy image....
     if (Image == NULL)
-       Image = LoadIconAnyFormat(GlobalConfig.IconsDir ? GlobalConfig.IconsDir : DEFAULT_ICONS_DIR,
-                                 BootLogo ? L"boot" : L"os", FallbackIconName);
+       Image = DummyImage(128);
 
-    // try the fallback name with os_ instead of boot_
-    if (BootLogo && (Image == NULL))
-       Image = LoadIconAnyFormat(GlobalConfig.IconsDir ? GlobalConfig.IconsDir : DEFAULT_ICONS_DIR, L"os", FallbackIconName);
-
-    if (Image != NULL)
-        return Image;
-    else
-       return DummyImage(128);
+    return Image;
 } /* EG_IMAGE * LoadOSIcon() */
 
 
@@ -187,18 +170,5 @@ EG_IMAGE * DummyImage(IN UINTN PixelSize)
         YPtr += LineOffset;
     }
 
-    return Image;
-}
-
-EG_IMAGE * LoadIcnsFallback(IN EFI_FILE_HANDLE BaseDir, IN CHAR16 *FileName, IN UINTN PixelSize)
-{
-    EG_IMAGE *Image;
-    if (GlobalConfig.TextOnly)      // skip loading if it's not used anyway
-        return NULL;
-
-    Image = LoadIcns(BaseDir, FileName, PixelSize);
-    if (Image == NULL) {
-        Image = DummyImage(PixelSize);
-    }
     return Image;
 }

@@ -82,7 +82,7 @@
 #define FALLBACK_BASENAME       L"boot.efi"            /* Not really correct */
 #endif
 
-#define MOK_NAMES               L"\\EFI\\tools\\MokManager.efi,\\EFI\\redhat\\MokManager.efi,\\EFI\\ubuntu\\MokManager.efi,\\EFI\\suse\\MokManager"
+#define MOK_NAMES               L"\\EFI\\tools\\MokManager.efi,\\EFI\\fedora\\MokManager.efi,\\EFI\\redhat\\MokManager.efi,\\EFI\\ubuntu\\MokManager.efi,\\EFI\\suse\\MokManager"
 
 // Filename patterns that identify EFI boot loaders. Note that a single case (either L"*.efi" or
 // L"*.EFI") is fine for most systems; but Gigabyte's buggy Hybrid EFI does a case-sensitive
@@ -134,7 +134,7 @@ static VOID AboutrEFInd(VOID)
 
     if (AboutMenu.EntryCount == 0) {
         AboutMenu.TitleImage = BuiltinIcon(BUILTIN_ICON_FUNC_ABOUT);
-        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.6.6");
+        AddMenuInfoLine(&AboutMenu, L"rEFInd Version 0.6.6.4");
         AddMenuInfoLine(&AboutMenu, L"");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2006-2010 Christoph Pfisterer");
         AddMenuInfoLine(&AboutMenu, L"Copyright (c) 2012 Roderick W. Smith");
@@ -717,7 +717,7 @@ static CHAR16 * GetMainLinuxOptions(IN CHAR16 * LoaderPath, IN REFIT_VOLUME *Vol
 // code and shortcut letter. For Linux EFI stub loaders, also sets kernel options
 // that will (with luck) work fairly automatically.
 VOID SetLoaderDefaults(LOADER_ENTRY *Entry, CHAR16 *LoaderPath, REFIT_VOLUME *Volume) {
-   CHAR16      *FileName, *PathOnly, *IconNames = NULL, *NoExtension, *OSIconName = NULL, *Temp, *SubString;
+   CHAR16      *FileName, *PathOnly, *NoExtension, *OSIconName = NULL, *Temp, *SubString;
    CHAR16      ShortcutLetter = 0;
    UINTN       i = 0, Length;
 
@@ -727,16 +727,10 @@ VOID SetLoaderDefaults(LOADER_ENTRY *Entry, CHAR16 *LoaderPath, REFIT_VOLUME *Vo
 
    // locate a custom icon for the loader
    // Anything found here takes precedence over the "hints" in the OSIconName variable
-   while ((Temp = FindCommaDelimited(ICON_EXTENSIONS, i++)) != NULL) {
-      MergeStrings(&IconNames, NoExtension, L',');
-      MergeStrings(&IconNames, Temp, L'.');
-      MyFreePool(Temp);
-   }
    if (!Entry->me.Image)
-      Entry->me.Image = LoadIcns(Volume->RootDir, IconNames, 128);
+      Entry->me.Image = egFindIcon(NoExtension, 128);
    if (!Entry->me.Image)
       Entry->me.Image = Volume->VolIconImage;
-   MyFreePool(IconNames);
 
    // Begin creating icon "hints" by using last part of directory path leading
    // to the loader
@@ -1014,6 +1008,7 @@ static BOOLEAN ScanLoaderDir(IN REFIT_VOLUME *Volume, IN CHAR16 *Path, IN CHAR16
     struct LOADER_LIST      *LoaderList = NULL, *NewLoader;
     BOOLEAN                 FoundFallbackDuplicate = FALSE;
 
+//    Print(L"Entering ScanLoaderDir(), scanning '%s' for pattern '%s'\n", Path, Pattern);
     if ((!SelfDirPath || !Path || ((StriCmp(Path, SelfDirPath) == 0) && (Volume->DeviceHandle != SelfVolume->DeviceHandle)) ||
            (StriCmp(Path, SelfDirPath) != 0)) &&
            (ShouldScan(Volume, Path))) {
@@ -1059,6 +1054,7 @@ static BOOLEAN ScanLoaderDir(IN REFIT_VOLUME *Volume, IN CHAR16 *Path, IN CHAR16
           CheckError(Status, FileName);
        } // if (Status != EFI_NOT_FOUND)
     } // if not scanning our own directory
+//    PauseForKey();
     return FoundFallbackDuplicate;
 } /* static VOID ScanLoaderDir() */
 
@@ -1070,9 +1066,11 @@ static VOID ScanEfiFiles(REFIT_VOLUME *Volume) {
    UINTN                   i, Length, VolNum;
    BOOLEAN                 ScanFallbackLoader = TRUE;
 
+//   Print(L"Entering ScanEfiFiles(), GlobalConfig.ScanAllLinux = %s\n", GlobalConfig.ScanAllLinux ? L"TRUE" : L"FALSE");
    MatchPatterns = StrDuplicate(LOADER_MATCH_PATTERNS);
    if (GlobalConfig.ScanAllLinux)
       MergeStrings(&MatchPatterns, LINUX_MATCH_PATTERNS, L',');
+//   Print(L"MatchPatterns = '%s'\n", MatchPatterns);
 
    if ((Volume->RootDir != NULL) && (Volume->VolName != NULL)) {
       // check for Mac OS X boot loader

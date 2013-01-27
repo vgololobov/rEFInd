@@ -952,7 +952,7 @@ static VOID PaintSelection(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State,
    }
 } // static VOID MoveSelection(VOID)
 
-// Display an icon at the specified location. Uses the image specified by
+// Display a 48x48 icon at the specified location. Uses the image specified by
 // ExternalFilename if it's available, or BuiltInImage if it's not. The 
 // Y position is specified as the center value, and so is adjusted by half
 // the icon's height. The X position is set along the icon's left
@@ -961,8 +961,7 @@ static VOID PaintSelection(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State,
 static VOID PaintIcon(IN EG_EMBEDDED_IMAGE *BuiltInIcon, IN CHAR16 *ExternalFilename, UINTN PosX, UINTN PosY, UINTN Alignment) {
    EG_IMAGE *Icon = NULL;
 
-   if (FileExists(SelfDir, ExternalFilename))
-      Icon = egLoadIcon(SelfDir, ExternalFilename, 48);
+   Icon = egFindIcon(ExternalFilename, 48);
    if (Icon == NULL)
       Icon = egPrepareEmbeddedImage(BuiltInIcon, TRUE);
    if (Icon != NULL) {
@@ -970,7 +969,7 @@ static VOID PaintIcon(IN EG_EMBEDDED_IMAGE *BuiltInIcon, IN CHAR16 *ExternalFile
          PosX -= Icon->Width;
       egDrawImageWithTransparency(Icon, NULL, PosX, PosY - (Icon->Height / 2), Icon->Width, Icon->Height);
    }
-} // static VOID PaintIcon()
+} // static VOID ()
 
 inline UINTN ComputeRow0PosY(VOID) {
    return ((UGAHeight / 2) - ROW0_TILESIZE / 2);
@@ -979,7 +978,6 @@ inline UINTN ComputeRow0PosY(VOID) {
 // Display (or erase) the arrow icons to the left and right of an icon's row,
 // as appropriate.
 static VOID PaintArrows(SCROLL_STATE *State, UINTN PosX, UINTN PosY, UINTN row0Loaders) {
-   CHAR16 FileName[256];
    EG_IMAGE *TempImage;
    UINTN Width, Height, RightX, AdjPosY;
 
@@ -993,8 +991,7 @@ static VOID PaintArrows(SCROLL_STATE *State, UINTN PosX, UINTN PosY, UINTN row0L
    // of the surrounding row; PaintIcon() adjusts this back up by half the
    // icon's height to properly center it.
    if ((State->FirstVisible > 0) && (!(GlobalConfig.HideUIFlags & HIDEUI_FLAG_ARROWS))) {
-      SPrint(FileName, 255, L"%s\\arrow_left.icns", GlobalConfig.IconsDir ? GlobalConfig.IconsDir : DEFAULT_ICONS_DIR);
-      PaintIcon(&egemb_arrow_left, FileName, PosX, PosY, ALIGN_RIGHT);
+      PaintIcon(&egemb_arrow_left, L"arrow_left", PosX, PosY, ALIGN_RIGHT);
    } else {
       TempImage = egCropImage(GlobalConfig.ScreenBackground, PosX - Width, AdjPosY, Width, Height);
       BltImage(TempImage, PosX - Width, AdjPosY);
@@ -1002,8 +999,7 @@ static VOID PaintArrows(SCROLL_STATE *State, UINTN PosX, UINTN PosY, UINTN row0L
    } // if/else
 
    if ((State->LastVisible < (row0Loaders - 1)) && (!(GlobalConfig.HideUIFlags & HIDEUI_FLAG_ARROWS))) {
-      SPrint(FileName, 255, L"%s\\arrow_right.icns", GlobalConfig.IconsDir ? GlobalConfig.IconsDir : DEFAULT_ICONS_DIR);
-      PaintIcon(&egemb_arrow_right, FileName, RightX, PosY, ALIGN_LEFT);
+      PaintIcon(&egemb_arrow_right, L"arrow_right", RightX, PosY, ALIGN_LEFT);
    } else {
       TempImage = egCropImage(GlobalConfig.ScreenBackground, RightX, AdjPosY, Width, Height);
       BltImage(TempImage, RightX, AdjPosY);
