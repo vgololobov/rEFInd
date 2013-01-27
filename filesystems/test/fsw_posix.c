@@ -292,6 +292,34 @@ int fsw_posix_closedir(struct fsw_posix_dir *dir)
 }
 
 /**
+ * Gets the content of a file and writes it to standard output
+ */
+int catfile(struct fsw_posix_volume *vol, char *path)
+{
+    struct fsw_posix_file *file;
+    int r;
+    char buf[256];
+
+    file = fsw_posix_open(vol, path, 0, 0);
+    if (file == NULL) {
+        fprintf(stderr, "open(%s) call failed.\n", path);
+        return 1;
+    }
+
+    while ((r=fsw_posix_read(file, buf, sizeof(buf))) > 0)
+    {
+        int i;
+        for (i=0; i<r; i++)
+        {
+           printf("%c", buf[i]);
+        }
+    }
+    fsw_posix_close(file);
+
+    return 0;
+}
+
+/**
  * Open a shand of a required type by path.
  */
 
@@ -368,7 +396,7 @@ fsw_status_t fsw_posix_read_block(struct fsw_volume *vol, fsw_u32 phys_bno, void
     off_t           block_offset, seek_result;
     ssize_t         read_result;
 
-    FSW_MSG_DEBUGV((FSW_MSGSTR("fsw_posix_read_block: %d  (%d)\n"), phys_bno, vol->phys_blocksize));
+    //FSW_MSG_DEBUGV((FSW_MSGSTR("fsw_posix_read_block: %d  (%d)\n"), phys_bno, vol->phys_blocksize));
 
     // read from disk
     block_offset = (off_t)phys_bno * vol->phys_blocksize;

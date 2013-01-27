@@ -1,5 +1,5 @@
 /**
- * \file lslr.c
+ * \file catfile.c
  * Test program for the POSIX user space environment.
  */
 
@@ -41,59 +41,27 @@
 #include "fsw_posix.h"
 
 
-//extern struct fsw_fstype_table FSW_FSTYPE_TABLE_NAME(ext2);
-//extern struct fsw_fstype_table FSW_FSTYPE_TABLE_NAME(reiserfs);
 extern struct fsw_fstype_table FSW_FSTYPE_TABLE_NAME(FSTYPE);
 
 static struct fsw_fstype_table *fstypes[] = {
-    //&FSW_FSTYPE_TABLE_NAME(ext2),
-    //&FSW_FSTYPE_TABLE_NAME(reiserfs),
     &FSW_FSTYPE_TABLE_NAME(FSTYPE),
     NULL
 };
-
-static int listdir(struct fsw_posix_volume *vol, char *path, int level)
-{
-    struct fsw_posix_dir *dir;
-    struct dirent *dent;
-    int i;
-    char subpath[4096];
-
-    dir = fsw_posix_opendir(vol, path);
-    if (dir == NULL) {
-        fprintf(stderr, "opendir(%s) call failed.\n", path);
-        return 1;
-    }
-    while ((dent = fsw_posix_readdir(dir)) != NULL) {
-        for (i = 0; i < level*2; i++)
-            fputc(' ', stderr);
-        fprintf(stderr, "%d  %s\n", dent->d_type, dent->d_name);
-
-        if (dent->d_type == DT_DIR) {
-            snprintf(subpath, 4095, "%s%s/", path, dent->d_name);
-            listdir(vol, subpath, level + 1);
-        }
-    }
-
-    fsw_posix_closedir(dir);
-
-    return 0;
-}
 
 int main(int argc, char **argv)
 {
     struct fsw_posix_volume *vol;
     int i;
 
-    if (argc != 2) {
-        fprintf(stderr, "Usage: lslr <file/device>\n");
+    if (argc != 3) {
+        fprintf(stderr, "Usage: catfile <file/device> <file>\n");
         return 1;
     }
 
     for (i = 0; fstypes[i]; i++) {
         vol = fsw_posix_mount(argv[1], fstypes[i]);
         if (vol != NULL) {
-            fprintf(stderr, "Mounted as '%s'.\n", fstypes[i]->name.data);
+            fprintf(stderr, "Mounted as '%s'.\n", (char *)fstypes[i]->name.data);
             break;
         }
     }
@@ -102,8 +70,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    listdir(vol, "/", 0);
-    catfile(vol, "/boot/vmlinuz-3.5.0-21-generic");
+    catfile(vol, argv[2]);
 
     fsw_posix_unmount(vol);
 

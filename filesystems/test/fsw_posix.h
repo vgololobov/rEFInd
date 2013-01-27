@@ -88,6 +88,7 @@ struct fsw_posix_file * fsw_posix_open(struct fsw_posix_volume *pvol, const char
 ssize_t fsw_posix_read(struct fsw_posix_file *file, void *buf, size_t nbytes);
 off_t fsw_posix_lseek(struct fsw_posix_file *file, off_t offset, int whence);
 int fsw_posix_close(struct fsw_posix_file *file);
+int catfile(struct fsw_posix_volume *vol, char *path);
 
 struct fsw_posix_dir * fsw_posix_opendir(struct fsw_posix_volume *pvol, const char *path);
 struct dirent * fsw_posix_readdir(struct fsw_posix_dir *dir);
